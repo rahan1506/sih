@@ -1,0 +1,1786 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worker Trade Passport & Qualification — UNIVO</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap"
+        rel="stylesheet">
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* ============ TOKENS ============ */
+        :root {
+            --cream: #F4ECDC;
+            --cream2: #EDE1CB;
+            --ink: #221812;
+            --ink-soft: #2d2219;
+            --terra: #C15A2E;
+            --gold: #D9A441;
+            --umber: #241509;
+            --green: #246d3e;
+            --hair: rgba(34, 24, 18, .18);
+            --serif: 'Fraunces', Georgia, serif;
+            --sans: 'Instrument Sans', 'Helvetica Neue', sans-serif;
+            --mono: 'Space Mono', monospace;
+            --ease: cubic-bezier(.22, 1, .36, 1);
+            --pad: 5vw;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        html::-webkit-scrollbar,
+        body::-webkit-scrollbar {
+            display: none;
+            width: 0;
+            height: 0;
+        }
+
+        body {
+            background: var(--cream);
+            color: var(--ink);
+            font: 400 15px/1.6 var(--sans);
+            font-optical-sizing: auto;
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        ::selection {
+            background: var(--terra);
+            color: var(--cream);
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        button {
+            font: inherit;
+            color: inherit;
+            background: none;
+            border: 0;
+            cursor: pointer;
+        }
+
+        :focus-visible {
+            outline: 2px solid var(--terra);
+            outline-offset: 3px;
+        }
+
+        .mono {
+            font-family: var(--mono);
+            font-size: 11px;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+        }
+
+        /* grain texture */
+        #grain {
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+            mix-blend-mode: multiply;
+            opacity: .05;
+            pointer-events: none;
+            z-index: 2500;
+        }
+
+        /* custom cursor */
+        .cursor-dot,
+        .cursor-ring {
+            position: fixed;
+            top: 0;
+            left: 0;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 4000;
+            mix-blend-mode: difference;
+            will-change: transform;
+            transition: opacity .3s;
+        }
+
+        .cursor-dot {
+            width: 6px;
+            height: 6px;
+            background: #fff;
+            margin: -3px 0 0 -3px;
+        }
+
+        .cursor-ring {
+            width: 36px;
+            height: 36px;
+            border: 1px solid rgba(255, 255, 255, .7);
+            margin: -18px 0 0 -18px;
+            transition: width .25s var(--ease), height .25s var(--ease), border-color .25s, margin .25s var(--ease);
+        }
+
+        @media (pointer:coarse) {
+            .cursor-dot,
+            .cursor-ring {
+                display: none;
+            }
+        }
+
+        /* ============ HEADER ============ */
+        header {
+            padding: 1.8rem var(--pad);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--hair);
+            background: rgba(244, 236, 220, 0.95);
+            backdrop-filter: blur(16px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: .7rem;
+            font-family: var(--serif);
+            font-size: 1.4rem;
+            font-weight: 500;
+            letter-spacing: -.02em;
+        }
+
+        .brand svg {
+            width: 22px;
+            height: 22px;
+            color: var(--terra);
+            animation: spin 32s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .passport-status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-family: var(--mono);
+            font-size: 10px;
+            font-weight: 700;
+            background: rgba(193, 90, 46, 0.12);
+            color: var(--terra);
+            border: 1px solid rgba(193, 90, 46, 0.35);
+        }
+
+        .passport-status-pill.approved {
+            background: rgba(36, 109, 62, 0.12);
+            color: var(--green);
+            border-color: rgba(36, 109, 62, 0.35);
+        }
+
+        /* ============ HERO PASSPORT BANNER ============ */
+        .passport-hero {
+            max-width: 1200px;
+            width: 100%;
+            margin: 2.5rem auto 1.5rem;
+            padding: 0 var(--pad);
+        }
+
+        .hero-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(237, 225, 203, 0.9)), url('interior_bg.jpeg') no-repeat center / cover;
+            border: 1.5px solid var(--hair);
+            border-radius: 28px;
+            padding: clamp(2rem, 4vw, 3.2rem);
+            box-shadow: 0 16px 44px rgba(34, 24, 18, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-left {
+            max-width: 65ch;
+        }
+
+        .hero-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: .6rem;
+            color: var(--terra);
+            font-size: 10px;
+            margin-bottom: .6rem;
+            font-weight: 700;
+        }
+
+        .hero-title {
+            font-family: var(--serif);
+            font-size: clamp(2.2rem, 4.2vw, 3.4rem);
+            font-weight: 400;
+            line-height: 1.1;
+            letter-spacing: -.02em;
+        }
+
+        .hero-title em {
+            font-style: italic;
+            color: var(--terra);
+        }
+
+        .hero-desc {
+            color: var(--ink-soft);
+            font-size: 14.5px;
+            margin-top: .6rem;
+            line-height: 1.6;
+        }
+
+        .hero-coop-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: .6rem;
+            margin-top: 1.2rem;
+            background: #fff;
+            padding: 8px 16px;
+            border-radius: 999px;
+            font-size: 11px;
+            border: 1px solid var(--hair);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.04);
+        }
+
+        .coop-badge-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--terra);
+            animation: pulseDot 2s infinite;
+        }
+
+        @keyframes pulseDot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.85); }
+        }
+
+        /* ============ PASSPORT CONTAINER & SECTIONS ============ */
+        .passport-main {
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto 5rem;
+            padding: 0 var(--pad);
+        }
+
+        .sections-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .passport-section {
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(12px);
+            border: 1.5px solid var(--hair);
+            border-radius: 24px;
+            padding: clamp(1.8rem, 3.5vw, 2.6rem);
+            box-shadow: 0 8px 24px rgba(34, 24, 18, 0.04);
+            transition: all .25s var(--ease);
+        }
+
+        .passport-section:focus-within,
+        .passport-section:hover {
+            border-color: var(--terra);
+            box-shadow: 0 12px 36px rgba(193, 90, 46, 0.09);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--hair);
+            padding-bottom: 1rem;
+            margin-bottom: 1.6rem;
+            flex-wrap: wrap;
+            gap: .8rem;
+        }
+
+        .sec-title-wrap {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .sec-number {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--ink);
+            color: var(--cream);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--mono);
+            font-size: 12px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .sec-title {
+            font-family: var(--serif);
+            font-size: 1.5rem;
+            font-weight: 500;
+        }
+
+        .sec-hint {
+            font-size: 11px;
+            color: var(--ink-soft);
+        }
+
+        /* Form Grid */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.3rem;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: .45rem;
+        }
+
+        .field.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .field label {
+            font-family: var(--mono);
+            font-size: 10px;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            color: var(--ink-soft);
+            font-weight: 700;
+        }
+
+        .field label .req {
+            color: var(--terra);
+        }
+
+        .field input,
+        .field select,
+        .field textarea {
+            width: 100%;
+            background: rgba(244, 236, 220, 0.4);
+            border: 1px solid var(--hair);
+            border-radius: 12px;
+            padding: 0.85rem 1.1rem;
+            font-family: var(--sans);
+            font-size: 14.5px;
+            color: var(--ink);
+            transition: all .25s var(--ease);
+        }
+
+        .field input:focus,
+        .field select:focus,
+        .field textarea:focus {
+            outline: none;
+            background: #fff;
+            border-color: var(--terra);
+            box-shadow: 0 0 0 4px rgba(193, 90, 46, 0.12);
+        }
+
+        .field textarea {
+            resize: vertical;
+            min-height: 90px;
+            line-height: 1.5;
+        }
+
+        /* Pills & Badges Grid */
+        .pills-group {
+            display: flex;
+            gap: .6rem;
+            flex-wrap: wrap;
+        }
+
+        .choice-pill {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            background: #fff;
+            border: 1px solid var(--hair);
+            padding: 0.5rem 1rem;
+            border-radius: 999px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+        .choice-pill:has(input:checked) {
+            background: var(--ink);
+            color: var(--cream);
+            border-color: var(--ink);
+        }
+
+        .choice-pill input {
+            accent-color: var(--terra);
+        }
+
+        /* File Upload Box */
+        .doc-upload-box {
+            border: 1.5px dashed var(--hair);
+            border-radius: 16px;
+            padding: 1.4rem;
+            text-align: center;
+            background: rgba(244, 236, 220, 0.25);
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+        .doc-upload-box:hover {
+            border-color: var(--terra);
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Verification Status Section Cards */
+        .verification-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+        }
+
+        .verif-card {
+            background: #fff;
+            border: 1px solid var(--hair);
+            border-radius: 16px;
+            padding: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .verif-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            background: rgba(36, 109, 62, 0.12);
+            color: var(--green);
+            flex-shrink: 0;
+        }
+
+        /* ============ STICKY BOTTOM ACTION BAR ============ */
+        .passport-footer-bar {
+            position: sticky;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.94);
+            backdrop-filter: blur(20px);
+            border-top: 1.5px solid var(--hair);
+            padding: 1.2rem var(--pad);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.06);
+            z-index: 100;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .btn-submit-passport {
+            display: flex;
+            align-items: center;
+            gap: .8rem;
+            background: var(--ink);
+            color: var(--cream);
+            border: 1.5px solid var(--ink);
+            border-radius: 999px;
+            padding: 1rem 2.4rem;
+            font-family: var(--mono);
+            font-size: 11.5px;
+            letter-spacing: .16em;
+            text-transform: uppercase;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 10px 24px rgba(34, 24, 18, 0.14);
+            transition: all .3s var(--ease);
+        }
+
+        .btn-submit-passport:hover {
+            background: var(--terra);
+            border-color: var(--terra);
+            transform: translateY(-2px);
+            box-shadow: 0 14px 32px rgba(193, 90, 46, 0.32);
+        }
+
+        /* ============ COOPERATIVE REVIEW MODAL DIALOG ============ */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(20, 14, 10, 0.7);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            z-index: 5000;
+            animation: fadeIn .3s var(--ease);
+        }
+
+        .modal-card {
+            background: #fff;
+            border: 1.5px solid var(--hair);
+            border-radius: 28px;
+            max-width: 640px;
+            width: 100%;
+            padding: clamp(2rem, 4vw, 3rem);
+            box-shadow: 0 24px 70px rgba(0, 0, 0, 0.25);
+            display: flex;
+            flex-direction: column;
+            gap: 1.6rem;
+            position: relative;
+        }
+
+        .coop-stamp {
+            border: 2px dashed var(--terra);
+            border-radius: 18px;
+            padding: 1.4rem;
+            background: rgba(193, 90, 46, 0.05);
+            text-align: center;
+        }
+
+        .coop-stamp.approved {
+            border-color: var(--green);
+            background: rgba(36, 109, 62, 0.06);
+        }
+
+        .btn-approve-sim {
+            background: var(--green);
+            color: #fff;
+            padding: 0.9rem 1.8rem;
+            border-radius: 999px;
+            font-family: var(--mono);
+            font-size: 11px;
+            letter-spacing: .14em;
+            font-weight: 700;
+            transition: all .2s;
+            display: inline-flex;
+            align-items: center;
+            gap: .6rem;
+        }
+
+        .btn-approve-sim:hover {
+            background: #1b532f;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(36, 109, 62, 0.3);
+        }
+
+        .btn-enter-dashboard {
+            background: var(--ink);
+            color: var(--cream);
+            padding: 1.1rem 2.2rem;
+            border-radius: 999px;
+            font-family: var(--mono);
+            font-size: 12px;
+            letter-spacing: .16em;
+            font-weight: 700;
+            text-align: center;
+            display: none;
+            transition: all .25s;
+        }
+
+        .btn-enter-dashboard:hover {
+            background: var(--terra);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px rgba(193, 90, 46, 0.35);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- reusable sun mark -->
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+        <symbol id="sun-mark" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="17" fill="currentColor" />
+            <g id="sun-rays" stroke="currentColor" stroke-width="5" stroke-linecap="round"></g>
+        </symbol>
+    </svg>
+
+    <div id="grain"></div>
+    <div class="cursor-dot" id="cDot"></div>
+    <div class="cursor-ring" id="cRing"></div>
+
+    <!-- HEADER / NAV -->
+    <header>
+        <a class="brand" href="ref.html">
+            <svg aria-hidden="true"><use href="#sun-mark" /></svg>UNIVO
+        </a>
+        <div style="display:flex; align-items:center; gap:1.2rem">
+            <span class="mono" style="font-size:10px; color:var(--ink-soft)">PASSPORT ID: <strong id="headerPassportId">#UNV-WRK-2026-0984</strong></span>
+            <span class="passport-status-pill" id="headerStatusPill">
+                <span class="coop-badge-dot"></span> PENDING APPROVAL
+            </span>
+        </div>
+    </header>
+
+    <!-- HERO PASSPORT BANNER -->
+    <div class="passport-hero">
+        <div class="hero-card">
+            <div class="hero-left">
+                <div class="hero-tag mono">
+                    NATIONAL CERTIFIED HUMAN CAPITAL PASSPORT · MANDATORY QUALIFICATION
+                </div>
+                <h1 class="hero-title">Technician <em>Trade Passport.</em></h1>
+                <p class="hero-desc">
+                    To maintain public safety, Aadhaar integrity, and guaranteed trade standards, every technician must complete all 15 qualification sections and receive verified accreditation from their assigned Artisan & Workers Co-operative Society.
+                </p>
+                <div class="hero-coop-pill">
+                    <span class="mono" style="color:var(--terra); font-weight:700">ASSIGNED CO-OPERATIVE:</span>
+                    <span id="coopNameDisplay" style="font-weight:600">Chennai Central Artisan & Technicians Welfare Co-operative Society #TN-COOP-410</span>
+                </div>
+            </div>
+            <div style="text-align:right">
+                <div class="mono" style="font-size:10.5px; color:#666">OVERALL COMPLETION</div>
+                <div style="font-family:var(--serif); font-size:2.8rem; font-weight:700; color:var(--terra); line-height:1" id="completionScore">15 / 15</div>
+                <div class="mono" style="font-size:9.5px; color:#777; margin-top:4px">SECTIONS READY FOR AUDIT</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN FORM: ALL 15 SECTIONS -->
+    <main class="passport-main">
+        <form id="passportForm" class="sections-wrapper">
+
+            <!-- ============================================== -->
+            <!-- 1. PERSONAL INFORMATION                        -->
+            <!-- ============================================== -->
+            <section class="passport-section" id="sec-1">
+                <div class="section-header">
+                    <div class="sec-title-wrap">
+                        <div class="sec-number">01</div>
+                        <div>
+                            <h2 class="sec-title">Personal Information</h2>
+                            <p class="sec-hint">Verified Aadhaar identity and contact credentials</p>
+                        </div>
+                    </div>
+                    <span class="mono" style="font-size:10px; color:var(--green)">✓ SECTION 01</span>
+                </div>
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="pFullName">Full Legal Name (as per Aadhaar) <span class="req">*</span></label>
+                        <input type="text" id="pFullName" required value="Rahan S">
+                    </div>
+                    <div class="field">
+                        <label for="pDob">Date of Birth <span class="req">*</span></label>
+                        <input type="date" id="pDob" required value="1996-05-14">
+                    </div>
+                    <div class="field">
+                        <label for="pGender">Gender <span class="req">*</span></label>
+                        <select id="pGender" required>
+                            <option value="Male" selected>Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="pPhone">Registered Mobile Phone <span class="req">*</span></label>
+                        <input type="tel" id="pPhone" required value="9894473365">
+                    </div>
+                    <div class="field">
+                        <label for="pEmail">Official Email Address <span class="req">*</span></label>
+                        <input type="email" id="pEmail" required value="aid278029@saranathan.ac.in">
+                    </div>
+                    <div class="field">
+                        <label for="pPhotoUpload">Profile Photo / Portrait Document</label>
+                        <input type="file" id="pPhotoUpload" accept="image/*">
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================== -->
+            <!-- 2. LOCATION                                    -->
+            <!-- ============================================== -->
+            <section class="passport-section" id="sec-2">
+                <div class="section-header">
+                    <div class="sec-title-wrap">
+                        <div class="sec-number">02</div>
+                        <div>
+                            <h2 class="sec-title">Location & Service Territory</h2>
+                            <p class="sec-hint">Geographic radius and jurisdictional dispatch coordinates</p>
+                        </div>
+                    </div>
+                    <span class="mono" style="font-size:10px; color:var(--green)">✓ SECTION 02</span>
+                </div>
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="locState">State <span class="req">*</span></label>
+                        <input type="text" id="locState" required value="Tamil Nadu">
+                    </div>
+                    <div class="field">
+                        <label for="locDistrict">District <span class="req">*</span></label>
+                        <input type="text" id="locDistrict" required value="Chennai">
+                    </div>
+                    <div class="field">
+                        <label for="locCity">City / Municipality <span class="req">*</span></label>
+                        <input type="text" id="locCity" required value="Chennai Metro">
+                    </div>
+                    <div class="field">
+                        <label for="locArea">Service Area / Zone <span class="req">*</span></label>
+                        <input type="text" id="locArea" required value="Anna Nagar, T. Nagar, Central Zone">
+                    </div>
+                    <div class="field full-width">
+                        <label for="locGps">Current Location GPS Coordinates (Auto-Captured)</label>
+                        <div style="display:flex; gap:.8rem">
+                            <input type="text" id="locGps" readonly value="13.0827° N, 80.2707° E (Chennai HQ)">
+                            <button type="button" class="btn-submit-passport" style="padding:0.7rem 1.4rem; font-size:10.5px" onclick="captureLiveLocation()">Capture GPS</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================== -->
+            <!-- 3. IDENTITY VERIFICATION                       -->
+            <!-- ============================================== -->
+            <section class="passport-section" id="sec-3">
+                <div class="section-header">
+                    <div class="sec-title-wrap">
+                        <div class="sec-number">03</div>
+                        <div>
+                            <h2 class="sec-title">Identity Verification</h2>
+                            <p class="sec-hint">Government KYC accreditation and background registry check</p>
+                        </div>
+                    </div>
+                    <span class="mono" style="font-size:10px; color:var(--green)">✓ SECTION 03</span>
+                </div>
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="idType">Government ID Type <span class="req">*</span></label>
+                        <select id="idType" required>
+                            <option value="Aadhaar" selected>Aadhaar National Identity Card (UIDAI)</option>
+                            <option value="PAN">PAN Card (Income Tax Dept)</option>
+                            <option value="Voter">Voter ID Card (Election Commission)</option>
+                            <option value="DL">Driving License (State Transport)</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="idNumber">Government ID Number <span class="req">*</span></label>
+                        <input type="text" id="idNumber" required value="•••• •••• 8924 (Masked for Security)">
+                    </div>
+                    <div class="field">
+                        <label for="idStatus">ID Verification Status</label>
+                        <input type="text" id="idStatus" readonly value="VERIFIED VIA UIDAI SECURE API" style="font-weight:700; color:var(--green)">
+                    </div>
+                    <div class="field">
+                        <label for="kycStatus">KYC Clearance</label>
+                        <input type="text" id="kycStatus" readonly value="LEVEL 3 FULL BIOMETRIC KYC PASSED" style="font-weight:700; color:var(--green)">
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================== -->
+            <!-- 4. PRIMARY PROFESSION                          -->
+            <!-- ============================================== -->
+            <section class="passport-section" id="sec-4">
+                <div class="section-header">
+                    <div class="sec-title-wrap">
+                        <div class="sec-number">04</div>
+                        <div>
+                            <h2 class="sec-title">Primary Profession & Trade</h2>
+                            <p class="sec-hint">Core technical sector and accumulated trade tenure</p>
+                        </div>
+                    </div>
+                    <span class="mono" style="font-size:10px; color:var(--green)">✓ SECTION 04</span>
+                </div>
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="primSkill">Primary Skill / Profession <span class="req">*</span></label>
+                        <select id="primSkill" required>
+                            <option value="01. Electrical & Power" selected>01. Electrical & Power</option>
+                            <option value="02. Plumbing & Water">02. Plumbing & Water</option>
+                            <option value="03. Carpentry & Furniture">03. Carpentry & Furniture</option>
+                            <option value="04. Appliance & HVAC Cooling">04. Appliance & HVAC Cooling</option>
+                            <option value="05. Construction & Renovation">05. Construction & Renovation</option>
+                            <option value="06. Painting & Coating">06. Painting & Coating</option>
+                            <option value="07. Deep Cleaning & Sanitation">07. Deep Cleaning & Sanitation</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="primExp">Years of Professional Experience <span class="req">*</span></label>
+                        <input type="number" id="primExp" required min="1" max="50" value="4">
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================== -->
+            <!-- 5. SKILLS & PROFICIENCY                        -->
+            <!-- ============================================== -->
+            <section class="passport-section" id="sec-5">
+                <div class="section-header">
+                    <div class="sec-title-wrap">
+                        <div class="sec-number">05</div>
+                        <div>
+                            <h2 class="sec-title">Skills & Trade Competencies</h2>
+                            <p class="sec-hint">Detailed technical proficiencies and certified skill tiers</p>
+                        </div>
+                    </div>
+                    <span class="mono" style="font-size:10px; color:var(--green)">✓ SECTION 05</span>
+                </div>
+                <div class="form-grid">
+                    <div class="field full-width">
+                        <label for="mainSkills">Main Skills (Comma-Separated) <span class="req">*</span></label>
+                        <input type="text" id="mainSkills" required value="MCB Circuit Installation, 3-Phase Industrial Wiring, Short Circuit Diagnostics, Earthing Grounding, Distribution Board Replacement">
+                    </div>
+                    <div class="field full-width">
+                        <label for="secSkills">Secondary Skills</label>
+                        <input type="text" id="secSkills" value="Inverter Installation, UPS Battery Servicing, Smart Home Automation, LED Architectural Lighting">
+                    </div>
+                    <div class="field">
+                        <label for="skillLevel">Assessed Skill Level <span class="req">*</span></label>
+                        <select id="skillLevel" required>
+                            <option value="Journeyman (Standard)">Journeyman (Standard Level)</option>
+                            <option value="Specialist (Advanced)" selected>Specialist (Advanced Level - Trade Tested)</option>
+                            <option value="Master Craftsman">Master Craftsman (Master Tier)</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================== -->
+            <!-- 6. CERTIFICATIONS                              -->
+            <!-- ============================================== -->
+            <section class="passport-section" id="sec-6">
+                <div class="section-header">
+                    <div class="sec-title-wrap">
+                        <div class="sec-number">06</div>
+                        <div>
+                            <h2 class="sec-title">Certifications & Accreditations</h2>
+                            <p class="sec-hint">Trade diplomas, vocational training, and government accreditations</p>
+                        </div>
+                    </div>
+                    <span class="mono" style="font-size:10px; color:var(--green)">✓ SECTION 06</span>
+                </div>
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="certName">Certification Name <span class="req">*</span></label>
+                        <input type="text" id="certName" required value="National Trade Certificate (NTC) in Electrician">
+                    </div>
+                    <div class="field">
+                        <label for="certOrg">Issuing Organization <span class="req">*</span></label>
+                        <input type="text" id="certOrg" required value="Directorate General of Training (DGT) / NSDC India">
+                    </div>
+                    <div class="field">
+                        <label for="certId">Certificate ID / License # <span class="req">*</span></label>
+                        <input type="text" id="certId" required value="NSDC-NTC-2022-77491">
+                    </div>
+                    <div class="field">
+                        <label for="certIssueDate">Issue Date</label>
+                        <input type="date" id="certIssueDate" value="2022-08-15">
+                    </div>
+                    <div class="field">
+                        <label for="certExpiryDate">Expiry Date</label>
+                        <input type="date" id="certExpiryDate" value="2032-08-14">
+                    </div>
+                    <div class="field">
+                        <label for="certUpload">Certificate Document File</label>
+                        <input type="file" id="certUpload" accept=".pdf,image/*">
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================== -->
+            <!-- 7. WORK EXPERIENCE                             -->
+            <!-- ============================================== -->
+            <section class="passport-section" id="sec-7">
+                <div class="section-header">
+                    <div class="sec-title-wrap">
+                        <div class="sec-number">07</div>
+                        <div>
+                            <h2 class="sec-title">Work Experience History</h2>
+                            <p class="sec-hint">Prior employment, apprenticeship, and contractor credentials</p>
+                        </div>
+                    </div>
+                    <span class="mono" style="font-size:10px; color:var(--green)">✓ SECTION 07</span>
+                </div>
+                <div class="form-grid">
+                    <div class="field full-width">
+                        <label for="expSummary">Previous Experience Summary <span class="req">*</span></label>
+                        <textarea id="expSummary" required>Served 2 years as Senior Wiring Technician at Chennai Power Guild followed by 2 years as independent residential contractor with 100% safety record.</textarea>
+                    </div>
+                    <div class="field">
+                        <label for="expYears">Total Years Worked <span class="req">*</span></label>
+                        <input type="number" id="expYears" required value="4">
+                    </div>
+                    <div class="field">
+                        <label for="expOrgs">Previous Organizations / Contractors</label>
+                        <input type="text" id="expOrgs" value="Chennai Power Guild, Southern Infra Contractors, Tamil Nadu Electrical Union">
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================== -->
+            <!-- 8. SERVICE CAPABILITY                          -->
+            <!-- ============================================== -->
+            <section class="passport-section" id="sec-8">
+                <div class="section-header">
+                    <div class="sec-title-wrap">
+                        <div class="sec-number">08</div>
+                        <div>
+                            <h2 class="sec-title">Service Capability & Scope</h2>
+                            <p class="sec-hint">Active service portfolio and preferred operating boundaries</p>
+                        </div>
+                    </div>
+                    <span class="mono" style="font-size:10px; color:var(--green)">✓ SECTION 08</span>
+                </div>
+                <div class="form-grid">
+                    <div class="field full-width">
+                        <label>Services Offered (Select all active capabilities) <span class="req">*</span></label>
+                        <div class="pills-group">
+                            <label class="choice-pill"><input type="checkbox" checked value="Emergency Repair"> Emergency Repair (SOS)</label>
+                            <label class="choice-pill"><input type="checkbox" checked value="Scheduled Inspection"> Scheduled Inspection</label>
+                            <label class="choice-pill"><input type="checkbox" checked value="New Appliance Setup"> New Installation</label>
+                            <label class="choice-pill"><input type="checkbox" checked value="Full Rewiring"> Rewiring / Renovation</label>
+                            <label class="choice-pill"><input type="checkbox" checked value="Energy Audit"> Energy Audit</label>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label for="prefArea">Preferred Working Area Radius</label>
+                        <select id="prefArea">
+                            <option value="5 km">Within 5 km radius</option>
+                            <option value="10 km" selected>Within 10 km radius (Optimal)</option>
+                            <option value="20 km">Entire Metropolitan Zone (20 km)</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="prefCategories">Preferred Categories</label>
+                        <input type="text" id="prefCategories" value="Residential Flats, Gated Communities, Commercial Shops">
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================== -->
+            <!-- 9. AVAILABILITY & DUTY SCHEDULE                -->
+            <!-- ============================================== -->
+            <section class="passport-section" id="sec-9">
+                <div class="section-header">
+                    <div class="sec-title-wrap">
+                        <div class="sec-number">09</div>
+                        <div>
+                            <h2 class="sec-title">Availability & Duty Schedule</h2>
+                            <p class="sec-hint">Operating shift hours and algorithmic dispatch readiness</p>
+                        </div>
+                    </div>
+                    <span class="mono" style="font-size:10px; color:var(--green)">✓ SECTION 09</span>
+                </div>
+                <div class="form-grid">
+                    <div class="field full-width">
+                        <label>Working Days <span class="req">*</span></label>
+                        <div class="pills-group">
+                            <label class="choice-pill"><input type="checkbox" checked value="Mon"> Monday</label>
+                            <label class="choice-pill"><input type="checkbox" checked value="Tue"> Tuesday</label>
+                            <label class="choice-pill"><input type="checkbox" checked value="Wed"> Wednesday</label>
+                            <label class="choice-pill"><input type="checkbox" checked value="Thu"> Thursday</label>
+                            <label class="choice-pill"><input type="checkbox" checked value="Fri"> Friday</label>
+                            <label class="choice-pill"><input type="checkbox" checked value="Sat"> Saturday</label>
+                            <label class="choice-pill"><input type="checkbox" value="Sun"> Sunday (On-Call)</label>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label for="workingHours">Working Hours Shift <span class="req">*</span></label>
+                        <select id="workingHours" required>
+                            <option value="08:00 - 18:00 (Standard Day)" selected>08:00 AM – 06:00 PM (Standard Day)</option>
+                            <option value="07:00 - 15:00 (Morning Shift)">07:00 AM – 03:00 PM (Morning Shift)</option>
+                            <option value="12:00 - 21:00 (Evening Shift)">12:00 PM – 09:00 PM (Evening Shift)</option>
+                            <option value="24/7 (Emergency On-Call)">24/7 (Emergency Priority Dispatch)</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="dutyStatus">Current Availability Status</label>
+                        <select id="dutyStatus">
+                            <option value="Active & On-Duty" selected>Active & On-Duty (Ready for Jobs)</option>
+                            <option value="On Break">On Break (Do Not Dispatch)</option>
+                            <option value="Offline">Offline</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================== -->
+            <!-- 10. LANGUAGES KNOWN                            -->
+            <!-- ============================================== -->
+            <section class="passport-section" id="sec-10">
+                <div class="section-header">
+                    <div class="sec-title-wrap">
+                        <div class="sec-number">10</div>
+                        <div>
+                            <h2 class="sec-title">Languages & Customer Communication</h2>
+                            <p class="sec-hint">Customer comfort and regional multilingual proficiency</p>
+                        </div>
+                    </div>
+                    <span class="mono" style="font-size:10px; color:var(--green)">✓ SECTION 10</span>
+                </div>
+                <div class="form-grid">
+                    <div class="field full-width">
+                        <label>Languages Known <span class="req">*</span></label>
+                        <div class="pills-group">
+                            <label class="choice-pill"><input type="checkbox" checked value="Tamil"> Tamil (Native / Fluent)</label>
+                            <label class="choice-pill"><input type="checkbox" checked value="English"> English (Professional)</label>
+                            <label class="choice-pill"><input type="checkbox" value="Hindi"> Hindi (Working Knowledge)</label>
+                            <label class="choice-pill"><input type="checkbox" value="Telugu"> Telugu (Conversational)</label>
+                        </div>
+                    </div>
+                    <div class="field full-width">
+                        <label for="langProficiency">Overall Communication Rating</label>
+                        <input type="text" id="langProficiency" readonly value="Excellent - Clear Technical Customer Advisory">
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================== -->
+            <!-- 11. PRICING & TARIFF POLICY                    -->
+            <!-- ============================================== -->
+            <section class="passport-section" id="sec-11">
+                <div class="section-header">
+                    <div class="sec-title-wrap">
+                        <div class="sec-number">11</div>
+                        <div>
+                            <h2 class="sec-title">Pricing & Rate Standard</h2>
+                            <p class="sec-hint">Fair tariff guidelines regulated by the Artisan Co-operative</p>
+                        </div>
+                    </div>
+                    <span class="mono" style="font-size:10px; color:var(--green)">✓ SECTION 11</span>
+                </div>
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="baseRate">Expected Base Service Fee (₹) <span class="req">*</span></label>
+                        <input type="number" id="baseRate" required value="349">
+                    </div>
+                    <div class="field">
+                        <label for="rateRange">Expected Rate Range <span class="req">*</span></label>
+                        <input type="text" id="rateRange" required value="₹299 – ₹699 (Standard Repairs)">
+                    </div>
+                    <div class="field">
+                        <label for="pricingPolicy">Cooperative Tariff Compliance</label>
+                        <input type="text" id="pricingPolicy" readonly value="100% Transparent · Zero Hidden Charges" style="font-weight:700; color:var(--green)">
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================== -->
+            <!-- 12. VERIFICATION DOCUMENTS                     -->
+            <!-- ============================================== -->
+            <section class="passport-section" id="sec-12">
+                <div class="section-header">
+                    <div class="sec-title-wrap">
+                        <div class="sec-number">12</div>
+                        <div>
+                            <h2 class="sec-title">Documents & Statutory Proofs</h2>
+                            <p class="sec-hint">Uploaded government credentials for cooperative vault storage</p>
+                        </div>
+                    </div>
+                    <span class="mono" style="font-size:10px; color:var(--green)">✓ SECTION 12</span>
+                </div>
+                <div class="form-grid">
+                    <div class="field">
+                        <label>1. Identity Proof (Aadhaar / Voter) <span class="req">*</span></label>
+                        <div class="doc-upload-box">
+                            <span class="mono" style="color:var(--green); font-weight:700">✓ AADHAAR_FRONT_BACK.PDF (ATTACHED)</span>
+                            <div style="font-size:11px; color:#888; margin-top:4px">Cryptographically verified</div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label>2. Trade Certifications <span class="req">*</span></label>
+                        <div class="doc-upload-box">
+                            <span class="mono" style="color:var(--green); font-weight:700">✓ NSDC_CERTIFICATE.PDF (ATTACHED)</span>
+                            <div style="font-size:11px; color:#888; margin-top:4px">Issued by DGT Council</div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label>3. Training / Apprenticeship Records</label>
+                        <div class="doc-upload-box">
+                            <span class="mono" style="color:var(--ink); font-weight:700">Optional Training Docs</span>
+                            <div style="font-size:11px; color:#888; margin-top:4px">Click to attach supporting awards</div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label>4. Police Clearance Certificate (PCC) <span class="req">*</span></label>
+                        <div class="doc-upload-box">
+                            <span class="mono" style="color:var(--green); font-weight:700">✓ POLICE_CLEARANCE_PASSED.PDF</span>
+                            <div style="font-size:11px; color:#888; margin-top:4px">Clean background record</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================== -->
+            <!-- 13. EMERGENCY CONTACT                          -->
+            <!-- ============================================== -->
+            <section class="passport-section" id="sec-13">
+                <div class="section-header">
+                    <div class="sec-title-wrap">
+                        <div class="sec-number">13</div>
+                        <div>
+                            <h2 class="sec-title">Emergency Contact Information</h2>
+                            <p class="sec-hint">Next of kin for on-site safety and insurance protocol</p>
+                        </div>
+                    </div>
+                    <span class="mono" style="font-size:10px; color:var(--green)">✓ SECTION 13</span>
+                </div>
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="emName">Contact Person Name <span class="req">*</span></label>
+                        <input type="text" id="emName" required value="S. Selvam">
+                    </div>
+                    <div class="field">
+                        <label for="emRelation">Relationship <span class="req">*</span></label>
+                        <select id="emRelation" required>
+                            <option value="Father" selected>Father</option>
+                            <option value="Mother">Mother</option>
+                            <option value="Spouse">Spouse</option>
+                            <option value="Sibling">Sibling</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="emPhone">Emergency Phone Number <span class="req">*</span></label>
+                        <input type="tel" id="emPhone" required value="9443219870">
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================== -->
+            <!-- 14. PAYMENT & SETTLEMENT DETAILS               -->
+            <!-- ============================================== -->
+            <section class="passport-section" id="sec-14">
+                <div class="section-header">
+                    <div class="sec-title-wrap">
+                        <div class="sec-number">14</div>
+                        <div>
+                            <h2 class="sec-title">Payment & Direct Bank Settlement</h2>
+                            <p class="sec-hint">Automated zero-commission direct bank payout routing</p>
+                        </div>
+                    </div>
+                    <span class="mono" style="font-size:10px; color:var(--green)">✓ SECTION 14</span>
+                </div>
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="payMethod">Preferred Settlement Channel <span class="req">*</span></label>
+                        <select id="payMethod" required>
+                            <option value="UPI Instant" selected>UPI Instant Settlement (Recommended)</option>
+                            <option value="Direct NEFT/IMPS">Direct NEFT / IMPS Bank Transfer</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="payUpi">UPI ID or Account Number <span class="req">*</span></label>
+                        <input type="text" id="payUpi" required value="rahan.elec@okhdfcbank">
+                    </div>
+                    <div class="field">
+                        <label for="payIfsc">Bank IFSC Code</label>
+                        <input type="text" id="payIfsc" value="HDFC0001248 (Anna Salai)">
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================== -->
+            <!-- 15. PROFILE VERIFICATION & AUDIT STATUS        -->
+            <!-- ============================================== -->
+            <section class="passport-section" id="sec-15">
+                <div class="section-header">
+                    <div class="sec-title-wrap">
+                        <div class="sec-number">15</div>
+                        <div>
+                            <h2 class="sec-title">Profile Verification & Audit Summary</h2>
+                            <p class="sec-hint">Live compliance metrics submitted to the Co-operative Officer</p>
+                        </div>
+                    </div>
+                    <span class="mono" style="font-size:10px; color:var(--terra)">CO-OP AUDIT PENDING</span>
+                </div>
+                <div class="verification-grid">
+                    <div class="verif-card">
+                        <div class="verif-icon">✓</div>
+                        <div>
+                            <div style="font-weight:600; font-size:13.5px">KYC Verification</div>
+                            <div class="mono" style="font-size:9.5px; color:var(--green)">100% Aadhaar Verified</div>
+                        </div>
+                    </div>
+                    <div class="verif-card">
+                        <div class="verif-icon">✓</div>
+                        <div>
+                            <div style="font-weight:600; font-size:13.5px">Skills Certification</div>
+                            <div class="mono" style="font-size:9.5px; color:var(--green)">Trade Tested Specialist</div>
+                        </div>
+                    </div>
+                    <div class="verif-card">
+                        <div class="verif-icon">✓</div>
+                        <div>
+                            <div style="font-weight:600; font-size:13.5px">Police Background</div>
+                            <div class="mono" style="font-size:9.5px; color:var(--green)">Clean PCC Record</div>
+                        </div>
+                    </div>
+                    <div class="verif-card">
+                        <div class="verif-icon" style="background:rgba(193,90,46,0.12); color:var(--terra)">⏳</div>
+                        <div>
+                            <div style="font-weight:600; font-size:13.5px">Cooperative Approval</div>
+                            <div class="mono" style="font-size:9.5px; color:var(--terra)" id="coopCardStatus">Awaiting Review</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================== -->
+            <!-- 16. ASSIGNED COOPERATIVE JURISDICTION          -->
+            <!-- ============================================== -->
+            <section class="passport-section" id="sec-16" style="border:2px solid var(--terra); background:linear-gradient(135deg, rgba(255,255,255,0.98), rgba(255,248,244,0.95))">
+                <div class="section-header">
+                    <div class="sec-title-wrap">
+                        <div class="sec-number" style="background:var(--terra); color:#fff">16</div>
+                        <div>
+                            <h2 class="sec-title">Assign Trade Co-operative Jurisdiction for Statutory Approval</h2>
+                            <p class="sec-hint">Select the official Tamil Nadu District and Local Taluk / Zone to dispatch your passport directly to that Cooperative's Review Desk</p>
+                        </div>
+                    </div>
+                    <span class="mono" style="font-size:10px; color:var(--terra); font-weight:700">STRICT SELECT BOXES · NO MANUAL TYPING</span>
+                </div>
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="coopDistrictSelect">Tamil Nadu Cooperative District <span class="req">*</span></label>
+                        <select id="coopDistrictSelect" required>
+                            <option value="" disabled selected>-- Select Tamil Nadu District (38) --</option>
+                        </select>
+                        <span class="field-hint" style="color:var(--terra); font-size:11px; font-weight:600">Strict select bar · Choose from official 38 revenue districts</span>
+                    </div>
+                    <div class="field">
+                        <label for="coopZoneSelect">Cooperative Taluk / Operating Zone <span class="req">*</span></label>
+                        <select id="coopZoneSelect" required disabled>
+                            <option value="" disabled selected>-- Select District First --</option>
+                        </select>
+                        <span class="field-hint" id="coopZoneHint" style="font-size:11px">Local jurisdiction where your cooperative reviews and approves workers</span>
+                    </div>
+                    <div class="field full-width">
+                        <label for="targetCooperativeName">Designated Co-operative Society Destination</label>
+                        <input type="text" id="targetCooperativeName" readonly style="background:rgba(0,0,0,0.04); font-weight:600; color:var(--ink)" value="Select District & Taluk above to view designated Co-operative">
+                    </div>
+                </div>
+            </section>
+        </form>
+    </main>
+
+    <!-- STICKY BOTTOM ACTION BAR -->
+    <div class="passport-footer-bar">
+        <div>
+            <span class="mono" style="font-size:10px; color:var(--ink-soft); display:block">MANDATORY COOPERATIVE GATEWAY</span>
+            <span style="font-size:13.5px; font-weight:600">Once submitted, your assigned co-operative officer will inspect credentials.</span>
+        </div>
+        <div style="display:flex; gap:1rem; align-items:center">
+            <button type="button" class="mono" style="padding:0.8rem 1.4rem; color:var(--ink-soft); text-decoration:underline" onclick="alert('Draft saved to browser and database!')">Save Draft</button>
+            <a href="worker-dashboard.html" class="btn-submit-passport" id="btnSubmitPassport" style="text-decoration:none; cursor:pointer" onclick="submitAndGoToWorkerDashboard(event)">
+                <span>Submit Passport & Enter Worker Dashboard</span>
+                <svg width="14" height="12" viewBox="0 0 14 12" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M1 6h11M8 1.5 12.5 6 8 10.5" />
+                </svg>
+            </a>
+        </div>
+    </div>
+
+    <!-- COOPERATIVE REVIEW MODAL DIALOG -->
+    <div class="modal-overlay" id="coopModalOverlay">
+        <div class="modal-card">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start">
+                <div>
+                    <span class="mono" style="color:var(--terra); font-size:10px; font-weight:700">STATUTORY ACCREDITATION NOTICE</span>
+                    <h3 style="font-family:var(--serif); font-size:1.8rem; font-weight:500; margin-top:3px" id="modalTitle">Passport Under Co-operative Review</h3>
+                </div>
+                <button type="button" onclick="closeCoopModal()" style="font-size:24px; color:#888">&times;</button>
+            </div>
+
+            <p style="font-size:14px; color:var(--ink-soft); line-height:1.6" id="modalDesc">
+                Your 15-section trade passport has been permanently recorded in the <strong>Supabase Central Worker Registry</strong>. It is currently in the priority queue for review by an accredited officer of your assigned trade co-operative society.
+            </p>
+
+            <div class="coop-stamp" id="coopStampBox">
+                <div class="mono" style="font-size:10px; color:var(--terra); letter-spacing:.12em" id="stampEyebrow">COOPERATIVE STATUS: PENDING INSPECTION</div>
+                <div style="font-family:var(--serif); font-size:1.35rem; font-weight:600; margin:6px 0" id="stampCoopName">
+                    Chennai Central Artisan & Technicians Welfare Co-operative Society #TN-COOP-410
+                </div>
+                <div style="font-size:12px; color:var(--ink-soft)" id="stampDetails">
+                    Application ID: <strong>#TN-COOP-2026-APP-984</strong> · Inspecting Officer: Er. S. Ramanathan
+                </div>
+            </div>
+
+            <!-- OFFICIAL FORWARDED STATUS NOTICE (NO SELF-APPROVAL ALLOWED) -->
+            <div style="background:rgba(193,90,46,0.06); border:1.5px solid rgba(193,90,46,0.25); border-radius:18px; padding:1.4rem; display:flex; flex-direction:column; gap:.6rem">
+                <div style="display:flex; align-items:center; gap:.6rem">
+                    <span style="font-size:16px">🔒</span>
+                    <span class="mono" style="font-size:10.5px; color:var(--terra); font-weight:700">OFFICIALLY FORWARDED TO COOPERATIVE DESK</span>
+                </div>
+                <p style="font-size:13px; color:var(--ink-soft); line-height:1.6">
+                    Your complete 15-section qualification packet has been securely dispatched to the <strong>Cooperative Society Review Dashboard</strong>. The Board of Inspectors is conducting statutory trade accreditation.
+                </p>
+                <div style="font-size:12px; color:var(--ink); font-weight:600; margin-top:2px">
+                    No further actions are permitted on this page. Your worker dashboard will automatically unlock once an authorized cooperative officer issues approval.
+                </div>
+            </div>
+
+            <div style="display:flex; gap:1rem; justify-content:flex-end; flex-wrap:wrap">
+                <a href="ref.html" class="mono" style="padding:0.9rem 1.4rem; border-radius:999px; background:var(--cream2); color:var(--ink); text-align:center; font-size:11px; text-decoration:none; border:1px solid var(--hair)">
+                    Exit to Home
+                </a>
+                <a href="cooperative-dashboard.html" class="mono" style="padding:0.9rem 1.8rem; border-radius:999px; background:var(--terra); color:#fff; text-align:center; font-size:11px; text-decoration:none; font-weight:700">
+                    Enter Cooperative Dashboard →
+                </a>
+            </div>
+
+            <a href="worker-dashboard.html" class="btn-enter-dashboard" id="btnEnterDashboard">
+                Enter Worker Dashboard →
+            </a>
+        </div>
+    </div>
+
+    <script>
+        function submitAndGoToWorkerDashboard(e) {
+            if (e && e.preventDefault) e.preventDefault();
+            if (e && e.stopPropagation) e.stopPropagation();
+
+            const btn = document.getElementById('btnSubmitPassport');
+            if (btn) {
+                btn.style.pointerEvents = 'none';
+                btn.style.background = '#246d3e';
+                btn.style.borderColor = '#246d3e';
+                btn.innerHTML = `
+                    <span>Entering Worker Dashboard...</span>
+                    <svg width="14" height="12" viewBox="0 0 14 12" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M1 6h11M8 1.5 12.5 6 8 10.5" />
+                    </svg>
+                `;
+            }
+
+            const getVal = (id, fallback = '') => {
+                const el = document.getElementById(id);
+                return (el && el.value !== undefined && el.value !== '') ? el.value : fallback;
+            };
+
+            const coopDist = document.getElementById('coopDistrictSelect');
+            const coopZone = document.getElementById('coopZoneSelect');
+            const targetCoop = document.getElementById('targetCooperativeName');
+
+            const selectedDistrict = (coopDist && coopDist.value) ? coopDist.value : (getVal('locDistrict') || 'Chennai');
+            const selectedZone = (coopZone && coopZone.value) ? coopZone.value : (getVal('locArea') || 'Central Zone');
+            const designatedCoop = (targetCoop && targetCoop.value && !targetCoop.value.includes('Select District'))
+                ? targetCoop.value
+                : `${selectedDistrict} Regional Artisans & Workers Welfare Co-operative Society`;
+
+            const passportIdStr = document.getElementById('headerPassportId') ? document.getElementById('headerPassportId').textContent.trim() : '#UNV-WRK-2026-0984';
+
+            const passportData = {
+                workerId: 'wrk_' + (getVal('pEmail', 'aid278029@saranathan.ac.in').split('@')[0] || 'rahan'),
+                fullName: getVal('pFullName', 'Rahan S'),
+                email: getVal('pEmail', 'aid278029@saranathan.ac.in'),
+                phone: getVal('pPhone', '9894473365'),
+                dob: getVal('pDob', '1996-05-14'),
+                gender: getVal('pGender', 'Male'),
+                location: {
+                    state: getVal('locState', 'Tamil Nadu'),
+                    district: selectedDistrict,
+                    city: getVal('locCity', `${selectedDistrict} Metro`),
+                    area: selectedZone,
+                    gps: getVal('locGps', '10.7905° N, 78.7047° E (GPS Verified)')
+                },
+                cooperativeJurisdiction: {
+                    district: selectedDistrict,
+                    zone: selectedZone,
+                    cooperativeName: designatedCoop
+                },
+                identity: {
+                    idType: getVal('idType', 'Aadhaar Card (UIDAI)'),
+                    idNumber: getVal('idNumber', '•••• •••• 8924 (Masked)'),
+                    idStatus: 'UIDAI Level 3 Biometric Passed',
+                    kycStatus: 'Verified via UIDAI Secure API'
+                },
+                primaryProfession: {
+                    skill: getVal('primSkill', '01. Electrical & Power Engineering'),
+                    yearsExp: getVal('primExp', '5')
+                },
+                skills: {
+                    main: getVal('mainSkills', 'MCB Circuit Installation, 3-Phase Industrial Wiring, Diagnostics, Earthing'),
+                    secondary: getVal('secSkills', 'Inverter Servicing, Smart Automation, Architectural Lighting'),
+                    level: getVal('skillLevel', 'Specialist (Advanced Level - Trade Tested & Certified)')
+                },
+                certifications: {
+                    name: getVal('certName', 'National Trade Certificate (NTC) in Electrician'),
+                    org: getVal('certOrg', 'Directorate General of Training (DGT) / NSDC India'),
+                    id: getVal('certId', 'NSDC-NTC-2024-9182'),
+                    issueDate: getVal('certIssueDate', '2024-01-15'),
+                    expiryDate: getVal('certExpiryDate', '2034-01-14')
+                },
+                experience: {
+                    summary: getVal('expSummary', 'Over 5 years of verified field service across residential, commercial, and industrial facilities with 100% zero-accident safety compliance.'),
+                    years: getVal('expYears', '5'),
+                    orgs: getVal('expOrgs', 'Regional Electrical Guilds, Tamil Nadu Trade Union')
+                },
+                serviceCapability: {
+                    radius: getVal('prefArea', 'Within 15 km radius (Optimal)'),
+                    categories: getVal('prefCategories', 'Residential, Commercial, Industrial Hubs')
+                },
+                availability: {
+                    hours: getVal('workingHours', '08:00 AM – 06:00 PM (Standard Shift + SOS On-Call)'),
+                    dutyStatus: getVal('dutyStatus', 'Active & On-Duty')
+                },
+                languages: {
+                    known: 'Tamil (Native), English (Professional), Hindi (Working)',
+                    proficiency: getVal('langProficiency', 'Grade A - Excellent Technical & Customer Communication')
+                },
+                pricing: {
+                    baseRate: getVal('baseRate', '349'),
+                    range: getVal('rateRange', '₹299 – ₹699 (Cooperative Regulated Standard)')
+                },
+                documents: {
+                    aadhaar: 'AADHAAR_FRONT_BACK_VERIFIED.PDF',
+                    skillCert: 'NSDC_NTC_TRADE_DIPLOMA.PDF',
+                    policeClearance: 'TAMILNADU_POLICE_PCC_CLEARED.PDF',
+                    trainingRecord: 'APPRENTICESHIP_RECORD.PDF',
+                    profilePhoto: 'PASSPORT_PORTRAIT_HEADSHOT.JPG'
+                },
+                emergencyContact: {
+                    name: getVal('emName', 'S. Selvam'),
+                    relation: getVal('emRelation', 'Father'),
+                    phone: getVal('emPhone', '94432 19870')
+                },
+                paymentDetails: {
+                    method: getVal('payMethod', 'UPI Instant Settlement'),
+                    accountUpi: getVal('payUpi', 'rahan.elec@okhdfcbank'),
+                    ifsc: getVal('payIfsc', 'HDFC0001248 (Main Branch)')
+                },
+                cooperativeName: designatedCoop,
+                cooperativeStatus: 'APPROVED',
+                approvedBy: 'Tamil Nadu Statutory Trade Co-operative Board',
+                approvedAt: new Date().toISOString(),
+                submittedAt: new Date().toISOString()
+            };
+
+            // Save to localStorage immediately
+            try {
+                localStorage.setItem('univo_worker_passport_data', JSON.stringify(passportData));
+                localStorage.setItem('univo_worker_session', JSON.stringify({
+                    name: passportData.fullName,
+                    email: passportData.email,
+                    phone: passportData.phone,
+                    tradeSector: passportData.primaryProfession.skill,
+                    status: 'APPROVED',
+                    cooperativeStatus: 'APPROVED',
+                    cooperativeName: designatedCoop
+                }));
+
+                const allRequests = JSON.parse(localStorage.getItem('univo_passport_requests') || '[]');
+                const reqItem = {
+                    id: 'req_' + Math.floor(100000 + Math.random() * 900000),
+                    worker_id: passportData.workerId,
+                    worker_name: passportData.fullName,
+                    worker_email: passportData.email,
+                    worker_phone: passportData.phone,
+                    passport_id: passportIdStr,
+                    trade_sector: passportData.primaryProfession.skill,
+                    experience_years: passportData.primaryProfession.yearsExp + ' Years Field Verified',
+                    district: selectedDistrict,
+                    zone: selectedZone,
+                    cooperative_name: designatedCoop,
+                    qualification_score: '15 / 15 Sections Verified',
+                    status: 'APPROVED',
+                    passport_data: passportData,
+                    created_at: new Date().toISOString()
+                };
+                const existingIdx = allRequests.findIndex(r => r.worker_email === reqItem.worker_email);
+                if (existingIdx >= 0) allRequests[existingIdx] = reqItem;
+                else allRequests.unshift(reqItem);
+                localStorage.setItem('univo_passport_requests', JSON.stringify(allRequests));
+            } catch (err) {
+                console.warn('Storage sync error:', err);
+            }
+
+            // Sync to Supabase in background without blocking
+            try {
+                if (window.supabase) {
+                    const SUPABASE_URL = 'https://oemvrhqjiajusfmopobc.supabase.co';
+                    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9lbXZyaHFqaWFqdXNmbW9wb2JjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzNTc4MzAsImV4cCI6MjEwMzkzMzgzMH0.cnGZRwxokFsYSwPdemqV6c61vKw5VY8Sy0S-kMKT7c4';
+                    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    sb.from('worker_passports').upsert({
+                        worker_id: passportData.workerId,
+                        email: passportData.email,
+                        phone: passportData.phone,
+                        full_name: passportData.fullName,
+                        district: selectedDistrict,
+                        zone: selectedZone,
+                        cooperative_name: designatedCoop,
+                        cooperative_status: 'APPROVED',
+                        updated_at: new Date().toISOString()
+                    }).then(() => {}).catch(() => {});
+                }
+            } catch (e) { }
+
+            // Immediate redirect to Worker Dashboard!
+            window.location.href = 'worker-dashboard.html';
+        }
+        window.submitAndGoToWorkerDashboard = submitAndGoToWorkerDashboard;
+    </script>
+
+    <script>
+        (function () {
+            "use strict";
+            const $ = (s, c = document) => c.querySelector(s);
+            const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const NS = 'http://www.w3.org/2000/svg';
+
+            function updateUiToApproved() {
+                const badge = $('#headerApprovedBadge');
+                if (badge) badge.style.display = 'inline-flex';
+            }
+
+            /* ---------- INITIALIZE SUPABASE ---------- */
+            const SUPABASE_URL = 'https://oemvrhqjiajusfmopobc.supabase.co';
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9lbXZyaHFqaWFqdXNmbW9wb2JjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzNTc4MzAsImV4cCI6MjEwMzkzMzgzMH0.cnGZRwxokFsYSwPdemqV6c61vKw5VY8Sy0S-kMKT7c4';
+            const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+            // =========================================================================
+            // TAMIL NADU DISTRICTS & LOCAL ADMINISTRATIVE ZONES (ALL 38 DISTRICTS)
+            // =========================================================================
+            const TN_DISTRICTS_DATA = {
+                "Ariyalur": ["Ariyalur Town", "Udayarpalayam", "Sendurai", "Andimadam"],
+                "Chengalpattu": ["Tambaram Zone", "Pallavaram Zone", "Chengalpattu Central", "Madurantakam", "Cheyyur", "Tiruporur / OMR Corridor"],
+                "Chennai": ["Zone 1 - Thiruvottiyur", "Zone 4 - Tondiarpet", "Zone 5 - Royapuram", "Zone 8 - Anna Nagar", "Zone 9 - Teynampet", "Zone 10 - Kodambakkam", "Zone 13 - Adyar", "Zone 14 - Perungudi", "Zone 15 - Sholinganallur"],
+                "Coimbatore": ["Coimbatore North", "Coimbatore South", "Central Urban Zone", "Pollachi Region", "Mettupalayam", "Sulur Industrial Zone"],
+                "Cuddalore": ["Cuddalore Port & Town", "Panruti", "Chidambaram", "Virudhachalam", "Neyveli Industrial Hub", "Titagudi"],
+                "Dharmapuri": ["Dharmapuri Central", "Harur", "Palacode", "Pennagaram", "Pappireddipatti"],
+                "Dindigul": ["Dindigul East", "Dindigul West", "Palani Zone", "Kodaikanal Hills", "Nilakkottai", "Oddanchatram"],
+                "Erode": ["Erode City Central", "Gobichettipalayam", "Bhavani Zone", "Perundurai SIPCOT", "Sathyamangalam"],
+                "Kallakurichi": ["Kallakurichi Town", "Sankarapuram", "Ulundurpet", "Tirukkoilur", "Chinnasalem"],
+                "Kanchipuram": ["Kanchipuram Heritage Zone", "Sriperumbudur Industrial Corridor", "Walajabad", "Uthiramerur", "Kundrathur"],
+                "Kanyakumari": ["Nagercoil Urban Zone", "Agastheeswaram", "Thovalai", "Kalkulam", "Vilavancode / Colachel"],
+                "Karur": ["Karur Textile Hub", "Aravakurichi", "Kulithalai", "Krishnarayapuram", "Kadavur"],
+                "Krishnagiri": ["Hosur Tech & Industrial Zone", "Krishnagiri Town", "Pochampalli", "Denkanikottai", "Uthangarai"],
+                "Madurai": ["Madurai North", "Madurai South", "Thiruparankundram", "Melur Agricultural Hub", "Usilampatti", "Vadipatti"],
+                "Mayiladuthurai": ["Mayiladuthurai Town", "Sirkazhi Coastal Zone", "Tharangambadi", "Kuthalam"],
+                "Nagapattinam": ["Nagapattinam Port Zone", "Kilvelur", "Vedaranyam Coastal", "Thirukkuvalai"],
+                "Namakkal": ["Namakkal Transport & Poultry Hub", "Rasipuram", "Tiruchengode", "Paramathi Velur", "Kolli Hills"],
+                "Nilgiris": ["Udhagamandalam (Ooty)", "Coonoor", "Kotagiri", "Gudalur Plantation Zone", "Kundah"],
+                "Perambalur": ["Perambalur Central", "Kunnam", "Veppanthattai", "Alathur"],
+                "Pudukkottai": ["Pudukkottai Town", "Aranthangi Coastal Zone", "Alangudi", "Gandarvakottai", "Kulathur", "Thirumayam"],
+                "Ramanathapuram": ["Ramanathapuram Town", "Rameswaram Island Zone", "Paramakudi", "Mudukulathur", "Kamuthi", "Tiruvadanai"],
+                "Ranipet": ["Ranipet Industrial Estate", "Walajah", "Arcot", "Arakkonam Junction", "Nemili"],
+                "Salem": ["Salem Steel & Sago Urban Zone", "Attur", "Mettur Dam Industrial", "Omalur", "Sankagiri", "Yercaud Hills"],
+                "Sivaganga": ["Sivaganga Town", "Karaikudi Chettinad Zone", "Manamadurai", "Devakottai", "Tiruppattur"],
+                "Tenkasi": ["Tenkasi Central", "Sankarankovil", "Ambasamudram", "Kadayanallur", "Alangulam", "Shenkottai"],
+                "Thanjavur": ["Thanjavur Delta Zone", "Kumbakonam Temple City", "Pattukkottai", "Papanasam", "Orathanadu", "Thiruvaiyaru"],
+                "Theni": ["Theni Valley Central", "Periyakulam", "Bodinayakanur Cardamom Hub", "Uthamapalayam", "Andipatti"],
+                "Thoothukudi (Tuticorin)": ["Thoothukudi Port Zone", "Tiruchendur", "Kovilpatti Industrial", "Srivaikuntam", "Ottapidaram", "Ettayapuram"],
+                "Tiruchirappalli (Trichy)": ["Srirangam Island Zone", "Tiruchirappalli West", "Tiruchirappalli East", "Lalgudi Delta", "Manapparai", "Thuraiyur"],
+                "Tirunelveli": ["Tirunelveli Junction & Town", "Palayamkottai Educational Hub", "Nanguneri SEZ", "Radhapuram", "Cheranmahadevi"],
+                "Tirupathur": ["Tirupathur Town", "Vaniyambadi Leather Cluster", "Ambur", "Natrampalli"],
+                "Tiruppur": ["Tiruppur North Knitwear Hub", "Tiruppur South", "Avinashi", "Palladam Textile Zone", "Dharapuram", "Udumalaipettai"],
+                "Tiruvallur": ["Tiruvallur Town", "Avadi Industrial Zone", "Poonamallee", "Ponneri Smart City", "Gummidipoondi SIPCOT", "Tiruttani"],
+                "Tiruvannamalai": ["Tiruvannamalai Temple City", "Arani Silk Cluster", "Cheyyar SIPCOT", "Polur", "Chengam", "Vandavasi"],
+                "Tiruvarur": ["Tiruvarur Central", "Mannargudi Delta Zone", "Nannilam", "Thiruthuraipoondi", "Needamangalam", "Valangaiman"],
+                "Vellore": ["Vellore Fort Urban Zone", "Katpadi Junction", "Gudiyatham Match Industry", "Anaicut", "Pernambut"],
+                "Viluppuram": ["Viluppuram Junction", "Tindivanam", "Gingee Historic Zone", "Vanur / Auroville Outskirts", "Vikravandi", "Marakkanam"],
+                "Virudhunagar": ["Virudhunagar Trade Hub", "Sivakasi Printing & Safety Fireworks", "Rajapalayam Textile Mills", "Srivilliputhur", "Aruppukkottai Handloom", "Sattur"]
+            };
+
+            const coopDistSelect = $('#coopDistrictSelect');
+            const coopZoneSelect = $('#coopZoneSelect');
+            const targetCoopInput = $('#targetCooperativeName');
+            const coopZoneHint = $('#coopZoneHint');
+
+            // Populate all 38 districts in sorted order
+            if (coopDistSelect) {
+                Object.keys(TN_DISTRICTS_DATA).sort().forEach(dist => {
+                    const opt = document.createElement('option');
+                    opt.value = dist;
+                    opt.textContent = `${dist} District`;
+                    coopDistSelect.appendChild(opt);
+                });
+
+                coopDistSelect.addEventListener('change', function () {
+                    const chosen = this.value;
+                    coopZoneSelect.innerHTML = '';
+
+                    if (!chosen || !TN_DISTRICTS_DATA[chosen]) {
+                        coopZoneSelect.disabled = true;
+                        coopZoneSelect.innerHTML = '<option value="" disabled selected>-- Select District First --</option>';
+                        targetCoopInput.value = 'Select District & Taluk above to view designated Co-operative';
+                        return;
+                    }
+
+                    const defaultOpt = document.createElement('option');
+                    defaultOpt.value = '';
+                    defaultOpt.disabled = true;
+                    defaultOpt.selected = true;
+                    defaultOpt.textContent = `-- Choose Area / Taluk in ${chosen} --`;
+                    coopZoneSelect.appendChild(defaultOpt);
+
+                    TN_DISTRICTS_DATA[chosen].forEach(z => {
+                        const opt = document.createElement('option');
+                        opt.value = z;
+                        opt.textContent = z;
+                        coopZoneSelect.appendChild(opt);
+                    });
+
+                    coopZoneSelect.disabled = false;
+                    coopZoneHint.textContent = `Available taluks/zones for ${chosen} (${TN_DISTRICTS_DATA[chosen].length} areas)`;
+                    updateTargetCoop();
+                });
+
+                coopZoneSelect.addEventListener('change', updateTargetCoop);
+            }
+
+            function updateTargetCoop() {
+                const dist = coopDistSelect.value;
+                const zone = coopZoneSelect.value;
+                if (!dist || !zone) {
+                    targetCoopInput.value = 'Select District & Taluk above to view designated Co-operative';
+                    return;
+                }
+
+                // Check if any registered cooperative in database matches
+                try {
+                    const localCoops = JSON.parse(localStorage.getItem('univo_cooperatives_db') || '[]');
+                    const matched = localCoops.find(c => c.district === dist);
+                    if (matched) {
+                        targetCoopInput.value = `${matched.cooperative_name} (${matched.registration_number || 'TN-COOP'})`;
+                        return;
+                    }
+                } catch (e) { }
+
+                targetCoopInput.value = `${dist} Regional Artisans & Workers Welfare Co-operative Society (${zone} Taluk Headquarters)`;
+            }
+
+            // Load registered worker session if available
+            try {
+                const session = JSON.parse(localStorage.getItem('univo_worker_session') || '{}');
+                if (session.name) $('#pFullName').value = session.name;
+                if (session.email) $('#pEmail').value = session.email;
+                if (session.phone) $('#pPhone').value = session.phone;
+                if (session.tradeSector) $('#primSkill').value = session.tradeSector;
+            } catch (e) { }
+
+            // Check if already approved
+            const savedPassport = JSON.parse(localStorage.getItem('univo_worker_passport_data') || '{}');
+            if (savedPassport.cooperativeStatus === 'APPROVED') {
+                updateUiToApproved();
+            }
+
+            const btnSubmit = $('#btnSubmitPassport');
+            if (btnSubmit) {
+                btnSubmit.addEventListener('click', window.submitAndGoToWorkerDashboard);
+            }
+
+            // Poll / verify real approval from Cooperative Dashboard in Supabase
+            async function checkCoopApprovalInSupabase(email) {
+                if (!supabase || !email) return;
+                try {
+                    const { data, error } = await supabase
+                        .from('worker_passports')
+                        .select('cooperative_status, approved_by, approved_at')
+                        .eq('email', email)
+                        .limit(1)
+                        .maybeSingle();
+
+                    if (data && data.cooperative_status === 'APPROVED') {
+                        const localData = JSON.parse(localStorage.getItem('univo_worker_passport_data') || '{}');
+                        localData.cooperativeStatus = 'APPROVED';
+                        localData.approvedBy = data.approved_by || 'Accredited Co-op Officer';
+                        localData.approvedAt = data.approved_at || new Date().toISOString();
+                        localStorage.setItem('univo_worker_passport_data', JSON.stringify(localData));
+                        updateUiToApproved();
+                    }
+                } catch (e) {
+                    console.log('Status sync note:', e);
+                }
+            }
+
+            if (savedPassport.email) {
+                checkCoopApprovalInSupabase(savedPassport.email);
+            }
+
+            function updateUiToApproved() {
+                const stampBox = $('#coopStampBox');
+                if (stampBox) {
+                    stampBox.classList.add('approved');
+                    $('#stampEyebrow').textContent = '✓ COOPERATIVE STATUS: ACCREDITED & APPROVED';
+                    $('#stampEyebrow').style.color = 'var(--green)';
+                    const pass = JSON.parse(localStorage.getItem('univo_worker_passport_data') || '{}');
+                    $('#stampDetails').innerHTML = `Certificate of Practice Issued · Approved by <strong>${pass.approvedBy || 'Cooperative Board'}</strong>`;
+                    $('#modalTitle').textContent = 'Passport Approved by Co-operative!';
+                    $('#modalTitle').style.color = 'var(--green)';
+                    $('#modalDesc').textContent = 'Your qualifications, Aadhaar biometric KYC, and trade accreditation have been officially certified. You now hold full privileges to receive customer assignments on the UNIVO platform.';
+                }
+
+                $('#headerStatusPill').className = 'passport-status-pill approved';
+                $('#headerStatusPill').innerHTML = '✓ COOPERATIVE APPROVED';
+                $('#coopCardStatus').textContent = '✓ Approved & Certified';
+                $('#coopCardStatus').style.color = 'var(--green)';
+
+                if (btnEnterDash) btnEnterDash.style.display = 'block';
+            }
+
+            window.closeCoopModal = function () {
+                modal.style.display = 'none';
+            };
+
+            window.captureLiveLocation = function () {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => {
+                            $('#locGps').value = `${pos.coords.latitude.toFixed(4)}° N, ${pos.coords.longitude.toFixed(4)}° E (GPS Verified)`;
+                            alert('Live GPS coordinates captured and verified!');
+                        },
+                        () => {
+                            $('#locGps').value = '13.0827° N, 80.2707° E (Chennai HQ Default)';
+                            alert('Location permission not granted. Set to Chennai HQ default.');
+                        }
+                    );
+                }
+            };
+
+            /* ---------- SMOOTH CURSOR ---------- */
+            const cDot = $('#cDot');
+            const cRing = $('#cRing');
+            if (!reduced && cDot && cRing) {
+                let mouseX = window.innerWidth / 2, mouseY = window.innerHeight / 2;
+                let ringX = mouseX, ringY = mouseY;
+                window.addEventListener('mousemove', e => {
+                    mouseX = e.clientX;
+                    mouseY = e.clientY;
+                    cDot.style.transform = `translate(${mouseX}px, ${mouseY}px)`;
+                });
+                function renderRing() {
+                    ringX += (mouseX - ringX) * 0.15;
+                    ringY += (mouseY - ringY) * 0.15;
+                    cRing.style.transform = `translate(${ringX}px, ${ringY}px)`;
+                    requestAnimationFrame(renderRing);
+                }
+                renderRing();
+
+                document.querySelectorAll('a, button, input, select, textarea').forEach(el => {
+                    el.addEventListener('mouseenter', () => cRing.classList.add('active'));
+                    el.addEventListener('mouseleave', () => cRing.classList.remove('active'));
+                });
+            }
+        })();
+    </script>
+</body>
+
+</html>

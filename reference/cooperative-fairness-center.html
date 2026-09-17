@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cooperative Fairness Center — UNIVO Workforce Equity</title>
+    <meta name="description" content="Monitor algorithmic job opportunity equity, review qualification vs allocation balance, and ensure certified cooperative workers receive fair dispatch access.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        /* ============ TOKENS ============ */
+        :root {
+            --cream: #F4ECDC;
+            --cream2: #EDE1CB;
+            --ink: #221812;
+            --ink-soft: #2d2219;
+            --terra: #C15A2E;
+            --gold: #D9A441;
+            --umber: #241509;
+            --green: #246d3e;
+            --hair: rgba(34, 24, 18, .18);
+            --serif: 'Fraunces', Georgia, serif;
+            --sans: 'Instrument Sans', 'Helvetica Neue', sans-serif;
+            --mono: 'Space Mono', monospace;
+            --ease: cubic-bezier(.22, 1, .36, 1);
+            --pad: 4vw;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            cursor: auto;
+        }
+
+        body {
+            background-color: var(--cream);
+            color: var(--ink);
+            font-family: var(--sans);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        #grain {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: .03;
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        /* HEADER */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(244, 236, 220, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1.5px solid var(--hair);
+            padding: 0.9rem var(--pad);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .brand {
+            font-family: var(--serif);
+            font-size: 1.5rem;
+            font-weight: 500;
+            text-decoration: none;
+            color: var(--ink);
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+        }
+
+        .brand svg {
+            width: 22px;
+            height: 22px;
+            color: var(--terra);
+        }
+
+        .nav-back-link {
+            text-decoration: none;
+            color: var(--ink);
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 7px 15px;
+            border-radius: 999px;
+            border: 1px solid var(--hair);
+            background: rgba(255,255,255,0.6);
+            transition: all .2s ease;
+        }
+
+        .nav-back-link:hover {
+            background: #fff;
+            border-color: var(--terra);
+            color: var(--terra);
+        }
+
+        .coop-district-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: 3px 10px;
+            border-radius: 999px;
+            background: #fff;
+            border: 1px solid var(--hair);
+            font-family: var(--mono);
+            font-size: 10px;
+            color: var(--ink-soft);
+        }
+
+        /* MAIN CONTENT */
+        main {
+            flex: 1;
+            padding: 2.5rem var(--pad) 4rem;
+            max-width: 1360px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .mono {
+            font-family: var(--mono);
+        }
+
+        /* Statutory Charter Safeguard Banner */
+        .statutory-safeguard-banner {
+            background: #FFF;
+            border: 1.5px solid rgba(193, 90, 46, 0.4);
+            border-left: 6px solid var(--terra);
+            border-radius: 18px;
+            padding: 1.1rem 1.4rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.2rem;
+            box-shadow: 0 8px 24px rgba(193, 90, 46, 0.06);
+            flex-wrap: wrap;
+        }
+
+        /* AI Insight Banner */
+        .ai-insight-box {
+            background: linear-gradient(135deg, rgba(255, 248, 240, 0.95), rgba(255, 255, 255, 0.92));
+            border: 1.5px solid rgba(193, 90, 46, 0.35);
+            border-radius: 20px;
+            padding: 1.3rem 1.6rem;
+            margin-bottom: 2.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.5rem;
+            box-shadow: 0 8px 24px rgba(193, 90, 46, 0.05);
+            flex-wrap: wrap;
+        }
+
+        /* Metrics Summary Grid */
+        .fairness-kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.2rem;
+            margin-bottom: 2.2rem;
+        }
+
+        @media (max-width: 1024px) {
+            .fairness-kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .fairness-kpi-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .kpi-card {
+            background: #fff;
+            border: 1.5px solid var(--hair);
+            border-radius: 20px;
+            padding: 1.3rem 1.4rem;
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.03);
+            display: flex;
+            flex-direction: column;
+            gap: .5rem;
+        }
+
+        /* Split Section Layout */
+        .fairness-sections-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 2rem;
+            align-items: flex-start;
+            margin-bottom: 2.5rem;
+        }
+
+        @media (max-width: 1024px) {
+            .fairness-sections-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card-panel {
+            background: #fff;
+            border: 1.5px solid var(--hair);
+            border-radius: 24px;
+            padding: 1.8rem;
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.04);
+        }
+
+        /* Tables */
+        .fairness-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12.5px;
+        }
+
+        .fairness-table th {
+            text-align: left;
+            padding: 10px 12px;
+            background: #FAF6EE;
+            color: var(--ink-soft);
+            font-family: var(--mono);
+            font-size: 9.5px;
+            font-weight: 700;
+            border-bottom: 1.5px solid var(--hair);
+            text-transform: uppercase;
+            letter-spacing: .06em;
+        }
+
+        .fairness-table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--hair);
+            vertical-align: middle;
+        }
+
+        .fairness-table tr:hover td {
+            background: #FFFDF9;
+        }
+
+        /* Buttons */
+        .btn-review-allocation {
+            padding: 9px 18px;
+            border-radius: 999px;
+            background: var(--ink);
+            color: #fff;
+            border: none;
+            font-family: var(--sans);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+        }
+
+        .btn-review-allocation:hover {
+            background: #000;
+            transform: translateY(-1px);
+        }
+
+        .btn-rebalance-worker {
+            padding: 5px 11px;
+            border-radius: 999px;
+            background: rgba(193, 90, 46, 0.1);
+            border: 1px solid rgba(193, 90, 46, 0.3);
+            color: var(--terra);
+            font-family: var(--mono);
+            font-size: 9.5px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all .2s ease;
+        }
+
+        .btn-rebalance-worker:hover {
+            background: var(--terra);
+            color: #fff;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(34, 24, 18, 0.6);
+            backdrop-filter: blur(8px);
+            z-index: 5000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+
+        .modal-card {
+            background: #FAF6ED;
+            border: 1.5px solid var(--hair);
+            border-radius: 24px;
+            width: 100%;
+            max-width: 620px;
+            padding: 2rem;
+            box-shadow: 0 24px 64px rgba(0,0,0,0.25);
+            animation: popIn .25s var(--ease);
+        }
+
+        @keyframes popIn {
+            from { transform: scale(0.96); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        /* Toast */
+        #toastNotice {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--ink);
+            color: #fff;
+            padding: 1rem 1.6rem;
+            border-radius: 999px;
+            font-size: 13.5px;
+            display: none;
+            align-items: center;
+            gap: .8rem;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
+            z-index: 10000;
+            animation: slideUp .3s var(--ease);
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- reusable sun mark -->
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+        <symbol id="sun-mark" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="17" fill="currentColor" />
+            <g id="sun-rays" stroke="currentColor" stroke-width="5" stroke-linecap="round"></g>
+        </symbol>
+    </svg>
+
+    <div id="grain"></div>
+
+    <!-- HEADER -->
+    <header>
+        <div style="display: flex; align-items: center; gap: 1.2rem">
+            <a class="brand" href="ref.html">
+                <svg aria-hidden="true"><use href="#sun-mark" /></svg>
+                Univo
+            </a>
+            <span class="mono" style="font-size: 11px; color: var(--ink-soft); font-weight: 600">
+                / COOPERATIVE FAIRNESS CENTER
+            </span>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 1rem">
+            <span class="coop-district-pill" id="headerCoopPill">
+                <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--terra)"></span>
+                <span id="coopNameDisplay">Tiruchirappalli · Srirangam Island Zone</span>
+            </span>
+            <a href="cooperative-dashboard.html" class="nav-back-link">
+                <span>← Back to Dashboard</span>
+            </a>
+        </div>
+    </header>
+
+    <main>
+        <!-- Title & Subtitle -->
+        <div style="margin-bottom: 1.8rem">
+            <div style="display: flex; align-items: center; gap: .6rem; margin-bottom: .4rem">
+                <span class="mono" style="font-size: 10px; color: var(--terra); font-weight: 700; background: rgba(193,90,46,0.1); padding: 3px 8px; border-radius: 999px">
+                    ⚖️ ALGORITHMIC WORKFORCE EQUITY & PARITY
+                </span>
+                <span class="mono" style="font-size: 10px; color: var(--green); font-weight: 700">● REAL-TIME DISPATCH MONITORING</span>
+            </div>
+            <h1 style="font-family: var(--serif); font-size: 2.2rem; font-weight: 500; line-height: 1.2">
+                Cooperative Fairness Center
+            </h1>
+            <p style="font-size: 14px; color: var(--ink-soft); max-width: 820px; margin-top: .4rem">
+                Monitors whether service dispatch opportunities are being distributed fairly and equitably among qualified cooperative workers across all territorial zones.
+            </p>
+        </div>
+
+        <!-- STATUTORY CHARTER SAFEGUARD BANNER (User Mandate) -->
+        <div class="statutory-safeguard-banner">
+            <div style="display: flex; align-items: center; gap: .8rem">
+                <span style="font-size: 22px">🛡️</span>
+                <div>
+                    <strong style="font-size: 13.5px; color: var(--ink); text-transform: uppercase; letter-spacing: .02em">
+                        STATUTORY CHARTER SAFEGUARD: Fairness Must NEVER Override Worker Qualification Requirements
+                    </strong>
+                    <div style="font-size: 12px; color: var(--ink-soft); margin-top: 2px">
+                        Job tickets are distributed equitably exclusively among verified, trade-accredited technicians holding verified NTC / NSDC certifications. Competence and safety criteria remain non-negotiable.
+                    </div>
+                </div>
+            </div>
+            <span class="mono" style="background: rgba(36,109,62,0.1); color: var(--green); padding: 4px 10px; border-radius: 999px; font-size: 10px; font-weight: 700">
+                ✓ 100% ACCREDITED ROSTER
+            </span>
+        </div>
+
+        <!-- AI INSIGHT CALLOUT (Exact User Quote) -->
+        <div class="ai-insight-box">
+            <div style="display: flex; align-items: center; gap: 1rem">
+                <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(193,90,46,0.15); display: flex; align-items: center; justify-content: center; font-size: 22px">
+                    🤖
+                </div>
+                <div>
+                    <span class="mono" style="font-size: 10px; color: var(--terra); font-weight: 700; text-transform: uppercase">
+                        AI Equity Intelligence Advisory
+                    </span>
+                    <h3 style="font-family: var(--serif); font-size: 1.25rem; font-weight: 600; margin-top: 2px">
+                        “Qualified workers in Zone 2 are receiving fewer opportunities than the cooperative average.”
+                    </h3>
+                    <p style="font-size: 12px; color: var(--ink-soft); margin-top: 2px">
+                        Analysis indicates a temporary dispatch disparity in Zone 2 due to algorithmic ticket concentration around industrial feeders. Certified technicians in Zone 2 are eligible for prioritized job matching.
+                    </p>
+                </div>
+            </div>
+            <button type="button" class="btn-review-allocation" onclick="openReviewAllocationModal()">
+                <span>⚖️ Review Allocation</span>
+                <span>➔</span>
+            </button>
+        </div>
+
+        <!-- 4 Key Fairness Indicator KPIs -->
+        <div class="fairness-kpi-grid">
+            <!-- 1. Simple Fairness Indicator -->
+            <div class="kpi-card" style="border-left: 4px solid var(--green)">
+                <span class="mono" style="font-size: 10px; color: var(--ink-soft); font-weight: 700">FAIRNESS INDICATOR</span>
+                <div style="display: flex; align-items: baseline; gap: .5rem">
+                    <span style="font-family: var(--serif); font-size: 2rem; font-weight: 600; color: var(--green)">89 / 100</span>
+                    <span class="mono" style="font-size: 11px; color: var(--green); font-weight: 700">BALANCED</span>
+                </div>
+                <div style="font-size: 11px; color: var(--ink-soft)">Healthy opportunity distribution across 42 certified members.</div>
+            </div>
+
+            <!-- 2. Opportunity Distribution Balance -->
+            <div class="kpi-card" style="border-left: 4px solid var(--terra)">
+                <span class="mono" style="font-size: 10px; color: var(--ink-soft); font-weight: 700">OPPORTUNITY BALANCE</span>
+                <div style="display: flex; align-items: baseline; gap: .5rem">
+                    <span style="font-family: var(--serif); font-size: 2rem; font-weight: 600">0.16 Gini</span>
+                    <span class="mono" style="font-size: 11px; color: var(--green); font-weight: 700">LOW DISPARITY</span>
+                </div>
+                <div style="font-size: 11px; color: var(--ink-soft)">Regional variance strictly bounded under 0.20 threshold.</div>
+            </div>
+
+            <!-- 3. Qualification vs Allocation -->
+            <div class="kpi-card" style="border-left: 4px solid var(--ink)">
+                <span class="mono" style="font-size: 10px; color: var(--ink-soft); font-weight: 700">QUALIFICATION ALIGNMENT</span>
+                <div style="display: flex; align-items: baseline; gap: .5rem">
+                    <span style="font-family: var(--serif); font-size: 2rem; font-weight: 600">97.4%</span>
+                    <span class="mono" style="font-size: 11px; color: var(--green); font-weight: 700">CERTIFIED MATCH</span>
+                </div>
+                <div style="font-size: 11px; color: var(--ink-soft)">Every dispatch is 100% matched to verified skills.</div>
+            </div>
+
+            <!-- 4. Fairness Trend Over Time -->
+            <div class="kpi-card" style="border-left: 4px solid var(--gold)">
+                <span class="mono" style="font-size: 10px; color: var(--ink-soft); font-weight: 700">FAIRNESS TREND (30 DAYS)</span>
+                <div style="display: flex; align-items: baseline; gap: .5rem">
+                    <span style="font-family: var(--serif); font-size: 2rem; font-weight: 600">+7.2%</span>
+                    <span class="mono" style="font-size: 11px; color: var(--green); font-weight: 700">IMPROVING ▲</span>
+                </div>
+                <div style="font-size: 11px; color: var(--ink-soft)">Consistent month-on-month equity gain since audit policy.</div>
+            </div>
+        </div>
+
+        <!-- 2-Column Main Fairness Layout -->
+        <div class="fairness-sections-grid">
+            <!-- Left: Opportunities Received per Worker & Jobs Completed -->
+            <div class="card-panel">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; border-bottom: 1.5px solid var(--hair); padding-bottom: .8rem">
+                    <div>
+                        <h2 style="font-family: var(--serif); font-size: 1.35rem; font-weight: 600">
+                            Opportunities Received & Jobs Completed
+                        </h2>
+                        <span style="font-size: 12px; color: var(--ink-soft)">Audited opportunity distribution across verified cooperative workforce</span>
+                    </div>
+                    <span class="mono" style="font-size: 10px; color: var(--terra); font-weight: 700">42 QUALIFIED TECHNICIANS</span>
+                </div>
+
+                <div style="overflow-x: auto">
+                    <table class="fairness-table">
+                        <thead>
+                            <tr>
+                                <th>Worker & Sector</th>
+                                <th>Zone</th>
+                                <th>Opportunities Received</th>
+                                <th>Jobs Completed</th>
+                                <th>Allocation Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="workerFairnessTableBody">
+                            <!-- Injected dynamically via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Right: Workers Receiving Fewer Opportunities -->
+            <div class="card-panel">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; border-bottom: 1.5px solid var(--hair); padding-bottom: .8rem">
+                    <div>
+                        <span class="mono" style="font-size: 9.5px; color: var(--terra); font-weight: 700">EQUITY INTERVENTION DESK</span>
+                        <h2 style="font-family: var(--serif); font-size: 1.3rem; font-weight: 600; margin-top: 2px">
+                            Workers Receiving Fewer Opportunities
+                        </h2>
+                    </div>
+                    <span class="mono" style="background: rgba(193,90,46,0.1); color: var(--terra); padding: 2px 8px; border-radius: 999px; font-size: 10px; font-weight: 700">
+                        3 IDENTIFIED
+                    </span>
+                </div>
+
+                <p style="font-size: 12px; color: var(--ink-soft); margin-bottom: 1rem">
+                    The following certified technicians have received fewer dispatch opportunities than the regional cooperative average (16 calls) over the last 14 days.
+                </p>
+
+                <div style="display: flex; flex-direction: column; gap: .85rem" id="underAllocatedList">
+                    <!-- Cards injected dynamically -->
+                </div>
+
+                <button type="button" class="btn-review-allocation" style="width: 100%; justify-content: center; margin-top: 1.2rem" onclick="openReviewAllocationModal()">
+                    <span>⚖️ Option to Review & Rebalance Allocation</span>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Review Allocation Modal -->
+    <div class="modal-overlay" id="reviewModal">
+        <div class="modal-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1.5px solid var(--hair); padding-bottom: 1rem">
+                <div>
+                    <span class="mono" style="font-size: 10px; color: var(--terra); font-weight: 700">COOPERATIVE ALLOCATION GOVERNANCE</span>
+                    <h3 style="font-family: var(--serif); font-size: 1.6rem; font-weight: 600; margin-top: 2px">
+                        Review Dispatch Opportunity Allocation
+                    </h3>
+                </div>
+                <button type="button" onclick="closeReviewModal()" style="font-size: 24px; color: #888; background: none; border: none; cursor: pointer">&times;</button>
+            </div>
+
+            <div style="margin-top: 1.2rem; font-size: 13px; color: var(--ink-soft); line-height: 1.6">
+                <div style="background: #FFF; padding: 1rem; border-radius: 14px; border: 1px solid var(--hair); margin-bottom: 1.2rem">
+                    <strong style="color: var(--ink)">Target Intervention: Zone 2 Disparity Correction</strong>
+                    <p style="margin-top: 4px; font-size: 12.5px">
+                        Increase priority matching coefficient by <strong>+18%</strong> for under-allocated certified technicians in Zone 2 for incoming residential and light commercial tickets.
+                    </p>
+                    <div class="mono" style="font-size: 10px; color: var(--green); margin-top: 6px; font-weight: 700">
+                        ✓ Qualification requirements strictly preserved · Must hold verified NTC trade accreditation
+                    </div>
+                </div>
+
+                <label class="mono" style="font-size: 10.5px; font-weight: 700; color: var(--ink-soft); display: block; margin-bottom: 6px">
+                    DISPATCH ROTATION POLICY
+                </label>
+                <select id="allocationPolicySelect" style="width: 100%; padding: 10px 14px; border-radius: 12px; border: 1.5px solid var(--hair); background: #fff; font-family: var(--sans); font-size: 13.5px; outline: none">
+                    <option value="balanced_priority" selected>Weighted Equity Rotation (Prioritize under-allocated qualified technicians)</option>
+                    <option value="strict_fifo">Strict First-In First-Out Roster Queue</option>
+                    <option value="proximity_weighted">Proximity Weighted with 20% Equity Guarantee</option>
+                </select>
+            </div>
+
+            <div style="margin-top: 1.5rem; display: flex; gap: .8rem; justify-content: flex-end">
+                <button type="button" onclick="closeReviewModal()" style="padding: 10px 18px; border-radius: 999px; background: transparent; border: 1px solid var(--hair); font-size: 13px; font-weight: 600; cursor: pointer">
+                    Cancel
+                </button>
+                <button type="button" class="btn-review-allocation" onclick="commitAllocationRebalance()">
+                    <span>✓ Apply Rebalance Policy</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toastNotice">
+        <span style="font-size: 18px">✓</span>
+        <span id="toastMsg">Allocation rebalance policy applied successfully.</span>
+    </div>
+
+    <script>
+        (function () {
+            "use strict";
+            const $ = (s) => document.querySelector(s);
+            const $$ = (s) => Array.from(document.querySelectorAll(s));
+
+            // Load Active Cooperative
+            let currentCoop = {
+                district: 'Tiruchirappalli (Trichy)',
+                zone: 'Srirangam Island Zone'
+            };
+            try {
+                const stored = JSON.parse(localStorage.getItem('univo_active_cooperative') || 'null');
+                if (stored) currentCoop = Object.assign(currentCoop, stored);
+            } catch (e) {}
+
+            $('#coopNameDisplay').textContent = `${currentCoop.district} · ${currentCoop.zone}`;
+
+            const FAIRNESS_WORKERS_DATA = [
+                { id: 'fw-1', name: 'R. Karthik', trade: 'Electrical & Wiring', zone: 'Zone 9 (Teynampet)', opps: 19, completed: 18, qualification: 'NTC Level 3 Certified', status: 'Balanced' },
+                { id: 'fw-2', name: 'M. Sundaram', trade: 'Solar PV & Earthing', zone: 'Zone 2 (Tondiarpet)', opps: 8, completed: 8, qualification: 'NTC Level 2 Certified', status: 'Under-Allocated' },
+                { id: 'fw-3', name: 'S. Vigneshwaran', trade: 'Plumbing & Pipeline', zone: 'Zone 3 (Mylapore)', opps: 22, completed: 21, qualification: 'Master Hydro Certified', status: 'High Volume' },
+                { id: 'fw-4', name: 'K. Balaji', trade: 'Plumbing & Drainage', zone: 'Zone 9 (Teynampet)', opps: 15, completed: 14, qualification: 'Trade Tested Grade A', status: 'Balanced' },
+                { id: 'fw-5', name: 'A. Mohammed Imran', trade: 'HVAC & Cold Chain', zone: 'Zone 5 (Royapettah)', opps: 17, completed: 16, qualification: 'VRF Certified Specialist', status: 'Balanced' },
+                { id: 'fw-6', name: 'P. Anand Kumar', trade: 'Electrical & 3-Phase', zone: 'Zone 10 (Kodambakkam)', opps: 16, completed: 15, qualification: 'NTC Electrician Diploma', status: 'Balanced' },
+                { id: 'fw-7', name: 'G. Saravanan', trade: 'Solar Inverters & Storage', zone: 'Zone 9 (Teynampet)', opps: 14, completed: 14, qualification: 'Solar Roof Top Certified', status: 'Balanced' },
+                { id: 'fw-8', name: 'V. Dinesh', trade: 'HVAC Duct & Compressor', zone: 'Zone 3 (Mylapore)', opps: 16, completed: 15, qualification: 'Refrigeration Trade Guild', status: 'Balanced' },
+                { id: 'fw-9', name: 'T. Murugan', trade: 'Electrical Diagnostics', zone: 'Zone 2 (Tondiarpet)', opps: 9, completed: 9, qualification: 'Industrial Wireman License', status: 'Under-Allocated' },
+                { id: 'fw-10', name: 'S. Jayakumar', trade: 'HVAC Air Purification', zone: 'Zone 2 (Tondiarpet)', opps: 7, completed: 7, qualification: 'Cleanroom HVAC Specialist', status: 'Under-Allocated' }
+            ];
+
+            function renderFairnessTable() {
+                const tbody = $('#workerFairnessTableBody');
+                if (!tbody) return;
+                tbody.innerHTML = '';
+
+                FAIRNESS_WORKERS_DATA.forEach(w => {
+                    const tr = document.createElement('tr');
+                    const isUnder = w.status === 'Under-Allocated';
+                    tr.innerHTML = `
+                        <td>
+                            <strong>${w.name}</strong>
+                            <div style="font-size:11px; color:var(--ink-soft)">${w.trade} · <span class="mono" style="font-size:9.5px">${w.qualification}</span></div>
+                        </td>
+                        <td>${w.zone}</td>
+                        <td><strong class="mono">${w.opps}</strong> opportunities</td>
+                        <td><strong class="mono" style="color:var(--green)">${w.completed}</strong> completed</td>
+                        <td>
+                            <span class="mono" style="font-size:9.5px; font-weight:700; padding:2px 8px; border-radius:999px; ${isUnder ? 'background:rgba(193,90,46,0.1); color:var(--terra)' : 'background:rgba(36,109,62,0.1); color:var(--green)'}">
+                                ${w.status}
+                            </span>
+                        </td>
+                        <td>
+                            ${isUnder ? `<button type="button" class="btn-rebalance-worker" onclick="prioritizeWorker('${w.id}')">Prioritize ⚡</button>` : `<span style="color:#888; font-size:11px">In Parity</span>`}
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            function renderUnderAllocatedList() {
+                const box = $('#underAllocatedList');
+                if (!box) return;
+                box.innerHTML = '';
+
+                const under = FAIRNESS_WORKERS_DATA.filter(w => w.status === 'Under-Allocated');
+                under.forEach(w => {
+                    const card = document.createElement('div');
+                    card.style.background = '#FAF6EE';
+                    card.style.border = '1px solid var(--hair)';
+                    card.style.borderLeft = '3px solid var(--terra)';
+                    card.style.borderRadius = '14px';
+                    card.style.padding = '.9rem 1.1rem';
+                    card.style.display = 'flex';
+                    card.style.justifyContent = 'space-between';
+                    card.style.alignItems = 'center';
+                    card.style.gap = '.8rem';
+
+                    card.innerHTML = `
+                        <div>
+                            <div style="font-weight:700; font-size:13px">${w.name}</div>
+                            <div style="font-size:11px; color:var(--ink-soft)">${w.trade} · ${w.zone}</div>
+                            <div class="mono" style="font-size:9.5px; color:var(--terra); font-weight:700; margin-top:2px">
+                                ${w.opps} Opportunities Received (Co-op Avg: 16)
+                            </div>
+                        </div>
+                        <button type="button" class="btn-rebalance-worker" onclick="prioritizeWorker('${w.id}')">
+                            Boost Match ⚡
+                        </button>
+                    `;
+                    box.appendChild(card);
+                });
+            }
+
+            window.prioritizeWorker = function (id) {
+                const w = FAIRNESS_WORKERS_DATA.find(x => x.id === id);
+                if (!w) return;
+                w.opps += 2;
+                w.status = 'Balanced';
+                renderFairnessTable();
+                renderUnderAllocatedList();
+                showToast(`✓ Priority dispatch matched for qualified technician ${w.name}!`);
+            };
+
+            window.openReviewAllocationModal = function () {
+                $('#reviewModal').style.display = 'flex';
+            };
+
+            window.closeReviewModal = function () {
+                $('#reviewModal').style.display = 'none';
+            };
+
+            window.commitAllocationRebalance = function () {
+                closeReviewModal();
+                FAIRNESS_WORKERS_DATA.forEach(w => {
+                    if (w.status === 'Under-Allocated') {
+                        w.opps += 3;
+                        w.status = 'Balanced';
+                    }
+                });
+                renderFairnessTable();
+                renderUnderAllocatedList();
+                showToast('✓ Zone 2 allocation rebalance committed to cooperative dispatch engine!');
+            };
+
+            function showToast(msg) {
+                const toast = $('#toastNotice');
+                const label = $('#toastMsg');
+                if (!toast || !label) return;
+                label.textContent = msg;
+                toast.style.display = 'flex';
+                setTimeout(() => {
+                    toast.style.display = 'none';
+                }, 3400);
+            }
+
+            window.addEventListener('DOMContentLoaded', () => {
+                renderFairnessTable();
+                renderUnderAllocatedList();
+            });
+
+            /* Sun rays */
+            (function () {
+                const g = $('#sun-rays');
+                if (!g) return;
+                for (let i = 0; i < 12; i++) {
+                    const a = i * Math.PI / 6, r2 = i % 2 === 0 ? 46 : 38;
+                    const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    l.setAttribute('x1', (50 + 26 * Math.cos(a)).toFixed(1));
+                    l.setAttribute('y1', (50 + 26 * Math.sin(a)).toFixed(1));
+                    l.setAttribute('x2', (50 + r2 * Math.cos(a)).toFixed(1));
+                    l.setAttribute('y2', (50 + r2 * Math.sin(a)).toFixed(1));
+                    g.appendChild(l);
+                }
+            })();
+        })();
+    </script>
+</body>
+
+</html>

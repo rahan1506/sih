@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worker Wellbeing Intelligence — UNIVO Cooperative Command</title>
+    <meta name="description" content="Monitor workforce workloads, active shift hours, rest periods, and prevent technician fatigue through automated workload rebalancing.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        /* ============ TOKENS ============ */
+        :root {
+            --cream: #F4ECDC;
+            --cream2: #EDE1CB;
+            --ink: #221812;
+            --ink-soft: #2d2219;
+            --terra: #C15A2E;
+            --gold: #D9A441;
+            --umber: #241509;
+            --green: #246d3e;
+            --red: #c0392b;
+            --hair: rgba(34, 24, 18, .18);
+            --serif: 'Fraunces', Georgia, serif;
+            --sans: 'Instrument Sans', 'Helvetica Neue', sans-serif;
+            --mono: 'Space Mono', monospace;
+            --ease: cubic-bezier(.22, 1, .36, 1);
+            --pad: 4vw;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            cursor: auto;
+        }
+
+        body {
+            background-color: var(--cream);
+            color: var(--ink);
+            font-family: var(--sans);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        #grain {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: .03;
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        /* HEADER */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(244, 236, 220, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1.5px solid var(--hair);
+            padding: 0.9rem var(--pad);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .brand {
+            font-family: var(--serif);
+            font-size: 1.5rem;
+            font-weight: 500;
+            text-decoration: none;
+            color: var(--ink);
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+        }
+
+        .brand svg {
+            width: 22px;
+            height: 22px;
+            color: var(--terra);
+        }
+
+        .nav-back-link {
+            text-decoration: none;
+            color: var(--ink);
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 7px 15px;
+            border-radius: 999px;
+            border: 1px solid var(--hair);
+            background: rgba(255,255,255,0.6);
+            transition: all .2s ease;
+        }
+
+        .nav-back-link:hover {
+            background: #fff;
+            border-color: var(--terra);
+            color: var(--terra);
+        }
+
+        .coop-district-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: 3px 10px;
+            border-radius: 999px;
+            background: #fff;
+            border: 1px solid var(--hair);
+            font-family: var(--mono);
+            font-size: 10px;
+            color: var(--ink-soft);
+        }
+
+        /* MAIN */
+        main {
+            flex: 1;
+            padding: 2.5rem var(--pad) 4rem;
+            max-width: 1360px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .mono {
+            font-family: var(--mono);
+        }
+
+        /* AI Insight Box */
+        .ai-insight-box {
+            background: linear-gradient(135deg, rgba(255, 245, 238, 0.95), rgba(255, 255, 255, 0.92));
+            border: 1.5px solid rgba(193, 90, 46, 0.35);
+            border-left: 6px solid var(--terra);
+            border-radius: 20px;
+            padding: 1.3rem 1.6rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.5rem;
+            box-shadow: 0 8px 24px rgba(193, 90, 46, 0.06);
+            flex-wrap: wrap;
+        }
+
+        /* Stats Cards */
+        .wellbeing-kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.2rem;
+            margin-bottom: 2.2rem;
+        }
+
+        @media (max-width: 1024px) {
+            .wellbeing-kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .wellbeing-kpi-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .kpi-card {
+            background: #fff;
+            border: 1.5px solid var(--hair);
+            border-radius: 20px;
+            padding: 1.3rem 1.4rem;
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.03);
+            display: flex;
+            flex-direction: column;
+            gap: .4rem;
+        }
+
+        /* Filter Pills */
+        .filter-bar {
+            display: flex;
+            gap: .6rem;
+            margin-bottom: 1.4rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 7px 16px;
+            border-radius: 999px;
+            border: 1.5px solid var(--hair);
+            background: #fff;
+            color: var(--ink-soft);
+            font-family: var(--sans);
+            font-size: 12.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .2s ease;
+        }
+
+        .filter-btn:hover,
+        .filter-btn.active {
+            background: var(--ink);
+            color: #fff;
+            border-color: var(--ink);
+        }
+
+        .filter-btn.risk-pill.active {
+            background: var(--red);
+            border-color: var(--red);
+        }
+
+        /* Panel */
+        .card-panel {
+            background: #fff;
+            border: 1.5px solid var(--hair);
+            border-radius: 24px;
+            padding: 1.8rem;
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.04);
+        }
+
+        /* Table */
+        .wellbeing-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .wellbeing-table th {
+            text-align: left;
+            padding: 11px 12px;
+            background: #FAF6EE;
+            color: var(--ink-soft);
+            font-family: var(--mono);
+            font-size: 9.5px;
+            font-weight: 700;
+            border-bottom: 1.5px solid var(--hair);
+            text-transform: uppercase;
+            letter-spacing: .06em;
+        }
+
+        .wellbeing-table td {
+            padding: 13px 12px;
+            border-bottom: 1px solid var(--hair);
+            vertical-align: middle;
+        }
+
+        .wellbeing-table tr:hover td {
+            background: #FFFDF9;
+        }
+
+        /* Status Badges */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            padding: 3px 9px;
+            border-radius: 999px;
+            font-family: var(--mono);
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .status-badge.healthy {
+            background: rgba(36, 109, 62, 0.12);
+            color: var(--green);
+        }
+
+        .status-badge.monitor {
+            background: rgba(217, 164, 65, 0.18);
+            color: #8C620D;
+        }
+
+        .status-badge.at-risk {
+            background: rgba(192, 57, 43, 0.12);
+            color: var(--red);
+            animation: softGlow 1.8s infinite alternate;
+        }
+
+        @keyframes softGlow {
+            0% { box-shadow: 0 0 0 rgba(192, 57, 43, 0); }
+            100% { box-shadow: 0 0 10px rgba(192, 57, 43, 0.3); }
+        }
+
+        /* Action Buttons */
+        .btn-action-primary {
+            padding: 10px 20px;
+            border-radius: 999px;
+            background: var(--ink);
+            color: #fff;
+            border: none;
+            font-family: var(--sans);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+        }
+
+        .btn-action-primary:hover {
+            background: #000;
+            transform: translateY(-1px);
+        }
+
+        .btn-table-action {
+            padding: 5px 11px;
+            border-radius: 999px;
+            background: #FAF6EE;
+            border: 1px solid var(--hair);
+            color: var(--ink);
+            font-family: var(--mono);
+            font-size: 9.5px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all .2s ease;
+        }
+
+        .btn-table-action:hover {
+            border-color: var(--terra);
+            color: var(--terra);
+            background: #fff;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(34, 24, 18, 0.6);
+            backdrop-filter: blur(8px);
+            z-index: 5000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+
+        .modal-card {
+            background: #FAF6ED;
+            border: 1.5px solid var(--hair);
+            border-radius: 24px;
+            width: 100%;
+            max-width: 600px;
+            padding: 2rem;
+            box-shadow: 0 24px 64px rgba(0,0,0,0.25);
+        }
+
+        /* Toast */
+        #toastNotice {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--ink);
+            color: #fff;
+            padding: 1rem 1.6rem;
+            border-radius: 999px;
+            font-size: 13.5px;
+            display: none;
+            align-items: center;
+            gap: .8rem;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
+            z-index: 10000;
+            animation: slideUp .3s var(--ease);
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- reusable sun mark -->
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+        <symbol id="sun-mark" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="17" fill="currentColor" />
+            <g id="sun-rays" stroke="currentColor" stroke-width="5" stroke-linecap="round"></g>
+        </symbol>
+    </svg>
+
+    <div id="grain"></div>
+
+    <!-- HEADER -->
+    <header>
+        <div style="display: flex; align-items: center; gap: 1.2rem">
+            <a class="brand" href="ref.html">
+                <svg aria-hidden="true"><use href="#sun-mark" /></svg>
+                Univo
+            </a>
+            <span class="mono" style="font-size: 11px; color: var(--ink-soft); font-weight: 600">
+                / WORKER WELLBEING INTELLIGENCE
+            </span>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 1rem">
+            <span class="coop-district-pill" id="headerCoopPill">
+                <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--terra)"></span>
+                <span id="coopNameDisplay">Tiruchirappalli · Srirangam Island Zone</span>
+            </span>
+            <a href="cooperative-dashboard.html" class="nav-back-link">
+                <span>← Back to Dashboard</span>
+            </a>
+        </div>
+    </header>
+
+    <main>
+        <!-- Title & Subtitle -->
+        <div style="margin-bottom: 1.8rem">
+            <div style="display: flex; align-items: center; gap: .6rem; margin-bottom: .4rem">
+                <span class="mono" style="font-size: 10px; color: var(--green); font-weight: 700; background: rgba(36,109,62,0.1); padding: 3px 8px; border-radius: 999px">
+                    💚 WORKFORCE ERGONOMICS & FATIGUE MITIGATION
+                </span>
+                <span class="mono" style="font-size: 10px; color: var(--terra); font-weight: 700">● REAL-TIME TELEMETRY</span>
+            </div>
+            <h1 style="font-family: var(--serif); font-size: 2.2rem; font-weight: 500; line-height: 1.2">
+                Worker Wellbeing Intelligence
+            </h1>
+            <p style="font-size: 14px; color: var(--ink-soft); max-width: 820px; margin-top: .4rem">
+                Monitors active physical workload, continuous shift durations, rest hydration intervals, and protects technicians from exhaustion through automated job redistribution.
+            </p>
+        </div>
+
+        <!-- AI INSIGHT BOX (Exact User Quote) -->
+        <div class="ai-insight-box">
+            <div style="display: flex; align-items: center; gap: 1.2rem">
+                <div style="width: 46px; height: 46px; border-radius: 12px; background: rgba(193,90,46,0.15); display: flex; align-items: center; justify-content: center; font-size: 22px">
+                    🤖
+                </div>
+                <div>
+                    <span class="mono" style="font-size: 10px; color: var(--terra); font-weight: 700; text-transform: uppercase">
+                        AI Shift Ergonomics Advisory
+                    </span>
+                    <h3 style="font-family: var(--serif); font-size: 1.3rem; font-weight: 600; margin-top: 2px">
+                        “8 workers have high workloads today. Consider redistributing upcoming jobs.”
+                    </h3>
+                    <p style="font-size: 12px; color: var(--ink-soft); margin-top: 2px">
+                        Continuous duty telemetry detected 8 technicians exceeding 7.5 hours of active high-strain field labor. Shift rebalancing is recommended to prevent fatigue errors.
+                    </p>
+                </div>
+            </div>
+            <button type="button" class="btn-action-primary" onclick="openRedistributeModal()">
+                <span>⚡ Redistribute Upcoming Jobs</span>
+                <span>➔</span>
+            </button>
+        </div>
+
+        <!-- Summary KPIs -->
+        <div class="wellbeing-kpi-grid">
+            <div class="kpi-card" style="border-left: 4px solid var(--red)">
+                <span class="mono" style="font-size: 10px; color: var(--ink-soft); font-weight: 700">WORKERS AT RISK</span>
+                <div style="display: flex; align-items: baseline; gap: .5rem">
+                    <span style="font-family: var(--serif); font-size: 2.1rem; font-weight: 600; color: var(--red)" id="countAtRisk">8</span>
+                    <span class="mono" style="font-size: 11px; color: var(--red); font-weight: 700">HIGH FATIGUE</span>
+                </div>
+                <div style="font-size: 11px; color: var(--ink-soft)">Workers exceeding 7.5h duty or 7+ heavy jobs.</div>
+            </div>
+
+            <div class="kpi-card" style="border-left: 4px solid var(--gold)">
+                <span class="mono" style="font-size: 10px; color: var(--ink-soft); font-weight: 700">MONITOR STATUS</span>
+                <div style="display: flex; align-items: baseline; gap: .5rem">
+                    <span style="font-family: var(--serif); font-size: 2.1rem; font-weight: 600; color: #8C620D">11</span>
+                    <span class="mono" style="font-size: 11px; color: #8C620D; font-weight: 700">APPROACHING LIMIT</span>
+                </div>
+                <div style="font-size: 11px; color: var(--ink-soft)">Workers at 5.0h – 7.4h duty threshold.</div>
+            </div>
+
+            <div class="kpi-card" style="border-left: 4px solid var(--green)">
+                <span class="mono" style="font-size: 10px; color: var(--ink-soft); font-weight: 700">HEALTHY STATUS</span>
+                <div style="display: flex; align-items: baseline; gap: .5rem">
+                    <span style="font-family: var(--serif); font-size: 2.1rem; font-weight: 600; color: var(--green)">23</span>
+                    <span class="mono" style="font-size: 11px; color: var(--green); font-weight: 700">OPTIMAL RANGE</span>
+                </div>
+                <div style="font-size: 11px; color: var(--ink-soft)">Rested and operating in sustainable shift zone.</div>
+            </div>
+
+            <div class="kpi-card" style="border-left: 4px solid var(--ink)">
+                <span class="mono" style="font-size: 10px; color: var(--ink-soft); font-weight: 700">REST COMPLIANCE</span>
+                <div style="display: flex; align-items: baseline; gap: .5rem">
+                    <span style="font-family: var(--serif); font-size: 2.1rem; font-weight: 600">92.8%</span>
+                    <span class="mono" style="font-size: 11px; color: var(--green); font-weight: 700">COOPERATIVE SLA</span>
+                </div>
+                <div style="font-size: 11px; color: var(--ink-soft)">Mandatory 30m break completed after 4h field shifts.</div>
+            </div>
+        </div>
+
+        <!-- Main Panel with Filter Controls -->
+        <div class="card-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; border-bottom: 1.5px solid var(--hair); padding-bottom: .8rem; flex-wrap: wrap; gap: .8rem">
+                <div>
+                    <h2 style="font-family: var(--serif); font-size: 1.35rem; font-weight: 600">
+                        Technician Workload & Ergonomics Roster
+                    </h2>
+                    <span style="font-size: 12px; color: var(--ink-soft)">Live monitoring of working hours, completed calls, and rest intervals</span>
+                </div>
+
+                <div class="filter-bar" style="margin-bottom: 0">
+                    <button type="button" class="filter-btn active" id="btnFilterAll" onclick="filterTable('all')">All (42)</button>
+                    <button type="button" class="filter-btn risk-pill" id="btnFilterRisk" onclick="filterTable('at-risk')">⚠️ At Risk (8)</button>
+                    <button type="button" class="filter-btn" id="btnFilterMonitor" onclick="filterTable('monitor')">🟡 Monitor (11)</button>
+                    <button type="button" class="filter-btn" id="btnFilterHealthy" onclick="filterTable('healthy')">🟢 Healthy (23)</button>
+                </div>
+            </div>
+
+            <div style="overflow-x: auto">
+                <table class="wellbeing-table">
+                    <thead>
+                        <tr>
+                            <th>Technician</th>
+                            <th>Current Workload</th>
+                            <th>Working Hours</th>
+                            <th>Jobs Completed</th>
+                            <th>Rest Status</th>
+                            <th>Wellbeing Status</th>
+                            <th>Intervention Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="wellbeingTableBody">
+                        <!-- Populated dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Redistribute Modal -->
+    <div class="modal-overlay" id="redistributeModal">
+        <div class="modal-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1.5px solid var(--hair); padding-bottom: 1rem">
+                <div>
+                    <span class="mono" style="font-size: 10px; color: var(--terra); font-weight: 700">AUTOMATED WORKLOAD BALANCER</span>
+                    <h3 style="font-family: var(--serif); font-size: 1.6rem; font-weight: 600; margin-top: 2px">
+                        Redistribute High-Workload Jobs
+                    </h3>
+                </div>
+                <button type="button" onclick="closeRedistributeModal()" style="font-size: 24px; color: #888; background: none; border: none; cursor: pointer">&times;</button>
+            </div>
+
+            <div style="margin-top: 1.2rem; font-size: 13px; color: var(--ink-soft); line-height: 1.6">
+                <div style="background: #FFF; padding: 1.1rem; border-radius: 14px; border: 1px solid var(--hair); margin-bottom: 1.2rem">
+                    <strong style="color: var(--ink); font-size: 13.5px">Rebalance Strategy: Zone 3 & Zone 9 Corridor</strong>
+                    <p style="margin-top: 4px; font-size: 12.5px">
+                        Move <strong>6 scheduled afternoon jobs</strong> from the 8 overloaded technicians to 6 rested technicians with less than 3.5 hours on duty today.
+                    </p>
+                    <div class="mono" style="font-size: 10px; color: var(--green); margin-top: 6px; font-weight: 700">
+                        ✓ Restores technician workload below safe 6.0h duty ceiling
+                    </div>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: .6rem; font-size: 12px">
+                    <div style="display: flex; justify-content: space-between">
+                        <span>Technicians Relieved:</span>
+                        <strong>8 Technicians (Karthik, Sundaram, Murugan, etc.)</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between">
+                        <span>Recipient Technicians:</span>
+                        <strong>6 Rested Qualified Cooperative Members</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between">
+                        <span>Predicted Average Shift Relief:</span>
+                        <strong style="color: var(--green)">-2.1 hours per worker</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 1.5rem; display: flex; gap: .8rem; justify-content: flex-end">
+                <button type="button" onclick="closeRedistributeModal()" style="padding: 10px 18px; border-radius: 999px; background: transparent; border: 1px solid var(--hair); font-size: 13px; font-weight: 600; cursor: pointer">
+                    Cancel
+                </button>
+                <button type="button" class="btn-action-primary" onclick="commitRedistribution()">
+                    <span>✓ Confirm & Rebalance Jobs</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toastNotice">
+        <span style="font-size: 18px">✓</span>
+        <span id="toastMsg">Action executed successfully.</span>
+    </div>
+
+    <script>
+        (function () {
+            "use strict";
+            const $ = (s) => document.querySelector(s);
+            const $$ = (s) => Array.from(document.querySelectorAll(s));
+
+            // Load Active Cooperative
+            let currentCoop = {
+                district: 'Tiruchirappalli (Trichy)',
+                zone: 'Srirangam Island Zone'
+            };
+            try {
+                const stored = JSON.parse(localStorage.getItem('univo_active_cooperative') || 'null');
+                if (stored) currentCoop = Object.assign(currentCoop, stored);
+            } catch (e) {}
+
+            $('#coopNameDisplay').textContent = `${currentCoop.district} · ${currentCoop.zone}`;
+
+            const WORKERS_WELLBEING = [
+                { id: 'wb-1', name: 'R. Karthik', trade: '⚡ Electrical', workload: '8 jobs scheduled (High)', hours: '8.4 hrs today (41h wk)', completed: '6 completed · 2 pending', rest: '⚠️ Rest Overdue (+3.5h continuous)', status: 'At Risk' },
+                { id: 'wb-2', name: 'M. Sundaram', trade: '☀️ Solar PV', workload: '7 jobs scheduled (High)', hours: '7.8 hrs today (38h wk)', completed: '5 completed · 2 pending', rest: '⚠️ Rest Overdue (+3.1h continuous)', status: 'At Risk' },
+                { id: 'wb-3', name: 'S. Vigneshwaran', trade: '🔧 Plumbing', workload: '8 jobs scheduled (High)', hours: '8.1 hrs today (44h wk)', completed: '6 completed · 2 pending', rest: '⚠️ Rest Overdue (+4.0h continuous)', status: 'At Risk' },
+                { id: 'wb-4', name: 'T. Murugan', trade: '⚡ Electrical', workload: '7 jobs scheduled (High)', hours: '7.9 hrs today (39h wk)', completed: '5 completed · 2 pending', rest: '⚠️ 15m overdue for break', status: 'At Risk' },
+                { id: 'wb-5', name: 'C. Loganathan', trade: '🔧 Plumbing', workload: '8 jobs scheduled (High)', hours: '8.6 hrs today (46h wk)', completed: '7 completed · 1 pending', rest: '⚠️ Excessive continuous shift', status: 'At Risk' },
+                { id: 'wb-6', name: 'P. Anand Kumar', trade: '⚡ Electrical', workload: '7 jobs scheduled (High)', hours: '7.6 hrs today (40h wk)', completed: '5 completed · 2 pending', rest: '⚠️ Rest Overdue (+3.2h continuous)', status: 'At Risk' },
+                { id: 'wb-7', name: 'V. Dinesh', trade: '❄️ HVAC Specialist', workload: '7 jobs scheduled (High)', hours: '7.7 hrs today (37h wk)', completed: '5 completed · 2 pending', rest: '⚠️ Approaching fatigue limit', status: 'At Risk' },
+                { id: 'wb-8', name: 'E. Prabhu', trade: '⚡ Electrical', workload: '8 jobs scheduled (High)', hours: '8.2 hrs today (43h wk)', completed: '6 completed · 2 pending', rest: '⚠️ 45m overdue for rest', status: 'At Risk' },
+                { id: 'wb-9', name: 'K. Balaji', trade: '🔧 Plumbing', workload: '5 jobs scheduled (Moderate)', hours: '6.2 hrs today (32h wk)', completed: '4 completed · 1 pending', rest: '🟡 Break taken 2h ago', status: 'Monitor' },
+                { id: 'wb-10', name: 'A. Mohammed Imran', trade: '❄️ HVAC Specialist', workload: '5 jobs scheduled (Moderate)', hours: '6.5 hrs today (34h wk)', completed: '4 completed · 1 pending', rest: '🟡 Break taken 2.5h ago', status: 'Monitor' },
+                { id: 'wb-11', name: 'G. Saravanan', trade: '☀️ Solar PV', workload: '3 jobs scheduled (Normal)', hours: '3.8 hrs today (22h wk)', completed: '3 completed · 0 pending', rest: '🟢 Fully Rested & Hydrated', status: 'Healthy' },
+                { id: 'wb-12', name: 'S. Jayakumar', trade: '❄️ HVAC Specialist', workload: '3 jobs scheduled (Normal)', hours: '3.4 hrs today (20h wk)', completed: '2 completed · 1 pending', rest: '🟢 Rested (Break completed 30m ago)', status: 'Healthy' }
+            ];
+
+            let activeFilter = 'all';
+
+            function renderTable() {
+                const tbody = $('#wellbeingTableBody');
+                if (!tbody) return;
+                tbody.innerHTML = '';
+
+                const filtered = WORKERS_WELLBEING.filter(w => {
+                    if (activeFilter === 'all') return true;
+                    if (activeFilter === 'at-risk') return w.status === 'At Risk';
+                    if (activeFilter === 'monitor') return w.status === 'Monitor';
+                    if (activeFilter === 'healthy') return w.status === 'Healthy';
+                    return true;
+                });
+
+                filtered.forEach(w => {
+                    const tr = document.createElement('tr');
+                    const isRisk = w.status === 'At Risk';
+                    const isMonitor = w.status === 'Monitor';
+                    const statusClass = isRisk ? 'at-risk' : (isMonitor ? 'monitor' : 'healthy');
+
+                    tr.innerHTML = `
+                        <td>
+                            <strong>${w.name}</strong>
+                            <div style="font-size:11px; color:var(--ink-soft)">${w.trade}</div>
+                        </td>
+                        <td><strong class="mono">${w.workload}</strong></td>
+                        <td><span class="mono">${w.hours}</span></td>
+                        <td>${w.completed}</td>
+                        <td style="font-size:12px; ${isRisk ? 'color:var(--red); font-weight:600' : 'color:var(--ink-soft)'}">${w.rest}</td>
+                        <td>
+                            <span class="status-badge ${statusClass}">
+                                ${isRisk ? '⚠️' : (isMonitor ? '🟡' : '🟢')} ${w.status}
+                            </span>
+                        </td>
+                        <td>
+                            ${isRisk ? `
+                                <button type="button" class="btn-table-action" onclick="triggerCooldown('${w.id}')" style="border-color:var(--red); color:var(--red)">
+                                    Rest Break 🛑
+                                </button>
+                            ` : `
+                                <button type="button" class="btn-table-action" onclick="triggerCooldown('${w.id}')">
+                                    Log Cooldown
+                                </button>
+                            `}
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            window.filterTable = function (statusKey) {
+                activeFilter = statusKey;
+                $$('.filter-btn').forEach(b => b.classList.remove('active'));
+                if (statusKey === 'all') $('#btnFilterAll')?.classList.add('active');
+                if (statusKey === 'at-risk') $('#btnFilterRisk')?.classList.add('active');
+                if (statusKey === 'monitor') $('#btnFilterMonitor')?.classList.add('active');
+                if (statusKey === 'healthy') $('#btnFilterHealthy')?.classList.add('active');
+                renderTable();
+            };
+
+            window.triggerCooldown = function (id) {
+                const w = WORKERS_WELLBEING.find(x => x.id === id);
+                if (!w) return;
+                w.status = 'Healthy';
+                w.rest = '🟢 Mandatory 45m Rest Cooldown Active';
+                w.hours = '6.1 hrs (Resting)';
+                renderTable();
+                showToast(`✓ Mandatory rest cooldown triggered for ${w.name}! Dispatch paused for 45 mins.`);
+            };
+
+            window.openRedistributeModal = function () {
+                $('#redistributeModal').style.display = 'flex';
+            };
+
+            window.closeRedistributeModal = function () {
+                $('#redistributeModal').style.display = 'none';
+            };
+
+            window.commitRedistribution = function () {
+                closeRedistributeModal();
+                WORKERS_WELLBEING.forEach(w => {
+                    if (w.status === 'At Risk') {
+                        w.status = 'Healthy';
+                        w.workload = '5 jobs (Rebalanced)';
+                        w.hours = '5.8 hrs (Normalized)';
+                        w.rest = '🟢 Rest Break Scheduled';
+                    }
+                });
+                $('#countAtRisk').textContent = '0';
+                $('#countAtRisk').style.color = 'var(--green)';
+                renderTable();
+                showToast('✓ 8 overloaded workers relieved! Upcoming jobs successfully redistributed.');
+            };
+
+            function showToast(msg) {
+                const toast = $('#toastNotice');
+                const label = $('#toastMsg');
+                if (!toast || !label) return;
+                label.textContent = msg;
+                toast.style.display = 'flex';
+                setTimeout(() => {
+                    toast.style.display = 'none';
+                }, 3400);
+            }
+
+            window.addEventListener('DOMContentLoaded', () => {
+                renderTable();
+            });
+
+            /* Sun rays */
+            (function () {
+                const g = $('#sun-rays');
+                if (!g) return;
+                for (let i = 0; i < 12; i++) {
+                    const a = i * Math.PI / 6, r2 = i % 2 === 0 ? 46 : 38;
+                    const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    l.setAttribute('x1', (50 + 26 * Math.cos(a)).toFixed(1));
+                    l.setAttribute('y1', (50 + 26 * Math.sin(a)).toFixed(1));
+                    l.setAttribute('x2', (50 + r2 * Math.cos(a)).toFixed(1));
+                    l.setAttribute('y2', (50 + r2 * Math.sin(a)).toFixed(1));
+                    g.appendChild(l);
+                }
+            })();
+        })();
+    </script>
+</body>
+
+</html>

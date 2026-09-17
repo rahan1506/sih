@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Twin / What-If Simulator — UNIVO Cooperative Command</title>
+    <meta name="description" content="Test workforce deployment decisions, forecast systemic capacity consequences, and optimize trade coverage before issuing statutory dispatch orders.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        /* ============ TOKENS ============ */
+        :root {
+            --cream: #F4ECDC;
+            --cream2: #EDE1CB;
+            --ink: #221812;
+            --ink-soft: #2d2219;
+            --terra: #C15A2E;
+            --gold: #D9A441;
+            --umber: #241509;
+            --green: #246d3e;
+            --hair: rgba(34, 24, 18, .18);
+            --serif: 'Fraunces', Georgia, serif;
+            --sans: 'Instrument Sans', 'Helvetica Neue', sans-serif;
+            --mono: 'Space Mono', monospace;
+            --ease: cubic-bezier(.22, 1, .36, 1);
+            --pad: 4vw;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            cursor: auto;
+        }
+
+        body {
+            background-color: var(--cream);
+            color: var(--ink);
+            font-family: var(--sans);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        #grain {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: .03;
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        /* HEADER */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(244, 236, 220, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1.5px solid var(--hair);
+            padding: 0.9rem var(--pad);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .brand {
+            font-family: var(--serif);
+            font-size: 1.5rem;
+            font-weight: 500;
+            text-decoration: none;
+            color: var(--ink);
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+        }
+
+        .brand svg {
+            width: 22px;
+            height: 22px;
+            color: var(--terra);
+        }
+
+        .nav-back-link {
+            text-decoration: none;
+            color: var(--ink);
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 7px 15px;
+            border-radius: 999px;
+            border: 1px solid var(--hair);
+            background: rgba(255,255,255,0.6);
+            transition: all .2s ease;
+        }
+
+        .nav-back-link:hover {
+            background: #fff;
+            border-color: var(--terra);
+            color: var(--terra);
+        }
+
+        .coop-district-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: 3px 10px;
+            border-radius: 999px;
+            background: #fff;
+            border: 1px solid var(--hair);
+            font-family: var(--mono);
+            font-size: 10px;
+            color: var(--ink-soft);
+        }
+
+        /* MAIN CONTENT */
+        main {
+            flex: 1;
+            padding: 2.5rem var(--pad) 4rem;
+            max-width: 1360px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .mono {
+            font-family: var(--mono);
+        }
+
+        /* Workflow Step Indicator */
+        .step-progress-bar {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 2.2rem;
+        }
+
+        @media (max-width: 768px) {
+            .step-progress-bar {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .step-node {
+            background: #fff;
+            border: 1.5px solid var(--hair);
+            border-radius: 16px;
+            padding: 1rem 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: .8rem;
+            transition: all .25s ease;
+        }
+
+        .step-node.active {
+            border-color: var(--terra);
+            box-shadow: 0 8px 24px rgba(193, 90, 46, 0.12);
+            background: #FFFDF9;
+        }
+
+        .step-node.completed {
+            border-color: var(--green);
+            background: rgba(36, 109, 62, 0.03);
+        }
+
+        .step-num {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--mono);
+            font-size: 11px;
+            font-weight: 700;
+            background: var(--cream2);
+            color: var(--ink);
+        }
+
+        .step-node.active .step-num {
+            background: var(--terra);
+            color: #fff;
+        }
+
+        .step-node.completed .step-num {
+            background: var(--green);
+            color: #fff;
+        }
+
+        /* Twin Layout Grid */
+        .twin-grid {
+            display: grid;
+            grid-template-columns: 1.15fr 1.65fr;
+            gap: 2rem;
+            align-items: flex-start;
+        }
+
+        @media (max-width: 1024px) {
+            .twin-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Panels */
+        .card-panel {
+            background: #fff;
+            border: 1.5px solid var(--hair);
+            border-radius: 24px;
+            padding: 1.8rem;
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.04);
+        }
+
+        .preset-scenario-btn {
+            width: 100%;
+            text-align: left;
+            background: #FAF6ED;
+            border: 1.5px solid var(--hair);
+            border-radius: 14px;
+            padding: .9rem 1.1rem;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all .2s ease;
+            margin-bottom: .6rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .preset-scenario-btn:hover,
+        .preset-scenario-btn.selected {
+            border-color: var(--terra);
+            background: #FFF9F3;
+            transform: translateY(-1px);
+        }
+
+        .form-control-wrap {
+            margin-bottom: 1.2rem;
+        }
+
+        .form-label {
+            display: block;
+            font-family: var(--mono);
+            font-size: 10.5px;
+            font-weight: 700;
+            color: var(--ink-soft);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+        }
+
+        .form-select,
+        .form-input {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            border: 1.5px solid var(--hair);
+            background: #FAF6EE;
+            font-family: var(--sans);
+            font-size: 13.5px;
+            font-weight: 500;
+            color: var(--ink);
+            outline: none;
+            transition: border-color .2s;
+        }
+
+        .form-select:focus,
+        .form-input:focus {
+            border-color: var(--terra);
+            background: #fff;
+        }
+
+        /* Buttons */
+        .btn-run-sim {
+            width: 100%;
+            padding: 14px;
+            border-radius: 999px;
+            background: var(--ink);
+            color: #fff;
+            border: none;
+            font-family: var(--sans);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .25s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: .6rem;
+            box-shadow: 0 8px 24px rgba(34, 24, 18, 0.2);
+        }
+
+        .btn-run-sim:hover {
+            background: #000;
+            transform: translateY(-2px);
+        }
+
+        .btn-apply-decision {
+            width: 100%;
+            padding: 14px;
+            border-radius: 999px;
+            background: var(--green);
+            color: #fff;
+            border: none;
+            font-family: var(--sans);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .25s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: .6rem;
+            box-shadow: 0 8px 24px rgba(36, 109, 62, 0.25);
+            margin-top: 1.4rem;
+        }
+
+        .btn-apply-decision:hover {
+            filter: brightness(1.1);
+            transform: translateY(-2px);
+        }
+
+        /* Predicted Metric Card */
+        .metric-impact-card {
+            background: #FAF6EE;
+            border: 1.5px solid var(--hair);
+            border-radius: 18px;
+            padding: 1.3rem;
+            display: flex;
+            flex-direction: column;
+            gap: .7rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-impact-card.positive {
+            border-left: 4px solid var(--green);
+        }
+
+        .metric-impact-card.accent {
+            border-left: 4px solid var(--terra);
+        }
+
+        .sim-tag-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: 3px 8px;
+            border-radius: 999px;
+            background: rgba(193, 90, 46, 0.1);
+            color: var(--terra);
+            font-family: var(--mono);
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+
+        .progress-track {
+            height: 8px;
+            background: rgba(34, 24, 18, 0.08);
+            border-radius: 999px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill-current {
+            height: 100%;
+            background: var(--ink);
+            border-radius: 999px;
+            transition: width .6s ease;
+        }
+
+        .progress-fill-predicted {
+            height: 100%;
+            background: repeating-linear-gradient(45deg, var(--terra), var(--terra) 6px, #d97548 6px, #d97548 12px);
+            border-radius: 999px;
+            transition: width .6s ease;
+        }
+
+        /* Toast */
+        #toastNotice {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--ink);
+            color: #fff;
+            padding: 1rem 1.6rem;
+            border-radius: 999px;
+            font-size: 13.5px;
+            display: none;
+            align-items: center;
+            gap: .8rem;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
+            z-index: 10000;
+            animation: slideUp .3s var(--ease);
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- reusable sun mark -->
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+        <symbol id="sun-mark" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="17" fill="currentColor" />
+            <g id="sun-rays" stroke="currentColor" stroke-width="5" stroke-linecap="round"></g>
+        </symbol>
+    </svg>
+
+    <div id="grain"></div>
+
+    <!-- HEADER -->
+    <header>
+        <div style="display: flex; align-items: center; gap: 1.2rem">
+            <a class="brand" href="ref.html">
+                <svg aria-hidden="true"><use href="#sun-mark" /></svg>
+                Univo
+            </a>
+            <span class="mono" style="font-size: 11px; color: var(--ink-soft); font-weight: 600">
+                / DIGITAL TWIN SIMULATOR
+            </span>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 1rem">
+            <span class="coop-district-pill" id="headerCoopPill">
+                <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--terra)"></span>
+                <span id="coopNameDisplay">Tiruchirappalli · Srirangam Island Zone</span>
+            </span>
+            <a href="cooperative-dashboard.html" class="nav-back-link">
+                <span>← Back to Dashboard</span>
+            </a>
+        </div>
+    </header>
+
+    <main>
+        <!-- Title & Subtitle -->
+        <div style="margin-bottom: 2rem">
+            <div style="display: flex; align-items: center; gap: .6rem; margin-bottom: .4rem">
+                <span class="sim-tag-badge">⚡ AUTONOMOUS WHAT-IF WORKFORCE MODELLING</span>
+                <span class="mono" style="font-size: 10px; color: var(--green); font-weight: 700">● LIVE MONTE-CARLO PREDICTIVE ENGINE</span>
+            </div>
+            <h1 style="font-family: var(--serif); font-size: 2.2rem; font-weight: 500; line-height: 1.2">
+                Digital Twin / What-If Workforce Simulator
+            </h1>
+            <p style="font-size: 14px; color: var(--ink-soft); max-width: 820px; margin-top: .4rem">
+                Test and forecast the systemic operational, labor-equity, and response-time consequences of tactical worker deployments across cooperative zones before issuing statutory dispatch orders.
+            </p>
+        </div>
+
+        <!-- 3-Step Guided Workflow Progression -->
+        <div class="step-progress-bar">
+            <div class="step-node active" id="nodeStep1">
+                <div class="step-num">1</div>
+                <div>
+                    <div style="font-weight: 700; font-size: 13px">1. RUN SIMULATION</div>
+                    <div style="font-size: 11px; color: var(--ink-soft)">Configure intervention scenario</div>
+                </div>
+            </div>
+            <div class="step-node" id="nodeStep2">
+                <div class="step-num">2</div>
+                <div>
+                    <div style="font-weight: 700; font-size: 13px">2. VIEW IMPACT</div>
+                    <div style="font-size: 11px; color: var(--ink-soft)">Analyze predicted telemetry</div>
+                </div>
+            </div>
+            <div class="step-node" id="nodeStep3">
+                <div class="step-num">3</div>
+                <div>
+                    <div style="font-weight: 700; font-size: 13px">3. APPLY DECISION</div>
+                    <div style="font-size: 11px; color: var(--ink-soft)">Commit dispatch to network</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main 2-Column Simulation Grid -->
+        <div class="twin-grid">
+            <!-- Left Column: Scenario Configuration Panel -->
+            <div class="card-panel">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; border-bottom: 1.5px solid var(--hair); padding-bottom: .8rem">
+                    <h2 style="font-family: var(--serif); font-size: 1.35rem; font-weight: 600">
+                        Simulation Parameters
+                    </h2>
+                    <span class="mono" style="font-size: 10px; color: var(--terra); font-weight: 700">TESTBED v2.4</span>
+                </div>
+
+                <!-- Preset Scenarios (Including user's exact example) -->
+                <div style="margin-bottom: 1.5rem">
+                    <label class="form-label">Featured What-If Scenarios</label>
+                    <button type="button" class="preset-scenario-btn selected" onclick="loadScenario('zone3_plumbers')">
+                        <div>
+                            <strong>“What if we deploy 4 additional plumbers to Zone 3?”</strong>
+                            <div style="font-size: 11px; color: var(--ink-soft); margin-top: 2px">Targets critical hydrostatic surge in Mylapore sector</div>
+                        </div>
+                        <span style="font-size: 16px; color: var(--terra)">➔</span>
+                    </button>
+                    <button type="button" class="preset-scenario-btn" onclick="loadScenario('zone2_electricians')">
+                        <div>
+                            <strong>“What if we deploy 5 additional electricians to Zone 2?”</strong>
+                            <div style="font-size: 11px; color: var(--ink-soft); margin-top: 2px">Mitigates port substation switchgear load failure</div>
+                        </div>
+                        <span style="font-size: 16px; color: var(--terra)">➔</span>
+                    </button>
+                    <button type="button" class="preset-scenario-btn" onclick="loadScenario('zone10_hvac')">
+                        <div>
+                            <strong>“What if we deploy 3 HVAC specialists to Zone 10?”</strong>
+                            <div style="font-size: 11px; color: var(--ink-soft); margin-top: 2px">Absorbs commercial cold chain refrigeration surge</div>
+                        </div>
+                        <span style="font-size: 16px; color: var(--terra)">➔</span>
+                    </button>
+                </div>
+
+                <!-- Detailed Parameters Form -->
+                <div class="form-control-wrap">
+                    <label class="form-label" for="simTargetZone">Target Municipal Zone</label>
+                    <select class="form-select" id="simTargetZone" onchange="recalculatePreview()">
+                        <option value="Zone 3 · Mylapore & Triplicane" selected>Zone 3 (Mylapore & Triplicane - Critical Target)</option>
+                        <option value="Srirangam Island Zone">Srirangam Island Zone (Tiruchirappalli)</option>
+                        <option value="Zone 2 · Tondiarpet & Harbour">Zone 2 (Tondiarpet & Harbour)</option>
+                        <option value="Zone 5 · Royapettah">Zone 5 (Royapettah & Marina Corridor)</option>
+                        <option value="Zone 10 · Kodambakkam">Zone 10 (Kodambakkam & Vadapalani)</option>
+                        <option value="Zone 9 · Teynampet HQ">Zone 9 (Teynampet HQ)</option>
+                    </select>
+                </div>
+
+                <div class="form-control-wrap">
+                    <label class="form-label" for="simTrade">Trade Specialization</label>
+                    <select class="form-select" id="simTrade" onchange="recalculatePreview()">
+                        <option value="Plumbing & Hydro Pipeline Engineering" selected>🔧 Plumbing & Hydro Pipeline Engineering</option>
+                        <option value="Electrical & Wiring Installation">⚡ Electrical & Wiring Installation</option>
+                        <option value="HVAC & Cold Storage Maintenance">❄️ HVAC & Cold Storage Maintenance</option>
+                        <option value="Solar PV & Inverter Systems">☀️ Solar PV & Inverter Systems</option>
+                    </select>
+                </div>
+
+                <div class="form-control-wrap">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px">
+                        <label class="form-label" style="margin-bottom: 0" for="simWorkersRange">Additional Workers to Deploy</label>
+                        <span class="mono" style="font-weight: 700; color: var(--terra); font-size: 14px" id="lblWorkerCount">+4 Workers</span>
+                    </div>
+                    <input type="range" id="simWorkersRange" min="1" max="10" value="4" style="width: 100%; accent-color: var(--terra); cursor: pointer;" oninput="updateWorkerCount(this.value)">
+                    <div style="display: flex; justify-content: space-between; font-size: 10px; color: var(--ink-soft); margin-top: 4px" class="mono">
+                        <span>+1 Tech</span>
+                        <span>+4 (Optimal)</span>
+                        <span>+10 Techs</span>
+                    </div>
+                </div>
+
+                <div class="form-control-wrap">
+                    <label class="form-label" for="simSourcePool">Mobilization Source Pool</label>
+                    <select class="form-select" id="simSourcePool">
+                        <option value="Zone 9 Central Headquarters Reserve" selected>Zone 9 Central HQ Reserve (+14 Buffer Available)</option>
+                        <option value="Regional Cooperative Flying Squad">Regional Cooperative Emergency Flying Squad</option>
+                        <option value="Neighboring Taluk Surplus Pool">Neighboring Taluk Inter-Cooperative Pool</option>
+                    </select>
+                </div>
+
+                <button type="button" class="btn-run-sim" id="btnExecuteSim" onclick="executeSimulation()">
+                    <span>🚀 RUN SIMULATION</span>
+                </button>
+            </div>
+
+            <!-- Right Column: Predicted Impact Telemetry Panel -->
+            <div class="card-panel" id="impactResultsPanel">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; border-bottom: 1.5px solid var(--hair); padding-bottom: .8rem; flex-wrap: wrap; gap: .8rem">
+                    <div>
+                        <span class="sim-tag-badge">SIMULATED PREDICTIONS · WHAT-IF MODEL</span>
+                        <h2 style="font-family: var(--serif); font-size: 1.35rem; font-weight: 600; margin-top: 2px" id="impactHeadline">
+                            Predicted Impact for Zone 3 (+4 Plumbers)
+                        </h2>
+                    </div>
+                    <button type="button" class="mono" style="background: rgba(36,109,62,0.08); border: 1px solid rgba(36,109,62,0.25); color: var(--green); padding: 5px 12px; border-radius: 999px; font-size: 10px; font-weight: 700" onclick="viewImpactDetails()">
+                        VIEW IMPACT ➔
+                    </button>
+                </div>
+
+                <!-- 5 Required Impact Dimensions -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem">
+                    <!-- 1. Demand Coverage -->
+                    <div class="metric-impact-card positive">
+                        <div style="display: flex; justify-content: space-between; align-items: center">
+                            <span class="mono" style="font-size: 10px; color: var(--ink-soft); font-weight: 700">1. DEMAND COVERAGE</span>
+                            <span class="mono" style="font-size: 10px; color: var(--green); font-weight: 700" id="deltaCoverage">+32% Surge Absorption</span>
+                        </div>
+                        <div style="display: flex; align-items: baseline; gap: .6rem">
+                            <span style="font-family: var(--serif); font-size: 1.9rem; font-weight: 600" id="valCoverageAfter">94%</span>
+                            <span style="font-size: 12px; color: var(--ink-soft); text-decoration: line-through" id="valCoverageBefore">62% Baseline</span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-fill-predicted" id="barCoverage" style="width: 94%"></div>
+                        </div>
+                        <span style="font-size: 11px; color: var(--ink-soft)">Eliminates municipal backlog risk across residential pipeline grids.</span>
+                    </div>
+
+                    <!-- 2. Worker Workload -->
+                    <div class="metric-impact-card positive">
+                        <div style="display: flex; justify-content: space-between; align-items: center">
+                            <span class="mono" style="font-size: 10px; color: var(--ink-soft); font-weight: 700">2. WORKER WORKLOAD</span>
+                            <span class="mono" style="font-size: 10px; color: var(--green); font-weight: 700" id="deltaWorkload">-38% Fatigue Relief</span>
+                        </div>
+                        <div style="display: flex; align-items: baseline; gap: .6rem">
+                            <span style="font-family: var(--serif); font-size: 1.9rem; font-weight: 600" id="valWorkloadAfter">4.2 hrs</span>
+                            <span style="font-size: 12px; color: var(--ink-soft); text-decoration: line-through" id="valWorkloadBefore">6.8 hrs Baseline</span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-fill-current" id="barWorkload" style="width: 52%"></div>
+                        </div>
+                        <span style="font-size: 11px; color: var(--ink-soft)">Restores sustainable 8-hour shift ergonomics and breaks fatigue risk.</span>
+                    </div>
+
+                    <!-- 3. Response Time -->
+                    <div class="metric-impact-card positive">
+                        <div style="display: flex; justify-content: space-between; align-items: center">
+                            <span class="mono" style="font-size: 10px; color: var(--ink-soft); font-weight: 700">3. RESPONSE TIME</span>
+                            <span class="mono" style="font-size: 10px; color: var(--green); font-weight: 700" id="deltaResponse">-61% Arrival Delay</span>
+                        </div>
+                        <div style="display: flex; align-items: baseline; gap: .6rem">
+                            <span style="font-family: var(--serif); font-size: 1.9rem; font-weight: 600" id="valResponseAfter">18 mins</span>
+                            <span style="font-size: 12px; color: var(--ink-soft); text-decoration: line-through" id="valResponseBefore">46 mins Baseline</span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-fill-predicted" id="barResponse" style="width: 32%"></div>
+                        </div>
+                        <span style="font-size: 11px; color: var(--ink-soft)">Emergency response arrives within cooperative SLA guarantee (<20m).</span>
+                    </div>
+
+                    <!-- 4. Opportunity Distribution -->
+                    <div class="metric-impact-card accent">
+                        <div style="display: flex; justify-content: space-between; align-items: center">
+                            <span class="mono" style="font-size: 10px; color: var(--ink-soft); font-weight: 700">4. OPPORTUNITY DISTRIBUTION</span>
+                            <span class="mono" style="font-size: 10px; color: var(--terra); font-weight: 700" id="deltaOpportunity">Gini Index: 0.18</span>
+                        </div>
+                        <div style="display: flex; align-items: baseline; gap: .6rem">
+                            <span style="font-family: var(--serif); font-size: 1.9rem; font-weight: 600" id="valOpportunityAfter">Balanced</span>
+                            <span style="font-size: 12px; color: var(--ink-soft); text-decoration: line-through" id="valOpportunityBefore">Skewed (0.44)</span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-fill-current" style="width: 88%"></div>
+                        </div>
+                        <span style="font-size: 11px; color: var(--ink-soft)">Equalizes ticket allocations across all junior and senior certified members.</span>
+                    </div>
+                </div>
+
+                <!-- 5. Cooperative Capacity (Full Width) -->
+                <div class="metric-impact-card positive" style="margin-top: 1rem">
+                    <div style="display: flex; justify-content: space-between; align-items: center">
+                        <span class="mono" style="font-size: 10px; color: var(--ink-soft); font-weight: 700">5. COOPERATIVE CAPACITY & THROUGHPUT</span>
+                        <span class="mono" style="font-size: 10px; color: var(--green); font-weight: 700" id="deltaCapacity">+22 Households/Day</span>
+                    </div>
+                    <div style="display: flex; align-items: baseline; gap: .8rem">
+                        <span style="font-family: var(--serif); font-size: 2.1rem; font-weight: 600" id="valCapacityAfter">58 Calls / Day</span>
+                        <span style="font-size: 13px; color: var(--ink-soft); text-decoration: line-through" id="valCapacityBefore">36 Calls Baseline</span>
+                    </div>
+                    <div class="progress-track" style="height: 10px">
+                        <div class="progress-fill-predicted" id="barCapacity" style="width: 82%"></div>
+                    </div>
+                    <span style="font-size: 12px; color: var(--ink-soft)">Cooperative gross member dividend potential expands by ₹28,600/week while stabilizing regional SLA.</span>
+                </div>
+
+                <!-- Apply Decision Button (Final Workflow Action) -->
+                <button type="button" class="btn-apply-decision" id="btnApplyDecision" onclick="applyDecisionToNetwork()">
+                    <span>✓ APPLY DECISION TO COOPERATIVE DISPATCH</span>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toastNotice">
+        <span style="font-size: 18px">✓</span>
+        <span id="toastMsg">Simulated decision applied successfully.</span>
+    </div>
+
+    <script>
+        (function () {
+            "use strict";
+            const $ = (s) => document.querySelector(s);
+            const $$ = (s) => Array.from(document.querySelectorAll(s));
+
+            // Load Active Cooperative
+            let currentCoop = {
+                district: 'Tiruchirappalli (Trichy)',
+                zone: 'Srirangam Island Zone'
+            };
+            try {
+                const stored = JSON.parse(localStorage.getItem('univo_active_cooperative') || 'null');
+                if (stored) currentCoop = Object.assign(currentCoop, stored);
+            } catch (e) {}
+
+            $('#coopNameDisplay').textContent = `${currentCoop.district} · ${currentCoop.zone}`;
+
+            window.updateWorkerCount = function (val) {
+                $('#lblWorkerCount').textContent = `+${val} Workers`;
+                recalculatePreview();
+            };
+
+            window.loadScenario = function (scenarioKey) {
+                $$('.preset-scenario-btn').forEach(b => b.classList.remove('selected'));
+                event.currentTarget.classList.add('selected');
+
+                if (scenarioKey === 'zone3_plumbers') {
+                    $('#simTargetZone').value = 'Zone 3 · Mylapore & Triplicane';
+                    $('#simTrade').value = 'Plumbing & Hydro Pipeline Engineering';
+                    $('#simWorkersRange').value = 4;
+                    updateWorkerCount(4);
+                } else if (scenarioKey === 'zone2_electricians') {
+                    $('#simTargetZone').value = 'Zone 2 · Tondiarpet & Harbour';
+                    $('#simTrade').value = 'Electrical & Wiring Installation';
+                    $('#simWorkersRange').value = 5;
+                    updateWorkerCount(5);
+                } else if (scenarioKey === 'zone10_hvac') {
+                    $('#simTargetZone').value = 'Zone 10 · Kodambakkam';
+                    $('#simTrade').value = 'HVAC & Cold Storage Maintenance';
+                    $('#simWorkersRange').value = 3;
+                    updateWorkerCount(3);
+                }
+            };
+
+            window.recalculatePreview = function () {
+                const workers = parseInt($('#simWorkersRange').value, 10) || 4;
+                const zone = $('#simTargetZone').value;
+
+                $('#impactHeadline').textContent = `Predicted Impact for ${zone.split('·')[0]} (+${workers} Workers)`;
+
+                // Dynamic simulation computations
+                const coverage = Math.min(99, 62 + workers * 8);
+                $('#valCoverageAfter').textContent = `${coverage}%`;
+                $('#deltaCoverage').textContent = `+${coverage - 62}% Surge Absorption`;
+                $('#barCoverage').style.width = `${coverage}%`;
+
+                const workload = (6.8 - workers * 0.65).toFixed(1);
+                $('#valWorkloadAfter').textContent = `${workload} hrs`;
+                $('#deltaWorkload').textContent = `-${Math.round((6.8 - workload) / 6.8 * 100)}% Fatigue Relief`;
+
+                const responseTime = Math.max(14, 46 - workers * 7);
+                $('#valResponseAfter').textContent = `${responseTime} mins`;
+                $('#deltaResponse').textContent = `-${Math.round((46 - responseTime) / 46 * 100)}% Arrival Delay`;
+
+                const capacity = 36 + workers * 5.5;
+                $('#valCapacityAfter').textContent = `${Math.round(capacity)} Calls / Day`;
+                $('#deltaCapacity').textContent = `+${Math.round(capacity - 36)} Households/Day`;
+                $('#barCapacity').style.width = `${Math.min(98, Math.round(capacity / 70 * 100))}%`;
+            };
+
+            window.executeSimulation = function () {
+                const btn = $('#btnExecuteSim');
+                btn.innerHTML = '<span>⚙️ COMPUTING MONTE-CARLO PREDICTION...</span>';
+                btn.style.background = '#444';
+
+                setTimeout(() => {
+                    btn.innerHTML = '<span>✓ SIMULATION COMPUTED</span>';
+                    btn.style.background = 'var(--green)';
+
+                    $('#nodeStep1').classList.add('completed');
+                    $('#nodeStep2').classList.add('active');
+
+                    recalculatePreview();
+                    showToast('Simulation complete! Review predicted impact metrics.');
+
+                    setTimeout(() => {
+                        btn.innerHTML = '<span>🚀 RUN SIMULATION</span>';
+                        btn.style.background = 'var(--ink)';
+                    }, 2200);
+                }, 750);
+            };
+
+            window.viewImpactDetails = function () {
+                $('#nodeStep2').classList.add('completed');
+                $('#nodeStep3').classList.add('active');
+                $('#impactResultsPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                showToast('Viewing simulated predictions. Click Apply Decision to deploy.');
+            };
+
+            window.applyDecisionToNetwork = function () {
+                const workers = $('#simWorkersRange').value;
+                const zone = $('#simTargetZone').value;
+                const trade = $('#simTrade').value;
+
+                const decisionRecord = {
+                    applied_at: new Date().toISOString(),
+                    target_zone: zone,
+                    trade: trade,
+                    workers_count: workers,
+                    predicted_coverage: $('#valCoverageAfter').textContent,
+                    predicted_sla: $('#valResponseAfter').textContent
+                };
+
+                localStorage.setItem('univo_last_applied_whatif', JSON.stringify(decisionRecord));
+
+                $('#nodeStep3').classList.add('completed');
+                const applyBtn = $('#btnApplyDecision');
+                applyBtn.textContent = '✓ DECISION COMMITTED TO STATUTORY COOPERATIVE NETWORK';
+                applyBtn.style.background = 'var(--ink)';
+                applyBtn.disabled = true;
+
+                showToast(`✓ Applied! +${workers} ${trade.split('&')[0]} deployed to ${zone}.`);
+            };
+
+            function showToast(msg) {
+                const toast = $('#toastNotice');
+                const label = $('#toastMsg');
+                if (!toast || !label) return;
+                label.textContent = msg;
+                toast.style.display = 'flex';
+                setTimeout(() => {
+                    toast.style.display = 'none';
+                }, 3400);
+            }
+
+            /* Sun rays */
+            (function () {
+                const g = $('#sun-rays');
+                if (!g) return;
+                for (let i = 0; i < 12; i++) {
+                    const a = i * Math.PI / 6, r2 = i % 2 === 0 ? 46 : 38;
+                    const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    l.setAttribute('x1', (50 + 26 * Math.cos(a)).toFixed(1));
+                    l.setAttribute('y1', (50 + 26 * Math.sin(a)).toFixed(1));
+                    l.setAttribute('x2', (50 + r2 * Math.cos(a)).toFixed(1));
+                    l.setAttribute('y2', (50 + r2 * Math.sin(a)).toFixed(1));
+                    g.appendChild(l);
+                }
+            })();
+        })();
+    </script>
+</body>
+
+</html>

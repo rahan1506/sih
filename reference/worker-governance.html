@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cooperative Governance & Democratic Voting — UNIVO</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap"
+        rel="stylesheet">
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* ============ DESIGN TOKENS ============ */
+        :root {
+            --cream: #F4ECDC;
+            --cream-soft: #FAF6EF;
+            --ink: #221812;
+            --ink-soft: #4a3b32;
+            --terra: #C15A2E;
+            --gold: #D9A441;
+            --green: #246d3e;
+            --green-soft: rgba(36, 109, 62, 0.08);
+            --hair: rgba(34, 24, 18, 0.12);
+            --serif: 'Fraunces', Georgia, serif;
+            --sans: 'Instrument Sans', 'Helvetica Neue', sans-serif;
+            --mono: 'Space Mono', monospace;
+            --ease: cubic-bezier(.22, 1, .36, 1);
+            --pad: 4vw;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--cream);
+            color: var(--ink);
+            font: 400 15px/1.6 var(--sans);
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        ::selection {
+            background: var(--terra);
+            color: var(--cream);
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        button {
+            font: inherit;
+            color: inherit;
+            background: none;
+            border: 0;
+            cursor: pointer;
+        }
+
+        .mono {
+            font-family: var(--mono);
+            font-size: 11px;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+        }
+
+        #grain {
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+            mix-blend-mode: multiply;
+            opacity: .05;
+            pointer-events: none;
+            z-index: 2500;
+        }
+
+        /* ============ HEADER ============ */
+        header {
+            padding: 1.2rem var(--pad);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--hair);
+            background: rgba(244, 236, 220, 0.96);
+            backdrop-filter: blur(16px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: .7rem;
+            font-family: var(--serif);
+            font-size: 1.35rem;
+            font-weight: 500;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: .9rem;
+            flex-wrap: wrap;
+        }
+
+        .pill-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            background: #fff;
+            border: 1px solid var(--hair);
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* Hero Banner */
+        .gov-hero {
+            max-width: 1350px;
+            width: 100%;
+            margin: 1.8rem auto 1.4rem;
+            padding: 0 var(--pad);
+        }
+
+        .hero-banner {
+            background: linear-gradient(135deg, rgba(255,255,255,0.96), rgba(244,236,220,0.88)), url('interior_bg.jpeg') no-repeat center / cover;
+            border: 1.5px solid var(--hair);
+            border-radius: 24px;
+            padding: clamp(1.8rem, 3.2vw, 2.6rem);
+            box-shadow: 0 12px 36px rgba(34, 24, 18, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .hero-left h1 {
+            font-family: var(--serif);
+            font-size: clamp(1.9rem, 3.2vw, 2.8rem);
+            font-weight: 400;
+            line-height: 1.15;
+        }
+
+        .hero-left h1 em {
+            font-style: italic;
+            color: var(--terra);
+        }
+
+        /* Main Container */
+        main {
+            max-width: 1350px;
+            width: 100%;
+            margin: 0 auto 5rem;
+            padding: 0 var(--pad);
+            display: flex;
+            flex-direction: column;
+            gap: 2.2rem;
+        }
+
+        /* Card styles */
+        .gov-card {
+            background: #fff;
+            border: 1.5px solid var(--hair);
+            border-radius: 22px;
+            padding: 2.2rem;
+            box-shadow: 0 8px 24px rgba(34, 24, 18, 0.03);
+            display: flex;
+            flex-direction: column;
+            gap: 1.4rem;
+            transition: all .25s var(--ease);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--hair);
+            padding-bottom: 0.9rem;
+            flex-wrap: wrap;
+            gap: .6rem;
+        }
+
+        .card-title {
+            font-family: var(--serif);
+            font-size: 1.45rem;
+            font-weight: 500;
+        }
+
+        .grid-2col {
+            display: grid;
+            grid-template-columns: 1.35fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 980px) {
+            .grid-2col {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Resolution Items */
+        .resolution-item {
+            background: var(--cream-soft);
+            border: 1.5px solid var(--hair);
+            border-radius: 18px;
+            padding: 1.8rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+            transition: all .2s;
+        }
+
+        .resolution-item.passed {
+            border-color: rgba(36, 109, 62, 0.4);
+            background: linear-gradient(180deg, rgba(36, 109, 62, 0.04), #fff);
+        }
+
+        .res-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            font-family: var(--mono);
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 999px;
+            background: rgba(193, 90, 46, 0.12);
+            color: var(--terra);
+        }
+
+        .res-badge.passed {
+            background: rgba(36, 109, 62, 0.12);
+            color: var(--green);
+        }
+
+        /* Progress Bar for Majority */
+        .vote-bar-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: .4rem;
+        }
+
+        .vote-meta-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .vote-track {
+            height: 10px;
+            background: rgba(34, 24, 18, 0.08);
+            border-radius: 999px;
+            overflow: hidden;
+            display: flex;
+        }
+
+        .vote-yes-fill {
+            height: 100%;
+            background: var(--green);
+            transition: width .5s var(--ease);
+        }
+
+        .vote-no-fill {
+            height: 100%;
+            background: #b91c1c;
+            transition: width .5s var(--ease);
+        }
+
+        /* Vote Actions */
+        .vote-actions {
+            display: flex;
+            gap: .8rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-vote-yes {
+            background: var(--green);
+            color: #fff;
+            padding: 0.75rem 1.4rem;
+            border-radius: 999px;
+            font-family: var(--mono);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .1em;
+            transition: all .2s;
+        }
+
+        .btn-vote-yes:hover {
+            background: #1b532f;
+            transform: translateY(-2px);
+        }
+
+        .btn-vote-no {
+            background: #b91c1c;
+            color: #fff;
+            padding: 0.75rem 1.4rem;
+            border-radius: 999px;
+            font-family: var(--mono);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .1em;
+            transition: all .2s;
+        }
+
+        .btn-vote-no:hover {
+            background: #991b1b;
+            transform: translateY(-2px);
+        }
+
+        .btn-vote-abstain {
+            background: transparent;
+            color: var(--ink-soft);
+            border: 1px solid var(--hair);
+            padding: 0.75rem 1.2rem;
+            border-radius: 999px;
+            font-family: var(--mono);
+            font-size: 11px;
+        }
+
+        .voted-stamp {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            background: var(--green-soft);
+            color: var(--green);
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-family: var(--mono);
+            font-size: 10.5px;
+            font-weight: 700;
+            border: 1px solid rgba(36, 109, 62, 0.3);
+        }
+
+        /* Form Controls */
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: .4rem;
+        }
+
+        .field label {
+            font-family: var(--mono);
+            font-size: 10.5px;
+            color: var(--ink-soft);
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .field input,
+        .field select,
+        .field textarea {
+            width: 100%;
+            background: var(--cream-soft);
+            border: 1px solid var(--hair);
+            border-radius: 12px;
+            padding: 0.8rem 1rem;
+            font-family: var(--sans);
+            font-size: 14px;
+            color: var(--ink);
+        }
+
+        .field input:focus,
+        .field select:focus,
+        .field textarea:focus {
+            outline: none;
+            border-color: var(--terra);
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(193, 90, 46, 0.12);
+        }
+
+        .field textarea {
+            min-height: 90px;
+            resize: vertical;
+        }
+
+        /* Buttons */
+        .btn-primary {
+            background: var(--ink);
+            color: var(--cream);
+            padding: 0.85rem 1.6rem;
+            border-radius: 999px;
+            font-family: var(--mono);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .12em;
+            text-align: center;
+            transition: all .2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .6rem;
+        }
+
+        .btn-primary:hover {
+            background: var(--terra);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(193, 90, 46, 0.28);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--ink-soft);
+            border: 1px solid var(--hair);
+            padding: 0.85rem 1.4rem;
+            border-radius: 999px;
+            font-family: var(--mono);
+            font-size: 11px;
+            text-align: center;
+            transition: all .2s;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--ink);
+            color: var(--ink);
+        }
+
+        /* Ticket Cards */
+        .ticket-item {
+            background: var(--cream-soft);
+            border: 1px solid var(--hair);
+            border-radius: 14px;
+            padding: 1.2rem;
+            display: flex;
+            flex-direction: column;
+            gap: .5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="grain"></div>
+
+    <!-- ============================================== -->
+    <!-- HEADER                                         -->
+    <!-- ============================================== -->
+    <header>
+        <div style="display:flex; align-items:center; gap:.8rem">
+            <a class="brand" href="worker-dashboard.html">UNIVO</a>
+            <span class="mono" style="font-size:10px; background:var(--ink); color:var(--cream); padding:3px 10px; border-radius:999px">
+                DEMOCRATIC GOVERNANCE
+            </span>
+        </div>
+
+        <div class="header-actions">
+            <!-- Link Back to Worker Dashboard -->
+            <a href="worker-dashboard.html" class="btn-secondary" style="font-weight:700">
+                ← Return to Worker Dashboard
+            </a>
+
+            <!-- Voting Badge -->
+            <div class="pill-badge" style="border-color:var(--terra)">
+                <span class="mono" style="color:var(--terra); font-weight:700">VOTING RIGHT: 1 WORKER = 1 VOTE</span>
+            </div>
+
+            <!-- Profile Info -->
+            <div class="pill-badge">
+                <div style="width:26px; height:26px; border-radius:50%; background:var(--ink); color:var(--cream); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700" id="avatarDisplay">
+                    RS
+                </div>
+                <span style="font-weight:600; font-size:12.5px" id="workerNameHeader">Rahan S</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- ============================================== -->
+    <!-- HERO HEADER                                    -->
+    <!-- ============================================== -->
+    <div class="gov-hero">
+        <div class="hero-banner">
+            <div class="hero-left">
+                <div class="mono" style="color:var(--terra); font-size:10px; font-weight:700">
+                    SOCIETY #TN-COOP-410 · DEMOCRATIC MEMBER RATIFICATION SYSTEM
+                </div>
+                <h1>Cooperative Decisions & <em>Voting.</em></h1>
+                <p style="color:var(--ink-soft); font-size:14px; margin-top:4px; max-width:65ch">
+                    At UNIVO, technicians govern the platform. Every policy, tariff update, and fund allocation requires majority worker approval before it can be implemented into official cooperative bylaws.
+                </p>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:.5rem; text-align:right">
+                <div class="mono" style="font-size:10px; color:#777">VOTER QUORUM STATUS</div>
+                <div style="display:inline-flex; align-items:center; gap:.5rem; background:var(--green-soft); color:var(--green); padding:6px 16px; border-radius:999px; font-weight:700; font-size:12px; border:1px solid rgba(36,109,62,0.3)">
+                    ✓ DEMOCRATIC VOTER STATUS: ACTIVE
+                </div>
+                <div class="mono" style="font-size:9.5px; color:#888">MEMBER ID: #TN-COOP-MEM-984</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- MAIN WORKSPACE                                 -->
+    <!-- ============================================== -->
+    <main>
+        <div class="grid-2col">
+            <!-- LEFT COLUMN: ACTIVE BOARD DECISIONS & VOTING -->
+            <div style="display:flex; flex-direction:column; gap:2rem">
+                <div class="gov-card">
+                    <div class="card-header">
+                        <div>
+                            <span class="mono" style="color:var(--terra); font-size:10px">MEMBER BALLOTS · RECENT DECISIONS</span>
+                            <h2 class="card-title">Active Cooperative Resolutions</h2>
+                        </div>
+                        <span class="mono" style="font-size:10px; color:var(--green)">MAJORITY RULE (>50% QUORUM)</span>
+                    </div>
+
+                    <p style="font-size:13px; color:var(--ink-soft)">
+                        Review the proposed resolutions below. Each member holds one vote. If a resolution crosses the 50% majority threshold, it is automatically enacted into the dispatch tariff and cooperative code.
+                    </p>
+
+                    <!-- RESOLUTION 1: TARIFF REVISION -->
+                    <div class="resolution-item" id="res-1">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start">
+                            <div>
+                                <span class="res-badge" id="resBadge1">RESOLUTION #2026-08 · VOTING OPEN</span>
+                                <h3 style="font-family:var(--serif); font-size:1.35rem; margin-top:5px">
+                                    Base Residential Service Tariff Revision (₹349 → ₹399)
+                                </h3>
+                            </div>
+                            <span class="mono" style="font-size:10px; color:#777">CLOSES IN 2 DAYS</span>
+                        </div>
+
+                        <p style="font-size:13px; color:var(--ink-soft); line-height:1.6">
+                            <strong>Proposal:</strong> Adjust standard diagnostic & base electrical repair fee from ₹349 to ₹399 across all residential flats in Chennai to offset rising copper wire and fuel index costs.
+                        </p>
+
+                        <!-- Live Quorum & Majority Progress Bar -->
+                        <div class="vote-bar-wrap">
+                            <div class="vote-meta-row">
+                                <span>Member Majority Progress: <strong id="yesPct1" style="color:var(--green)">78% YES</strong> vs <strong id="noPct1" style="color:#b91c1c">22% NO</strong></span>
+                                <span class="mono" id="quorumText1">842 / 1,200 Votes (Quorum Met)</span>
+                            </div>
+                            <div class="vote-track">
+                                <div class="vote-yes-fill" id="voteFill1" style="width:78%"></div>
+                                <div class="vote-no-fill" style="width:22%"></div>
+                            </div>
+                        </div>
+
+                        <div style="font-size:11.5px; color:var(--green); font-weight:600" id="implementStatus1">
+                            ✓ Currently crosses the 50% threshold. Scheduled for implementation on 15th Sept.
+                        </div>
+
+                        <!-- Voting Controls -->
+                        <div class="vote-actions" id="voteActions1">
+                            <button type="button" class="btn-vote-yes" onclick="castVote(1, 'YES')">Vote in Favor (YES) ✓</button>
+                            <button type="button" class="btn-vote-no" onclick="castVote(1, 'NO')">Vote Against (NO) ✕</button>
+                            <button type="button" class="btn-vote-abstain" onclick="castVote(1, 'ABSTAIN')">Abstain</button>
+                        </div>
+                    </div>
+
+                    <!-- RESOLUTION 2: ANNUAL SURPLUS ALLOCATION -->
+                    <div class="resolution-item passed" id="res-2">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start">
+                            <div>
+                                <span class="res-badge passed">RESOLUTION #2026-07 · PASSED & IMPLEMENTED</span>
+                                <h3 style="font-family:var(--serif); font-size:1.35rem; margin-top:5px">
+                                    Allocation of ₹15 Lakhs Surplus into Subsidized Tool Grants
+                                </h3>
+                            </div>
+                            <span class="mono" style="font-size:10px; color:var(--green)">89% MAJORITY</span>
+                        </div>
+
+                        <p style="font-size:13px; color:var(--ink-soft); line-height:1.6">
+                            <strong>Approved Decision:</strong> The cooperative annual operating surplus of ₹15,00,000 has been transferred into the member tool modernization fund, creating ₹5,000 annual equipment grants for certified technicians.
+                        </p>
+
+                        <div class="vote-bar-wrap">
+                            <div class="vote-meta-row">
+                                <span>Final Democratic Vote: <strong style="color:var(--green)">89% YES (1,068 votes)</strong> vs <strong style="color:#b91c1c">11% NO</strong></span>
+                                <span class="mono">1,200 / 1,200 (100% Quorum)</span>
+                            </div>
+                            <div class="vote-track">
+                                <div class="vote-yes-fill" style="width:89%"></div>
+                                <div class="vote-no-fill" style="width:11%"></div>
+                            </div>
+                        </div>
+
+                        <div style="font-size:12px; color:var(--green); font-weight:600">
+                            ✓ ENACTED INTO BYLAWS: Tool Grant claims are now live in the Cooperative Welfare Portal.
+                        </div>
+                    </div>
+
+                    <!-- RESOLUTION 3: NIGHT EMERGENCY TARIFF -->
+                    <div class="resolution-item" id="res-3">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start">
+                            <div>
+                                <span class="res-badge" id="resBadge3">RESOLUTION #2026-09 · VOTING OPEN</span>
+                                <h3 style="font-family:var(--serif); font-size:1.35rem; margin-top:5px">
+                                    Night Shift Emergency Premium Surge (1.5x → 1.8x)
+                                </h3>
+                            </div>
+                            <span class="mono" style="font-size:10px; color:#777">CLOSES IN 5 DAYS</span>
+                        </div>
+
+                        <p style="font-size:13px; color:var(--ink-soft); line-height:1.6">
+                            <strong>Proposal:</strong> Elevate the emergency SOS nighttime dispatch multiplier from 1.5x to 1.8x fair tariff for dispatches between 10:00 PM and 06:00 AM to compensate for sleep disruption and night hazard.
+                        </p>
+
+                        <div class="vote-bar-wrap">
+                            <div class="vote-meta-row">
+                                <span>Member Majority Progress: <strong id="yesPct3" style="color:var(--green)">94% YES</strong> vs <strong id="noPct3" style="color:#b91c1c">6% NO</strong></span>
+                                <span class="mono" id="quorumText3">612 / 1,200 Votes</span>
+                            </div>
+                            <div class="vote-track">
+                                <div class="vote-yes-fill" id="voteFill3" style="width:94%"></div>
+                                <div class="vote-no-fill" style="width:6%"></div>
+                            </div>
+                        </div>
+
+                        <div class="vote-actions" id="voteActions3">
+                            <button type="button" class="btn-vote-yes" onclick="castVote(3, 'YES')">Vote in Favor (YES) ✓</button>
+                            <button type="button" class="btn-vote-no" onclick="castVote(3, 'NO')">Vote Against (NO) ✕</button>
+                            <button type="button" class="btn-vote-abstain" onclick="castVote(3, 'ABSTAIN')">Abstain</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: WORKER ISSUES & GRIEVANCE SUBMISSION -->
+            <div style="display:flex; flex-direction:column; gap:2rem">
+                <!-- PETITION & GRIEVANCE FORM -->
+                <div class="gov-card">
+                    <div class="card-header">
+                        <div>
+                            <span class="mono" style="color:var(--terra); font-size:10px">DIRECT CO-OP ADVOCACY</span>
+                            <h2 class="card-title">Raise Issue or Request</h2>
+                        </div>
+                        <span class="mono" style="font-size:10px; color:var(--terra)">MEMBER PETITION</span>
+                    </div>
+
+                    <p style="font-size:12.5px; color:var(--ink-soft)">
+                        Have a concern regarding job allocation, safety hazards, equipment needs, or customer disputes? Submit your formal petition directly to the Board of Directors:
+                    </p>
+
+                    <form id="grievanceForm" style="display:flex; flex-direction:column; gap:1.1rem" onsubmit="submitGrievance(event)">
+                        <div class="field">
+                            <label for="gCategory">Issue / Request Category</label>
+                            <select id="gCategory" required>
+                                <option value="Tariff & Fair Wage Adjustment">Tariff & Fair Wage Adjustment</option>
+                                <option value="Safety Hazard & Unsafe Site Condition">Safety Hazard & Unsafe Site Condition</option>
+                                <option value="Equipment & Tool Replacement">Equipment & Tool Replacement</option>
+                                <option value="Customer Dispute / Unfair Review">Customer Dispute / Unfair Review</option>
+                                <option value="Dispatch Zone Re-allocation">Dispatch Zone Re-allocation</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label for="gTitle">Subject / Summary</label>
+                            <input type="text" id="gTitle" required>
+                        </div>
+
+                        <div class="field">
+                            <label for="gPriority">Urgency Level</label>
+                            <select id="gPriority" required>
+                                <option value="Routine Board Agenda">Routine (Placed in monthly meeting agenda)</option>
+                                <option value="High Priority (72-Hour Response)">High Priority (72-Hour Executive Response)</option>
+                                <option value="Immediate Emergency Intervention">Immediate Emergency Intervention (Critical Safety)</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label for="gDesc">Detailed Description & Proposed Solution</label>
+                            <textarea id="gDesc" required></textarea>
+                        </div>
+
+                        <button type="submit" class="btn-primary" style="margin-top:.4rem">
+                            Submit Petition to Cooperative Board →
+                        </button>
+                    </form>
+                </div>
+
+                <!-- PREVIOUS TICKETS & BOARD RESPONSES -->
+                <div class="gov-card">
+                    <div class="card-header">
+                        <div>
+                            <span class="mono" style="color:var(--terra); font-size:10px">AUDIT TRACKER</span>
+                            <h3 class="card-title" style="font-size:1.25rem">My Submitted Requests</h3>
+                        </div>
+                        <span class="mono" style="font-size:10px; color:var(--green)">1 RESOLVED</span>
+                    </div>
+
+                    <div id="ticketsList" style="display:flex; flex-direction:column; gap:.9rem">
+                        <!-- Dynamic ticket placeholder -->
+                        <div class="ticket-item" id="resolvedTicket">
+                            <div style="display:flex; justify-content:space-between; align-items:center">
+                                <strong style="font-size:13px">#TN-COOP-PETITION-410-89</strong>
+                                <span class="mono" style="color:var(--green); font-size:9.5px; font-weight:700">✓ RESOLVED</span>
+                            </div>
+                            <div style="font-size:12.5px; font-weight:600">
+                                Broken Insulated Screwdriver Set during Anna Salai SOS
+                            </div>
+                            <p style="font-size:12px; color:var(--ink-soft)">
+                                <strong>Board Action:</strong> Approved ₹1,200 emergency replacement tool voucher at Anna Salai Supply Depot. Credit processed.
+                            </p>
+                            <div style="font-size:11px; color:#888">
+                                Reviewed by: Er. S. Ramanathan · 26th Aug 2026
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- SCRIPT -->
+    <script>
+        (function () {
+            // Load user data
+            try {
+                const pass = JSON.parse(localStorage.getItem('univo_worker_passport_data') || '{}');
+                if (pass.fullName) {
+                    document.getElementById('workerNameHeader').textContent = pass.fullName;
+                    const initials = pass.fullName.split(' ').map(n => n[0]).join('').toUpperCase();
+                    document.getElementById('avatarDisplay').textContent = initials || 'RS';
+                }
+            } catch (e) {}
+
+            // Check if worker already voted
+            const userVotes = JSON.parse(localStorage.getItem('univo_worker_votes') || '{}');
+            if (userVotes['res1']) {
+                renderVotedState(1, userVotes['res1']);
+            }
+            if (userVotes['res3']) {
+                renderVotedState(3, userVotes['res3']);
+            }
+
+            // Interactive Democratic Voting Action
+            window.castVote = function (resNum, choice) {
+                userVotes['res' + resNum] = choice;
+                localStorage.setItem('univo_worker_votes', JSON.stringify(userVotes));
+
+                renderVotedState(resNum, choice);
+
+                alert(`✓ Democratic Ballot Recorded! Your vote (${choice}) for Resolution #2026-0${resNum} has been officially stamped into the cooperative ledger under Member ID #TN-COOP-MEM-984.`);
+            };
+
+            function renderVotedState(resNum, choice) {
+                const actionContainer = document.getElementById('voteActions' + resNum);
+                if (actionContainer) {
+                    actionContainer.innerHTML = `
+                        <div class="voted-stamp">
+                            ✓ YOU VOTED: ${choice} (Ballot Signed & Sealed)
+                        </div>
+                    `;
+                }
+
+                // Dynamically increment YES tally if voted YES
+                if (choice === 'YES') {
+                    if (resNum === 1) {
+                        document.getElementById('yesPct1').textContent = '79% YES';
+                        document.getElementById('voteFill1').style.width = '79%';
+                        document.getElementById('quorumText1').textContent = '843 / 1,200 Votes (Quorum Met)';
+                    } else if (resNum === 3) {
+                        document.getElementById('yesPct3').textContent = '95% YES';
+                        document.getElementById('voteFill3').style.width = '95%';
+                        document.getElementById('quorumText3').textContent = '613 / 1,200 Votes (Quorum Met)';
+                        document.getElementById('resBadge3').className = 'res-badge passed';
+                        document.getElementById('resBadge3').textContent = 'RESOLUTION #2026-09 · MAJORITY MET';
+                    }
+                }
+            }
+
+            // Grievance / Issue Submission Handler
+            window.submitGrievance = function (e) {
+                e.preventDefault();
+
+                const category = document.getElementById('gCategory').value;
+                const title = document.getElementById('gTitle').value.trim();
+                const priority = document.getElementById('gPriority').value;
+                const desc = document.getElementById('gDesc').value.trim();
+
+                const ticketId = '#TN-COOP-PETITION-410-' + Math.floor(100 + Math.random() * 900);
+
+                const newTicketHtml = `
+                    <div class="ticket-item" style="border-left:3.5px solid var(--terra); background:#fff">
+                        <div style="display:flex; justify-content:space-between; align-items:center">
+                            <strong style="font-size:13px">${ticketId}</strong>
+                            <span class="mono" style="color:var(--terra); font-size:9.5px; font-weight:700">SUBMITTED · BOARD REVIEW</span>
+                        </div>
+                        <div style="font-size:12.5px; font-weight:600">${title}</div>
+                        <p style="font-size:12px; color:var(--ink-soft)">
+                            <strong>Category:</strong> ${category} (${priority})<br>
+                            ${desc}
+                        </p>
+                        <div style="font-size:11px; color:#888">
+                            Submitted: Just now · Earmarked for Executive Inspector Action
+                        </div>
+                    </div>
+                `;
+
+                const list = document.getElementById('ticketsList');
+                list.insertAdjacentHTML('afterbegin', newTicketHtml);
+
+                alert(`✓ Petition ${ticketId} officially registered! Forwarded directly to the Board of Directors of Chennai Central Artisan & Technicians Co-operative Society #TN-COOP-410.`);
+                document.getElementById('grievanceForm').reset();
+            };
+        })();
+    </script>
+</body>
+
+</html>

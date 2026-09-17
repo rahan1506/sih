@@ -1,0 +1,17 @@
+{
+  "name": "univo-platform",
+  "version": "1.0.0",
+  "description": "UNIVO — Multi-Portal Cooperative Platform (Customer, Worker, Cooperative, Government)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "univo",
+    "cooperative",
+    "workforce"
+  ],
+  "author": "",
+  "license": "ISC"
+}

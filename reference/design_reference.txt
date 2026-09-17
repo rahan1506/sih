@@ -1,0 +1,225 @@
+================================================================================
+  DESIGN REFERENCE -- casadisolare.mp4 (Solare Typeface Website)
+  Extracted: Fonts . Transitions . 3D Motions . Wow Effects
+================================================================================
+
+
+--------------------------------------------------------------------------------
+ 1. TYPOGRAPHY / FONTS
+--------------------------------------------------------------------------------
+
+PRIMARY DISPLAY FONT
+  Name      : Solare
+  Type      : Variable Typeface (custom, 2 axes: weight + intensity)
+  Designer  : Nikolas Wrobel
+  Style     : Elegant, high-contrast serif with optical axis variation
+
+  Weight Variants (Standard):
+    - Fine
+    - Light
+    - Regular
+    - Medium
+    - Black
+
+  Weight Variants (Intense):
+    - Fine Intense
+    - Light Intense
+    - Regular Intense
+    - Medium Intense
+    - Black Intense
+
+  Italic Variants:
+    - Fine Italic
+    - Light Italic
+    - Regular Italic
+    - Medium Italic
+    - Black Italic
+
+  Intense Italic Variants:
+    - Fine Intense Italic
+    - Light Intense Italic
+    - Regular Intense Italic
+    - Medium Intense Italic
+    - Black Intense Italic
+
+SECONDARY UI FONT
+  Name      : Inter (or similar geometric sans-serif)
+  Style     : Clean, minimal, uppercase with wide letter-spacing
+  Usage     : Navigation labels, pill buttons, slider labels, UI controls
+
+
+--------------------------------------------------------------------------------
+ 2. TRANSITIONS
+--------------------------------------------------------------------------------
+
+  [T-01]  SMOOTH SCROLL
+          Fluid, physics-based vertical scroll between page sections.
+          Uses lerp (linear interpolation) easing for buttery deceleration.
+          Feels weightless -- no snapping, just continuous momentum.
+
+  [T-02]  FADE IN -- OPACITY REVEAL
+          Text and UI elements fade in (opacity: 0 to 1) as they enter
+          the viewport on scroll. Often combined with a subtle upward drift
+          (translateY: 20px to 0) for depth.
+
+  [T-03]  GRADIENT BACKGROUND FADE
+          Background color smoothly transitions from warm cream/ivory
+          to deep solar orange as the user scrolls into the CTA section.
+          Full-page color morph, no hard cuts.
+
+  [T-04]  STICKY ELEMENT MORPH
+          Font-tester sliders animate and collapse into a sticky navigation
+          bar when scrolling out of that section. Smooth layout morph,
+          not a cut or fade.
+
+  [T-05]  TEXT CONTENT SHUFFLE / SWAP
+          When the generate button is clicked in the type tester, the
+          pangram text swaps with a quick shuffle/scramble animation --
+          characters cycle rapidly before settling on new text.
+
+  [T-06]  WEIGHT INTERPOLATION SLIDE
+          Clicking a font weight in the explorer smoothly animates the
+          font weight/intensity axis value in real time. The letterforms
+          visibly morph -- a live variable font interpolation transition.
+
+
+--------------------------------------------------------------------------------
+ 3. 3D MOTIONS AND SPATIAL EFFECTS
+--------------------------------------------------------------------------------
+
+  [3D-01]  HERO 3D CANVAS -- SOLAR ARCH SCENE
+           A fully interactive 3D scene rendered in WebGL/Three.js.
+           Contains:
+             - A glowing sun sphere with warm light emission
+             - A monumental stone arch structure
+             - Ambient atmospheric lighting with soft shadows
+             - The scene responds to mouse movement with parallax tilt
+             - Depth-of-field blur on background elements
+             - Subtle camera drift / breathing animation at idle
+
+  [3D-02]  GLYPH 3D SCULPTURE
+           Individual letterform glyphs are rendered as 3D extruded objects
+           with:
+             - Physically-based rendering (PBR) materials -- marble/stone look
+             - Dynamic directional lighting casting real-time shadows
+             - Micro-rotation animations on hover
+             - Smooth camera orbit around the glyph on scroll
+
+  [3D-03]  CURSOR-FOLLOWING LENS / MAGNIFIER REVEAL
+           A circular orange translucent magnifier lens follows the cursor
+           across the glyph section.
+             - Outside the lens: flat 2D vector outlines of glyphs
+             - Inside the lens: full 3D rendered version is revealed
+             - Smooth lens movement with spring-based lag/follow physics
+             - Radius and opacity animate on hover enter/exit
+
+  [3D-04]  PARALLAX DEPTH LAYERS
+           Multiple background/foreground elements move at different scroll
+           speeds, creating an illusion of 3D depth across 2D sections.
+             - Foreground text moves faster than background imagery
+             - Depth layering: near / mid / far planes
+
+
+--------------------------------------------------------------------------------
+ 4. WOW EFFECTS AND MICRO-ANIMATIONS
+--------------------------------------------------------------------------------
+
+  [WOW-01]  VARIABLE FONT LIVE INTERPOLATION (Interactive Slider)
+            Two sliders control the font WEIGHT and INTENSITY axes in real
+            time. As the user drags, letterforms morph visibly and smoothly --
+            thin to thick, flat to optically stressed. The glyphs breathe
+            and evolve as if alive. This is the signature WOW moment.
+
+  [WOW-02]  MOUSE-TRACKING 3D TILT (Hero Section)
+            The entire 3D hero scene subtly tilts and rotates in response to
+            the user's mouse position across the viewport.
+              - tiltX / tiltY driven by cursor offset from center
+              - Spring physics: slow to accelerate, slow to return
+              - Creates strong sense of three-dimensionality
+
+  [WOW-03]  SCROLL-DRIVEN ANIMATION (CSS Scroll Timeline)
+            Multiple elements are bound to scroll position:
+              - Text lines slide in from left/right as sections enter view
+              - Illustrations scale up from 0.8 to 1.0 on entrance
+              - Opacity, translateX, scale all tied to scroll progress
+
+  [WOW-04]  AMBIENT IDLE ANIMATION -- FLOATING / BREATHING
+            In idle state (no user interaction), the 3D scene elements
+            gently float and breathe:
+              - Slight up-down oscillation (sin wave Y position)
+              - Slow rotation on Y axis
+              - Light intensity pulses softly
+            Creates a living feel even without interaction.
+
+  [WOW-05]  GLYPH OUTLINE TO FILLED MORPH ON HOVER
+            Letter outlines (stroke-only) fill with color/weight on hover.
+            The fill bleeds inward from the stroke -- an ink-spreading effect.
+
+  [WOW-06]  SPRING PHYSICS CURSOR TRAIL
+            The custom cursor or lens follows the real cursor with
+            spring-based lag -- it overshoots slightly and oscillates
+            before settling. Feels organic and premium.
+
+  [WOW-07]  CINEMATIC LETTER STAGGER REVEAL
+            When a text block enters the viewport, each word or character
+            staggers in one-by-one with a delay cascade:
+              - First word appears, then next with +80ms offset, etc.
+              - Combined with fade + slight upward translate
+              - Gives a cinematic, editorial feel
+
+  [WOW-08]  FULL-SCREEN COLOR WASH TRANSITION
+            Between major sections, the entire background performs a
+            slow color wash -- a gradient sweeps across the full viewport
+            like a slow tide. Timed to scroll speed.
+
+  [WOW-09]  TYPOGRAPHIC SCALE EXPLOSION
+            Large display text (e.g. SOLARE) appears at enormous scale
+            filling the entire viewport. On scroll it scales down to normal
+            heading size. Scale: ~400% to 100% over the scroll range.
+
+  [WOW-10]  STICKY NAVIGATION WITH BLUR BACKDROP
+            Navigation bar uses a frosted-glass blur (backdrop-filter: blur)
+            that activates on scroll. Smooth opacity + blur transition
+            gives a premium glassmorphism effect.
+
+  [WOW-11]  HORIZONTAL MARQUEE / INFINITE TICKER
+            A horizontal scrolling ticker of font specimen text runs
+            continuously across the screen. On hover it slows or reverses.
+            Used as a visual separator between sections.
+
+  [WOW-12]  MAGNETIC BUTTON EFFECT
+            CTA buttons slightly attract the cursor toward them when the
+            mouse gets close -- button moves to meet the cursor.
+            On click, a ripple/pulse radiates outward.
+
+
+--------------------------------------------------------------------------------
+ 5. COLOR PALETTE (from video)
+--------------------------------------------------------------------------------
+
+  Cream / Ivory        : #F5F0E8  (background, sections)
+  Solar Orange         : #E8601C  (CTA, accents, cursor lens)
+  Deep Charcoal        : #1A1410  (text, dark sections)
+  Warm Stone           : #C4A882  (mid-tones, 3D material)
+  Off White            : #FAF7F2  (card backgrounds)
+
+
+--------------------------------------------------------------------------------
+ 6. SUGGESTED CSS / JS IMPLEMENTATION STACK
+--------------------------------------------------------------------------------
+
+  Smooth Scroll        : Lenis.js or locomotive-scroll
+  3D Scene             : Three.js (WebGL)
+  Scroll Animations    : GSAP ScrollTrigger
+  Spring Physics       : react-spring or GSAP elastic ease
+  Variable Font        : CSS font-variation-settings
+  Glassmorphism        : backdrop-filter: blur(20px) + rgba background
+  Stagger Animations   : GSAP stagger or Framer Motion
+  Canvas Lens Effect   : Custom WebGL shader or Canvas 2D clipping mask
+  Magnetic Buttons     : Vanilla JS mousemove + GSAP quickTo
+  Marquee Ticker       : CSS animation: marquee infinite linear
+
+
+================================================================================
+  END OF REFERENCE
+================================================================================

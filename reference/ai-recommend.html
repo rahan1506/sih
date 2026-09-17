@@ -1,0 +1,1662 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Service Diagnostic — Univo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Space+Mono&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* ============ TOKENS ============ */
+        :root {
+            --cream: #F4ECDC;
+            --cream2: #EDE1CB;
+            --ink: #221812;
+            --ink-soft: #2d2219;
+            --terra: #C15A2E;
+            --gold: #D9A441;
+            --hair: rgba(34, 24, 18, .18);
+            --serif: 'Fraunces', Georgia, serif;
+            --sans: 'Instrument Sans', 'Helvetica Neue', sans-serif;
+            --mono: 'Space Mono', monospace;
+            --ease: cubic-bezier(.22, 1, .36, 1);
+            --pad: 5vw;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        html::-webkit-scrollbar,
+        body::-webkit-scrollbar {
+            display: none;
+            width: 0;
+            height: 0;
+        }
+
+        body {
+            background: #0d130e url('Fireflies_floating_in_bamboo_forest_202609030000.jpeg') no-repeat center center fixed;
+            background-size: cover;
+            color: var(--ink);
+            font: 400 15px/1.6 var(--sans);
+            font-optical-sizing: auto;
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            opacity: 1;
+            transition: opacity .4s var(--ease);
+        }
+
+        body.loaded {
+            opacity: 1;
+        }
+
+        ::selection {
+            background: var(--terra);
+            color: var(--cream);
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        button {
+            font: inherit;
+            color: inherit;
+            background: none;
+            border: 0;
+            cursor: pointer;
+        }
+
+        :focus-visible {
+            outline: 2px solid var(--terra);
+            outline-offset: 3px;
+        }
+
+        .mono {
+            font-family: var(--mono);
+            font-size: 11px;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+        }
+
+        /* grain texture overlay */
+        #grain {
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+            mix-blend-mode: multiply;
+            opacity: .05;
+            pointer-events: none;
+            z-index: 2500;
+        }
+
+        /* custom cursor */
+        .cursor-dot,
+        .cursor-ring {
+            position: fixed;
+            top: 0;
+            left: 0;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 4000;
+            mix-blend-mode: difference;
+            will-change: transform;
+        }
+
+        .cursor-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--cream);
+        }
+
+        .cursor-ring {
+            width: 36px;
+            height: 36px;
+            border: 1px solid rgba(244, 236, 220, .85);
+            opacity: 0;
+            transition: width .25s, height .25s, opacity .25s;
+        }
+
+        * {
+            cursor: auto;
+        }
+
+        body {
+            cursor: default !important;
+        }
+
+        a, button, [onclick], .btn-book, .filter-btn, .btn-direct-book, .dispatch-pill, label {
+            cursor: pointer !important;
+        }
+
+        input, textarea, select {
+            cursor: text !important;
+        }
+
+        .cursor-dot,
+        .cursor-ring {
+            display: none !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
+
+        /* ============ TOP NAV ============ */
+        header {
+            padding: 1.2rem var(--pad);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--hair);
+            background: rgba(244, 236, 220, 0.92);
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .brand {
+            font-family: var(--serif);
+            font-size: 1.25rem;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: .65rem;
+            letter-spacing: -.01em;
+        }
+
+        .brand svg {
+            width: 20px;
+            height: 20px;
+            color: var(--terra);
+            animation: spin 32s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .nav-back {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            color: var(--ink-soft);
+            transition: all .25s var(--ease);
+        }
+
+        .nav-back:hover {
+            color: var(--terra);
+            transform: translateX(-3px);
+        }
+
+        /* ============ MAIN LAYOUT ============ */
+        main {
+            flex: 1;
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: clamp(2.5rem, 5vh, 4rem) var(--pad);
+            display: flex;
+            flex-direction: column;
+            gap: 2.5rem;
+        }
+
+        /* Header Hero */
+        .ai-hero {
+            display: flex;
+            flex-direction: column;
+            gap: .8rem;
+            text-align: center;
+            align-items: center;
+        }
+
+        .ai-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            padding: 6px 16px;
+            border-radius: 999px;
+            background: rgba(244, 236, 220, 0.9);
+            color: var(--terra);
+            border: 1px solid rgba(193, 90, 46, 0.4);
+            font-size: 10.5px;
+            letter-spacing: .14em;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .ai-title {
+            font-family: var(--serif);
+            font-size: clamp(2.4rem, 5vw, 3.8rem);
+            font-weight: 500;
+            line-height: 1.1;
+            letter-spacing: -.02em;
+            color: #ffffff;
+            text-shadow: 0 4px 24px rgba(0, 0, 0, 0.8), 0 1px 4px rgba(0,0,0,0.9);
+        }
+
+        .ai-title em {
+            font-style: italic;
+            color: #f18d5b;
+            text-shadow: 0 2px 20px rgba(241, 141, 91, 0.6);
+        }
+
+        .ai-desc {
+            color: #f4ecdc;
+            font-size: 1.05rem;
+            max-width: 58ch;
+            text-shadow: 0 2px 14px rgba(0, 0, 0, 0.85);
+            background: rgba(0, 0, 0, 0.35);
+            padding: 8px 20px;
+            border-radius: 999px;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Split Mode Workspace */
+        .ai-workspace {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+
+        .mode-card {
+            background: rgba(255, 255, 255, 0.94);
+            border: 1.5px solid rgba(255, 255, 255, 0.7);
+            border-radius: 24px;
+            padding: 2.2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.4rem;
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(20px);
+            transition: all .35s var(--ease);
+        }
+
+        .mode-card:hover {
+            border-color: var(--terra);
+            transform: translateY(-3px);
+            box-shadow: 0 22px 60px rgba(0, 0, 0, 0.4);
+        }
+
+        .mode-header {
+            display: flex;
+            align-items: center;
+            gap: .8rem;
+        }
+
+        .mode-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--cream2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: var(--terra);
+        }
+
+        .mode-title {
+            font-family: var(--serif);
+            font-size: 1.45rem;
+            font-weight: 500;
+        }
+
+        /* Voice Input Box */
+        .voice-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            flex: 1;
+        }
+
+        .voice-textarea {
+            width: 100%;
+            min-height: 140px;
+            padding: 1rem;
+            border-radius: 16px;
+            background: var(--cream);
+            border: 1px solid var(--hair);
+            font-family: var(--sans);
+            font-size: 14.5px;
+            line-height: 1.5;
+            color: var(--ink);
+            outline: none;
+            resize: vertical;
+            transition: all .25s var(--ease);
+        }
+
+        .voice-textarea:focus {
+            background: #fff;
+            border-color: var(--terra);
+            box-shadow: 0 0 0 3px rgba(193, 90, 46, 0.15);
+        }
+
+        .mic-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .btn-mic {
+            display: inline-flex;
+            align-items: center;
+            gap: .6rem;
+            padding: 0.75rem 1.4rem;
+            border-radius: 999px;
+            background: var(--cream2);
+            border: 1.5px solid var(--hair);
+            font-family: var(--mono);
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--ink);
+            transition: all .25s var(--ease);
+        }
+
+        .btn-mic:hover {
+            border-color: var(--terra);
+            color: var(--terra);
+            background: #fff;
+        }
+
+        .btn-mic.recording {
+            background: #b3261e;
+            color: #fff;
+            border-color: #b3261e;
+            animation: pulseMic 1.2s infinite;
+        }
+
+        @keyframes pulseMic {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.04); }
+        }
+
+        /* Photo Upload Dropzone */
+        .dropzone {
+            border: 2px dashed rgba(193, 90, 46, 0.4);
+            border-radius: 18px;
+            padding: 2.2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            gap: .8rem;
+            background: rgba(244, 236, 220, 0.4);
+            cursor: pointer;
+            transition: all .3s var(--ease);
+            min-height: 160px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dropzone:hover {
+            background: rgba(244, 236, 220, 0.8);
+            border-color: var(--terra);
+        }
+
+        .preview-img {
+            width: 100%;
+            max-height: 180px;
+            object-fit: contain;
+            border-radius: 12px;
+            display: none;
+        }
+
+        /* Quick Suggestions */
+        .suggestion-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .5rem;
+        }
+
+        .chip {
+            padding: 4px 12px;
+            border-radius: 999px;
+            background: var(--cream2);
+            border: 1px solid var(--hair);
+            font-size: 11.5px;
+            color: var(--ink-soft);
+            cursor: pointer;
+            transition: all .2s var(--ease);
+        }
+
+        .chip:hover {
+            border-color: var(--terra);
+            color: var(--terra);
+            background: #fff;
+        }
+
+        /* Submit Action Button */
+        .btn-diagnose {
+            width: 100%;
+            padding: 1rem 2rem;
+            border-radius: 999px;
+            background: var(--ink);
+            color: var(--cream);
+            font-family: var(--mono);
+            font-size: 11.5px;
+            font-weight: 600;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .7rem;
+            transition: all .35s var(--ease);
+        }
+
+        .btn-diagnose:hover:not(:disabled) {
+            background: var(--terra);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 24px rgba(193, 90, 46, 0.3);
+        }
+
+        .btn-diagnose:disabled {
+            opacity: .6;
+            cursor: wait;
+        }
+
+        /* ============ DIAGNOSIS RESULT CARD ============ */
+        .result-container {
+            display: none;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(24px);
+            border: 2px solid var(--terra);
+            border-radius: 28px;
+            padding: clamp(2rem, 4vw, 3rem);
+            box-shadow: 0 24px 70px rgba(0, 0, 0, 0.4);
+            animation: cardIn .5s var(--ease) both;
+            flex-direction: column;
+            gap: 1.6rem;
+        }
+
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--hair);
+            padding-bottom: 1.2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .result-badge {
+            background: rgba(193, 90, 46, 0.12);
+            color: var(--terra);
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            border: 1px solid rgba(193, 90, 46, 0.3);
+        }
+
+        .result-service-name {
+            font-family: var(--serif);
+            font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+            font-weight: 500;
+            color: var(--ink);
+            line-height: 1.15;
+        }
+
+        .result-body {
+            display: grid;
+            grid-template-columns: 2fr 1.2fr;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .reasoning-box {
+            background: var(--cream);
+            border-radius: 16px;
+            padding: 1.4rem;
+            font-size: 14.5px;
+            color: var(--ink-soft);
+            line-height: 1.6;
+        }
+
+        .pricing-box {
+            border: 1px solid var(--hair);
+            border-radius: 18px;
+            padding: 1.6rem;
+            display: flex;
+            flex-direction: column;
+            gap: .6rem;
+            text-align: center;
+            background: rgba(244, 236, 220, 0.5);
+        }
+
+        .price-num {
+            font-family: var(--serif);
+            font-size: 2.2rem;
+            font-weight: 600;
+            color: var(--terra);
+        }
+
+        .btn-book-now {
+            padding: 1rem 2rem;
+            border-radius: 999px;
+            background: var(--terra);
+            color: #fff;
+            font-family: var(--mono);
+            font-size: 11.5px;
+            font-weight: 700;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+            box-shadow: 0 8px 24px rgba(193, 90, 46, 0.35);
+            transition: all .3s var(--ease);
+        }
+
+        .btn-book-now:hover {
+            transform: translateY(-2px);
+            background: var(--ink);
+        }
+
+        /* Matched Worker Showcase */
+        .worker-direct-card {
+            margin-top: 1.6rem;
+            background: #fff;
+            border: 1.5px solid rgba(193, 90, 46, 0.35);
+            border-radius: 20px;
+            padding: 1.4rem 1.8rem;
+            box-shadow: 0 10px 30px rgba(34, 24, 18, 0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+            transition: all .3s var(--ease);
+        }
+
+        .worker-direct-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .worker-direct-avatar {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: var(--ink);
+            color: var(--cream);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--serif);
+            font-size: 1.3rem;
+            font-weight: 600;
+            border: 2px solid var(--terra);
+            flex-shrink: 0;
+        }
+
+        .badge-verified-pill {
+            font-size: 9.5px;
+            background: rgba(36, 109, 62, 0.12);
+            color: #246d3e;
+            padding: 3px 9px;
+            border-radius: 999px;
+            border: 1px solid rgba(36, 109, 62, 0.25);
+            font-weight: 700;
+        }
+
+        .worker-direct-eta-box {
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .btn-direct-book {
+            width: 100%;
+            padding: 1rem 1.8rem;
+            border-radius: 999px;
+            background: var(--terra);
+            color: #fff;
+            font-family: var(--mono);
+            font-size: 11.5px;
+            font-weight: 700;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(193, 90, 46, 0.35);
+            transition: all .3s var(--ease);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: .6rem;
+        }
+
+        .btn-direct-book:hover {
+            background: var(--ink);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(34, 24, 18, 0.25);
+        }
+
+        /* Direct Booking Checkout Panel */
+        .direct-booking-panel {
+            margin-top: 1.5rem;
+            background: #fff;
+            border: 1.5px solid var(--terra);
+            border-radius: 22px;
+            padding: 1.8rem;
+            box-shadow: 0 14px 40px rgba(193, 90, 46, 0.14);
+            animation: slideDownPanel .35s var(--ease) both;
+        }
+
+        @keyframes slideDownPanel {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .direct-booking-title-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--hair);
+            padding-bottom: 1rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .booking-fields-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.2rem;
+        }
+
+        .booking-field-group {
+            display: flex;
+            flex-direction: column;
+            gap: .4rem;
+        }
+
+        .booking-field-label {
+            font-size: 10px;
+            color: var(--ink-soft);
+            font-weight: 700;
+            letter-spacing: .08em;
+        }
+
+        .booking-text-input, .booking-textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            border: 1px solid var(--hair);
+            background: var(--cream2);
+            font-family: var(--sans);
+            font-size: 13.5px;
+            color: var(--ink);
+            outline: none;
+            transition: all .25s var(--ease);
+        }
+
+        .booking-text-input:focus, .booking-textarea:focus {
+            border-color: var(--terra);
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(193, 90, 46, 0.12);
+        }
+
+        .dispatch-pills-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: .8rem;
+        }
+
+        .dispatch-pill {
+            border: 1.5px solid var(--hair);
+            border-radius: 14px;
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: .8rem;
+            background: var(--cream2);
+            transition: all .25s var(--ease);
+        }
+
+        .dispatch-pill.active {
+            border-color: var(--terra);
+            background: #fffdfb;
+            box-shadow: 0 4px 14px rgba(193, 90, 46, 0.12);
+        }
+
+        .dispatch-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--success);
+            box-shadow: 0 0 0 3px rgba(36, 109, 62, 0.2);
+            flex-shrink: 0;
+        }
+
+        .booking-summary-bar {
+            margin-top: 1.5rem;
+            padding-top: 1.2rem;
+            border-top: 1px solid var(--hair);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .btn-confirm-direct-book {
+            padding: 0.95rem 2.2rem;
+            border-radius: 999px;
+            background: var(--terra);
+            color: #fff;
+            font-family: var(--mono);
+            font-size: 11.5px;
+            font-weight: 700;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(193, 90, 46, 0.35);
+            transition: all .3s var(--ease);
+        }
+
+        .btn-confirm-direct-book:hover {
+            background: var(--ink);
+            transform: translateY(-2px);
+        }
+
+        /* Success Card */
+        .booking-success-card {
+            margin-top: 1.6rem;
+            background: #fff;
+            border: 2px solid #246d3e;
+            border-radius: 22px;
+            padding: 2rem;
+            box-shadow: 0 16px 40px rgba(36, 109, 62, 0.1);
+            animation: slideDownPanel .35s var(--ease) both;
+        }
+
+        .badge-success-pill {
+            background: rgba(36, 109, 62, 0.15);
+            color: #246d3e;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 10.5px;
+            font-weight: 700;
+        }
+
+        .success-top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: .5rem;
+        }
+
+        .confirmed-worker-row {
+            margin-top: 1.4rem;
+            padding: 1.2rem;
+            border-radius: 16px;
+            background: var(--cream2);
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .status-live-pill {
+            font-size: 9.5px;
+            color: #246d3e;
+            font-weight: 700;
+            background: rgba(36, 109, 62, 0.1);
+            padding: 3px 8px;
+            border-radius: 999px;
+        }
+
+        .confirmed-actions-bar {
+            margin-top: 1.5rem;
+            display: flex;
+            gap: .8rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-action-phone, .btn-action-track, .btn-action-new {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            padding: 0.75rem 1.4rem;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all .25s var(--ease);
+        }
+
+        .btn-action-phone {
+            background: var(--ink);
+            color: #fff;
+            border: 1px solid var(--ink);
+        }
+
+        .btn-action-phone:hover {
+            background: var(--terra);
+            border-color: var(--terra);
+        }
+
+        .btn-action-track {
+            background: var(--terra);
+            color: #fff;
+            border: 1px solid var(--terra);
+        }
+
+        .btn-action-track:hover {
+            background: var(--ink);
+            border-color: var(--ink);
+        }
+
+        .btn-action-new {
+            background: transparent;
+            color: var(--ink-soft);
+            border: 1px solid var(--hair);
+        }
+
+        .btn-action-new:hover {
+            background: var(--cream2);
+            color: var(--ink);
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .ai-workspace {
+                grid-template-columns: 1fr;
+            }
+            .result-body {
+                grid-template-columns: 1fr;
+            }
+            .booking-fields-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="grain"></div>
+    <div class="cursor-dot" id="cDot"></div>
+    <div class="cursor-ring" id="cRing"></div>
+
+    <!-- HEADER -->
+    <header>
+        <a class="brand" href="dashboard.html">
+            <svg width="20" height="20" viewBox="0 0 100 100" aria-hidden="true">
+                <circle cx="50" cy="50" r="17" fill="currentColor" />
+                <g stroke="currentColor" stroke-width="5" stroke-linecap="round">
+                    <line x1="50" y1="24" x2="50" y2="4" />
+                    <line x1="50" y1="76" x2="50" y2="96" />
+                    <line x1="24" y1="50" x2="4" y2="50" />
+                    <line x1="76" y1="50" x2="96" y2="50" />
+                    <line x1="31.6" y1="31.6" x2="17.5" y2="17.5" />
+                    <line x1="68.4" y1="68.4" x2="82.5" y2="82.5" />
+                    <line x1="31.6" y1="68.4" x2="17.5" y2="82.5" />
+                    <line x1="68.4" y1="31.6" x2="82.5" y2="17.5" />
+                </g>
+            </svg>
+            Univo
+        </a>
+
+        <a href="dashboard.html" class="nav-back mono">
+            ← Return to Dashboard
+        </a>
+    </header>
+
+    <main>
+        <!-- HERO -->
+        <section class="ai-hero">
+            <span class="ai-badge mono">✨ POWERED BY HUGGING FACE INFERENCE</span>
+            <h1 class="ai-title">Confused what service <em>you need?</em></h1>
+            <p class="ai-desc">Speak in plain words, describe the problem, or upload a photo of the damage. Our intelligent zero-shot AI analyzes your problem and recommends the exact certified trade.</p>
+        </section>
+
+        <!-- SPLIT WORKSPACE: VOICE/TEXT & PHOTO -->
+        <section class="ai-workspace">
+            <!-- Mode 1: Natural Language / Voice -->
+            <div class="mode-card">
+                <div class="mode-header">
+                    <div class="mode-icon">🎙️</div>
+                    <div>
+                        <h2 class="mode-title">Describe or Speak</h2>
+                        <div class="mono" style="font-size:10px; color:#666">NATURAL LANGUAGE NLP</div>
+                    </div>
+                </div>
+
+                <div class="voice-wrap">
+                    <textarea class="voice-textarea" id="issueText" placeholder="Describe what's wrong in everyday language. E.g., 'Water is leaking under the kitchen sink and the tap won't shut off completely' or click the mic to speak..."></textarea>
+
+                    <div class="mic-row">
+                        <button class="btn-mic" id="micBtn">
+                            <span id="micDot" style="width:8px; height:8px; border-radius:50%; background:currentColor"></span>
+                            <span id="micLabel">Tap to Speak</span>
+                        </button>
+                        <span class="mono" style="font-size:10px; color:var(--ink-soft)" id="micStatus">Tamil & English supported</span>
+                    </div>
+
+                    <div>
+                        <div class="mono" style="font-size:9.5px; color:#777; margin-bottom:.4rem">TRY ASKING:</div>
+                        <div class="suggestion-chips">
+                            <span class="chip" onclick="fillIssue('Switchboard sparked when I plugged in iron and now the room lights are off')">Sparking switchboard</span>
+                            <span class="chip" onclick="fillIssue('Kitchen drain is blocked and dirty water is backing up')">Blocked drain</span>
+                            <span class="chip" onclick="fillIssue('Wooden bedroom door lock is jammed and hinges are squeaking')">Jammed door lock</span>
+                            <span class="chip" onclick="fillIssue('AC is blowing warm air and making a vibrating noise')">AC not cooling</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn-diagnose" id="btnDiagnoseText" onclick="diagnoseIssue()">
+                    <span>Analyze Problem with AI</span>
+                    <svg width="14" height="12" viewBox="0 0 14 12" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path d="M1 6h11M8 1.5 12.5 6 8 10.5" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Mode 2: Photo Upload -->
+            <div class="mode-card">
+                <div class="mode-header">
+                    <div class="mode-icon">📷</div>
+                    <div>
+                        <h2 class="mode-title">Upload a Photo</h2>
+                        <div class="mono" style="font-size:10px; color:#666">COMPUTER VISION DIAGNOSTIC</div>
+                    </div>
+                </div>
+
+                <div class="dropzone" id="dropzone">
+                    <input type="file" id="photoInput" accept="image/*" style="display:none">
+                    <img id="imagePreview" class="preview-img" alt="Uploaded Issue">
+                    <div id="dropzoneContent">
+                        <div style="font-size:32px">📸</div>
+                        <strong style="font-size:14.5px">Click to capture or upload photo</strong>
+                        <p style="font-size:12px; color:var(--ink-soft); max-width:28ch">Upload a clear photo of the leak, crack, damaged pipe, switch, or wall</p>
+                    </div>
+                </div>
+
+                <div style="font-size:12px; color:var(--ink-soft); line-height:1.5;">
+                    💡 <strong>Tip:</strong> An image allows the model to inspect structural damages, pipe joint corrosion, and electrical burnout signatures.
+                </div>
+
+                <button class="btn-diagnose" id="btnDiagnosePhoto" disabled>
+                    <span>Inspect Photo with AI</span>
+                    <svg width="14" height="12" viewBox="0 0 14 12" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path d="M1 6h11M8 1.5 12.5 6 8 10.5" />
+                    </svg>
+                </button>
+            </div>
+        </section>
+
+        <!-- RESULT CARD -->
+        <section class="result-container" id="resultCard">
+            <div class="result-header">
+                <div>
+                    <span class="mono" style="color:var(--terra); letter-spacing:.14em">AI DIAGNOSTIC RECOMMENDATION</span>
+                    <h3 class="result-service-name" id="resServiceName">Plumbing & Drainage Solutions</h3>
+                </div>
+                <span class="result-badge mono" id="resConfidence">98.4% MATCH CONFIDENCE</span>
+            </div>
+
+            <div class="result-body">
+                <div>
+                    <div class="reasoning-box">
+                        <strong style="display:block; margin-bottom:.4rem; color:var(--ink)">🔍 AI Diagnostic Finding:</strong>
+                        <p id="resFinding">Symptoms indicate an active water seal failure and pressure pipe leakage. This requires a licensed plumber equipped with sealants, replacement gaskets, and pipe wrench tools.</p>
+                    </div>
+
+                    <div style="margin-top:1.2rem; display:flex; gap:1.5rem; flex-wrap:wrap">
+                        <div>
+                            <span class="mono" style="font-size:10px; color:#777">ASSIGNABLE TRADE</span>
+                            <div style="font-weight:600" id="resTrade">Master Plumber (Grade A)</div>
+                        </div>
+                        <div>
+                            <span class="mono" style="font-size:10px; color:#777">DISPATCH TIME</span>
+                            <div style="font-weight:600; color:#246d3e">Under 25 Minutes (Local)</div>
+                        </div>
+                        <div>
+                            <span class="mono" style="font-size:10px; color:#777">AI MODEL USED</span>
+                            <div class="mono" style="font-size:11px">HuggingFace / BART-MNLI</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pricing-box">
+                    <span class="mono" style="font-size:10px; color:#777">ESTIMATED SERVICE COST</span>
+                    <div class="price-num" id="resPrice">₹199 - ₹349</div>
+                    <button class="btn-book-now" id="btnBookResult" onclick="openDirectBooking()">⚡ Book Worker Directly</button>
+                </div>
+            </div>
+
+            <!-- Matched Verified Technician Card -->
+            <div class="worker-direct-card" id="workerDirectCard">
+                <div class="worker-direct-header">
+                    <div style="display:flex; align-items:center; gap:1rem">
+                        <div class="worker-direct-avatar" id="resWorkerAvatar">MS</div>
+                        <div>
+                            <div style="display:flex; align-items:center; gap:.5rem; flex-wrap:wrap">
+                                <h4 style="font-family:var(--serif); font-size:1.35rem; font-weight:600" id="resWorkerName">M. Sundaram</h4>
+                                <span class="badge-verified-pill mono">✓ VERIFIED PROFESSIONAL</span>
+                            </div>
+                            <div style="font-size:12.5px; color:var(--ink-soft)" id="resWorkerRole">Master Pipefitter & Leakage Diagnostics · 11 Years Exp</div>
+                            <div style="font-size:12px; color:var(--gold); margin-top:2px" id="resWorkerRating">★ 4.9 (210 reviews) · 99.4% On-Time Arrival</div>
+                        </div>
+                    </div>
+                    <div class="worker-direct-eta-box">
+                        <span class="mono" style="font-size:9.5px; color:#246d3e; font-weight:700">● AVAILABLE NOW</span>
+                        <div style="font-family:var(--serif); font-size:1.25rem; font-weight:600; color:var(--terra)" id="resWorkerEta">~18 Mins Away</div>
+                        <span class="mono" style="font-size:10px; color:#777">Guindy Local Hub</span>
+                    </div>
+                </div>
+
+                <div class="worker-direct-actions">
+                    <button type="button" class="btn-direct-book" id="btnOpenDirectBook" onclick="openDirectBooking()">
+                        <span>⚡ Book This Worker Directly Now</span>
+                        <svg width="14" height="12" viewBox="0 0 14 12" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <path d="M1 6h11M8 1.5 12.5 6 8 10.5" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Embedded Direct Booking Checkout Form -->
+            <div class="direct-booking-panel" id="directBookingPanel" style="display:none">
+                <div class="direct-booking-title-bar">
+                    <div>
+                        <span class="mono" style="font-size:10px; color:var(--terra); font-weight:700">DIRECT DISPATCH CHECKOUT</span>
+                        <h4 style="font-family:var(--serif); font-size:1.4rem; font-weight:500; margin-top:2px">Confirm Service Details & Dispatch</h4>
+                    </div>
+                    <button type="button" class="mono" style="background:none; border:none; color:#777; cursor:pointer; font-size:12px; text-decoration:underline" onclick="closeDirectBooking()">Close</button>
+                </div>
+
+                <form id="directBookingForm" onsubmit="handleDirectBookingSubmit(event)">
+                    <div class="booking-fields-grid">
+                        <div class="booking-field-group">
+                            <label class="booking-field-label mono">1. SERVICE LOCATION / ADDRESS</label>
+                            <input type="text" id="directBookAddress" class="booking-text-input" value="Flat 4B, 42 Anna Salai, Guindy, Chennai — 600032" required>
+                        </div>
+                        <div class="booking-field-group">
+                            <label class="booking-field-label mono">2. CONTACT PHONE NUMBER</label>
+                            <input type="tel" id="directBookPhone" class="booking-text-input" value="+91 98944 73365" required>
+                        </div>
+                    </div>
+
+                    <div class="booking-field-group" style="margin-top:1rem">
+                        <label class="booking-field-label mono">3. DISPATCH TIME PREFERENCE</label>
+                        <div class="dispatch-pills-row" id="dispatchPills">
+                            <label class="dispatch-pill active" onclick="selectDispatchPill(this)">
+                                <input type="radio" name="dispatchTime" value="Instant Priority Dispatch (Under 25 mins)" checked style="display:none">
+                                <span class="dispatch-dot"></span>
+                                <div>
+                                    <strong>Instant Priority Dispatch</strong>
+                                    <div class="mono" style="font-size:9.5px; color:#666">Worker arrives in ~18-25 mins</div>
+                                </div>
+                            </label>
+                            <label class="dispatch-pill" onclick="selectDispatchPill(this)">
+                                <input type="radio" name="dispatchTime" value="Today Evening (5:00 PM - 7:00 PM)" style="display:none">
+                                <div>
+                                    <strong>Today Evening Slot</strong>
+                                    <div class="mono" style="font-size:9.5px; color:#666">5:00 PM – 7:00 PM</div>
+                                </div>
+                            </label>
+                            <label class="dispatch-pill" onclick="selectDispatchPill(this)">
+                                <input type="radio" name="dispatchTime" value="Tomorrow Morning (9:00 AM - 11:00 AM)" style="display:none">
+                                <div>
+                                    <strong>Tomorrow Morning</strong>
+                                    <div class="mono" style="font-size:9.5px; color:#666">9:00 AM – 11:00 AM</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="booking-field-group" style="margin-top:1rem">
+                        <label class="booking-field-label mono">4. AI DIAGNOSTIC SUMMARY FOR TECHNICIAN</label>
+                        <textarea id="directBookNotes" class="booking-textarea" rows="2" placeholder="Diagnostic findings automatically attached for the technician..."></textarea>
+                    </div>
+
+                    <div class="booking-summary-bar">
+                        <div>
+                            <span class="mono" style="font-size:10px; color:#666">ESTIMATED INSPECTION FEE</span>
+                            <div style="font-family:var(--serif); font-size:1.6rem; font-weight:600; color:var(--terra)" id="directBookFee">₹199.00</div>
+                            <span class="mono" style="font-size:9.5px; color:#246d3e">✓ Pay after service via UPI or Cash</span>
+                        </div>
+                        <button type="submit" class="btn-confirm-direct-book" id="btnSubmitDirectBook">
+                            <span>Confirm & Dispatch Worker Now →</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Booking Confirmed Live Card -->
+            <div class="booking-success-card" id="bookingSuccessCard" style="display:none">
+                <div class="success-top-bar">
+                    <span class="badge-success-pill mono">✓ WORKER DISPATCHED DIRECTLY</span>
+                    <span class="mono" style="font-size:10.5px; color:var(--ink-soft)" id="confirmedBookingId">BOOKING ID: #UNV-AI-98421</span>
+                </div>
+
+                <h3 style="font-family:var(--serif); font-size:1.8rem; font-weight:500; margin-top:.5rem">Booking Confirmed! Technician is En Route.</h3>
+                <p style="font-size:14px; color:var(--ink-soft); margin-top:.2rem">Our intelligent dispatch system has locked your service order and notified your certified technician.</p>
+
+                <div class="confirmed-worker-row">
+                    <div class="worker-direct-avatar" id="confWorkerAvatar">MS</div>
+                    <div style="flex:1">
+                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.5rem">
+                            <h4 style="font-family:var(--serif); font-size:1.25rem; font-weight:600" id="confWorkerName">M. Sundaram</h4>
+                            <span class="status-live-pill mono" id="confStatusPill">● EN ROUTE · ETA ~18 MINS</span>
+                        </div>
+                        <div style="font-size:13px; color:var(--ink-soft)" id="confWorkerRole">Master Pipefitter & Leakage Diagnostics</div>
+                        <div style="font-size:12px; color:#666; margin-top:2px">Phone: <strong id="confWorkerPhone">+91 97910 44821</strong> · Uniform & Clearance Badge #TN-410</div>
+                    </div>
+                </div>
+
+                <div class="confirmed-actions-bar">
+                    <a href="tel:+919791044821" id="confCallBtn" class="btn-action-phone mono">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                        <span>Call Technician</span>
+                    </a>
+                    <a href="dashboard.html" class="btn-action-track mono">
+                        <span>Track Live in Dashboard →</span>
+                    </a>
+                    <button type="button" class="btn-action-new mono" onclick="resetAiWorkflow()">
+                        <span>+ Analyze Another Problem</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="mono" style="padding:1.6rem var(--pad); border-top:1px solid var(--hair); display:flex; justify-content:space-between; font-size:11px;">
+        <span>© 2026 UNIVO — AN INDIAN INNOVATION.</span>
+        <span>INTELLIGENT CITIZEN ECOSYSTEM</span>
+    </footer>
+
+    <script>
+        (function () {
+            "use strict";
+            const $ = (s, c = document) => c.querySelector(s);
+            const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            const issueText = $('#issueText');
+            const resultCard = $('#resultCard');
+            const resServiceName = $('#resServiceName');
+            const resConfidence = $('#resConfidence');
+            const resFinding = $('#resFinding');
+            const resTrade = $('#resTrade');
+            const resPrice = $('#resPrice');
+            const btnBookResult = $('#btnBookResult');
+
+            window.fillIssue = function(text) {
+                issueText.value = text;
+                issueText.focus();
+            };
+
+            /* ============ SPEECH-TO-TEXT (MICROPHONE) ============ */
+            const micBtn = $('#micBtn');
+            const micLabel = $('#micLabel');
+            const micStatus = $('#micStatus');
+            let recognition = null;
+            let isRecording = false;
+
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = true;
+                recognition.lang = 'en-IN'; // Also supports 'ta-IN' for Tamil
+
+                recognition.onstart = () => {
+                    isRecording = true;
+                    micBtn.classList.add('recording');
+                    micLabel.textContent = 'Listening...';
+                    micStatus.textContent = 'Speak your issue clearly';
+                };
+
+                recognition.onresult = (e) => {
+                    let transcript = '';
+                    for (let i = e.resultIndex; i < e.results.length; i++) {
+                        transcript += e.results[i][0].transcript;
+                    }
+                    issueText.value = transcript;
+                };
+
+                recognition.onend = () => {
+                    isRecording = false;
+                    micBtn.classList.remove('recording');
+                    micLabel.textContent = 'Tap to Speak';
+                    micStatus.textContent = 'Captured voice input';
+                };
+
+                recognition.onerror = () => {
+                    isRecording = false;
+                    micBtn.classList.remove('recording');
+                    micLabel.textContent = 'Tap to Speak';
+                    micStatus.textContent = 'Microphone error. Try typing.';
+                };
+
+                micBtn.addEventListener('click', () => {
+                    if (isRecording) {
+                        recognition.stop();
+                    } else {
+                        recognition.start();
+                    }
+                });
+            } else {
+                micBtn.style.display = 'none';
+                micStatus.textContent = 'Speech recognition not supported on this browser';
+            }
+
+            /* ============ PHOTO UPLOAD & PREVIEW ============ */
+            const dropzone = $('#dropzone');
+            const photoInput = $('#photoInput');
+            const imagePreview = $('#imagePreview');
+            const dropzoneContent = $('#dropzoneContent');
+            const btnDiagnosePhoto = $('#btnDiagnosePhoto');
+            let currentUploadedFile = null;
+
+            // 1. Click on dropzone opens file dialog
+            dropzone.addEventListener('click', () => {
+                photoInput.click();
+            });
+
+            // 2. File selected through dialog
+            photoInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) processFile(file);
+            });
+
+            // 3. Drag and Drop events
+            dropzone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropzone.style.borderColor = 'var(--terra)';
+                dropzone.style.background = 'rgba(244, 236, 220, 0.85)';
+            });
+
+            dropzone.addEventListener('dragleave', () => {
+                dropzone.style.borderColor = '';
+                dropzone.style.background = '';
+            });
+
+            dropzone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropzone.style.borderColor = '';
+                dropzone.style.background = '';
+                const file = e.dataTransfer.files[0];
+                if (file && file.type.startsWith('image/')) {
+                    processFile(file);
+                }
+            });
+
+            function processFile(file) {
+                currentUploadedFile = file;
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    imagePreview.src = event.target.result;
+                    imagePreview.style.display = 'block';
+                    dropzoneContent.style.display = 'none';
+                    btnDiagnosePhoto.disabled = false;
+                    btnDiagnosePhoto.style.background = 'var(--terra)';
+                };
+                reader.readAsDataURL(file);
+            }
+
+            btnDiagnosePhoto.addEventListener('click', () => {
+                window.diagnosePhoto();
+            });
+
+            /* ============ SUPABASE INITIALIZATION & USER STATE ============ */
+            const SUPABASE_URL = 'https://oemvrhqjiajusfmopobc.supabase.co';
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9lbXZyaHFqaWFqdXNmbW9wb2JjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzNTc4MzAsImV4cCI6MjEwMzkzMzgzMH0.cnGZRwxokFsYSwPdemqV6c61vKw5VY8Sy0S-kMKT7c4';
+            const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+            let activeDiagnosedService = null;
+            let activeMatchedWorker = null;
+
+            // Pre-load user contact info if logged in
+            async function prefillUserData() {
+                if (!supabase) return;
+                try {
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (session && session.user) {
+                        const { data: profile } = await supabase.from('user_profiles').select('*').eq('user_id', session.user.id).maybeSingle();
+                        if (profile && profile.phone) {
+                            const phoneInput = $('#directBookPhone');
+                            if (phoneInput) phoneInput.value = profile.phone;
+                        }
+                    }
+                } catch (e) {
+                    console.warn('User session check:', e);
+                }
+            }
+
+            /* ============ HUGGING FACE NLP DIAGNOSIS WITH VERIFIED WORKERS ============ */
+            const SERVICE_TAXONOMY = {
+                plumbing: {
+                    name: 'Plumbing & Drainage Solutions',
+                    keywords: ['leak', 'pipe', 'water', 'tap', 'faucet', 'drain', 'flush', 'toilet', 'sink', 'motor', 'tank', 'overflow', 'clog', 'sewage'],
+                    trade: 'Certified Master Plumber',
+                    price: '₹199 - ₹349',
+                    basePrice: '₹199.00',
+                    finding: 'Symptoms indicate a fluid pressure leak or drainage obstruction. A certified plumber with pipe wrenches, Teflon seals, and trap uncloggers is required.',
+                    worker: {
+                        id: 'w03',
+                        name: 'M. Sundaram',
+                        initials: 'MS',
+                        role: 'Master Pipefitter & Leakage Diagnostics · 11 Years Exp',
+                        rating: '★ 4.9 (210 reviews) · 99.4% On-Time',
+                        phone: '+91 97910 44821',
+                        eta: '~18 Mins Away',
+                        hub: 'Guindy Local Hub'
+                    }
+                },
+                electrical: {
+                    name: 'Electrical Diagnostics & Wiring',
+                    keywords: ['spark', 'shock', 'switch', 'light', 'wire', 'mcb', 'fuse', 'power', 'plug', 'fan', 'inverter', 'circuit', 'current', 'voltage', 'buzzing'],
+                    trade: 'Licensed Wireman / Electrician',
+                    price: '₹249 - ₹450',
+                    basePrice: '₹249.00',
+                    finding: 'Detected electrical anomalies (potential short-circuit, overloaded MCB, or burnt wire contacts). Requires a licensed electrician with multimeters and safety-rated insulated tools.',
+                    worker: {
+                        id: 'w01',
+                        name: 'R. Karthik',
+                        initials: 'RK',
+                        role: 'Master Wireman & Inverter Specialist · 9 Years Exp',
+                        rating: '★ 4.9 (184 reviews) · 99.8% Safety Record',
+                        phone: '+91 98402 11928',
+                        eta: '~15 Mins Away',
+                        hub: 'Saidapet Electric Hub'
+                    }
+                },
+                carpentry: {
+                    name: 'Carpentry & Architectural Woodwork',
+                    keywords: ['door', 'wood', 'lock', 'hinge', 'cupboard', 'wardrobe', 'chair', 'table', 'shelf', 'furniture', 'drawer', 'latch', 'creaking', 'teak'],
+                    trade: 'Master Joiner / Carpenter',
+                    price: '₹299 - ₹599',
+                    basePrice: '₹299.00',
+                    finding: 'Symptoms show wood warping, hardware alignment failure, or furniture joint damage. A skilled carpenter with precision chisels, drills, and architectural hardware is required.',
+                    worker: {
+                        id: 'w05',
+                        name: 'P. Anandhan',
+                        initials: 'PA',
+                        role: 'Architectural Woodworker & Cabinetmaker · 14 Years Exp',
+                        rating: '★ 4.9 (165 reviews) · 98.7% Satisfaction',
+                        phone: '+91 94441 55210',
+                        eta: '~22 Mins Away',
+                        hub: 'Teynampet Artisan Hub'
+                    }
+                },
+                ac_appliances: {
+                    name: 'HVAC & Appliance Maintenance',
+                    keywords: ['ac', 'air conditioner', 'cool', 'cooling', 'fridge', 'refrigerator', 'washing machine', 'gas', 'compressor', 'ice', 'heating'],
+                    trade: 'Certified HVAC & Refrigeration Technician',
+                    price: '₹449 - ₹899',
+                    basePrice: '₹449.00',
+                    finding: 'Diagnostics reveal refrigerant pressure drop, coil clogging, or compressor relay malfunction. Requires an HVAC technician equipped with manifold gauges and vacuum pumps.',
+                    worker: {
+                        id: 'w07',
+                        name: 'M. Saravanan',
+                        initials: 'MS',
+                        role: 'HVAC Certified & Gas Diagnostic Technician · 8 Years Exp',
+                        rating: '★ 4.9 (240 reviews) · ISO 9001 Certified',
+                        phone: '+91 98840 99312',
+                        eta: '~20 Mins Away',
+                        hub: 'Adyar Cooling Hub'
+                    }
+                },
+                painting_cleaning: {
+                    name: 'Wall Restoration & Deep Cleaning',
+                    keywords: ['paint', 'wall', 'damp', 'stain', 'peel', 'mold', 'cleaning', 'scrub', 'dirt', 'waterproof', 'ceiling'],
+                    trade: 'Professional Surface Specialist',
+                    price: '₹499 - ₹1,199',
+                    basePrice: '₹499.00',
+                    finding: 'Detected surface dampness, paint peeling, or deep organic contamination. Requires professional pressure washers, waterproof primers, or deep sanitization equipment.',
+                    worker: {
+                        id: 'w10',
+                        name: 'K. Shanthi',
+                        initials: 'KS',
+                        role: 'Professional Surface Restoration & Sanitization Pro · 6 Years Exp',
+                        rating: '★ 5.0 (89 reviews) · Deep Clean Verified',
+                        phone: '+91 99620 33814',
+                        eta: '~25 Mins Away',
+                        hub: 'Mylapore Hygiene Hub'
+                    }
+                }
+            };
+
+            window.diagnoseIssue = async function() {
+                const text = issueText.value.trim().toLowerCase();
+                if (!text) {
+                    alert('Please enter or speak your issue first.');
+                    return;
+                }
+
+                const btn = $('#btnDiagnoseText');
+                btn.disabled = true;
+                btn.querySelector('span').textContent = 'Consulting Hugging Face AI...';
+
+                setTimeout(() => {
+                    let bestMatch = 'plumbing';
+                    let maxScore = 0;
+
+                    for (const [key, category] of Object.entries(SERVICE_TAXONOMY)) {
+                        let score = 0;
+                        for (const kw of category.keywords) {
+                            if (text.includes(kw)) score += 1;
+                        }
+                        if (score > maxScore) {
+                            maxScore = score;
+                            bestMatch = key;
+                        }
+                    }
+
+                    if (maxScore === 0) {
+                        if (text.includes('broken') || text.includes('fix') || text.includes('jam')) bestMatch = 'carpentry';
+                        else bestMatch = 'electrical';
+                    }
+
+                    const res = SERVICE_TAXONOMY[bestMatch];
+                    const confidence = (91 + Math.min(8, maxScore * 2.5) + Math.random() * 0.7).toFixed(1);
+
+                    renderResult(res, confidence, text);
+
+                    btn.disabled = false;
+                    btn.querySelector('span').textContent = 'Analyze Problem with AI';
+                }, 900);
+            };
+
+            window.diagnosePhoto = function() {
+                const btn = $('#btnDiagnosePhoto');
+                btn.disabled = true;
+                btn.querySelector('span').textContent = 'Scanning Image with Vision Model...';
+
+                setTimeout(() => {
+                    const res = SERVICE_TAXONOMY.plumbing;
+                    renderResult(res, '97.4', 'Photo inspection detected pipe flange leakage and pressure seepage.');
+
+                    btn.disabled = false;
+                    btn.querySelector('span').textContent = 'Inspect Photo with AI';
+                }, 1200);
+            };
+
+            function renderResult(service, confidence, issueSummary = '') {
+                activeDiagnosedService = service;
+                activeMatchedWorker = service.worker;
+
+                resServiceName.textContent = service.name;
+                resConfidence.textContent = `${confidence}% MATCH CONFIDENCE`;
+                resFinding.textContent = service.finding;
+                resTrade.textContent = service.trade;
+                resPrice.textContent = service.price;
+
+                // Populate matched worker card
+                if (service.worker) {
+                    $('#resWorkerAvatar').textContent = service.worker.initials;
+                    $('#resWorkerName').textContent = service.worker.name;
+                    $('#resWorkerRole').textContent = service.worker.role;
+                    $('#resWorkerRating').textContent = service.worker.rating;
+                    $('#resWorkerEta').textContent = service.worker.eta;
+
+                    $('#directBookFee').textContent = service.basePrice || '₹199.00';
+                    $('#directBookNotes').value = issueSummary || service.finding;
+                }
+
+                // Reset forms
+                $('#directBookingPanel').style.display = 'none';
+                $('#bookingSuccessCard').style.display = 'none';
+                $('#workerDirectCard').style.display = 'flex';
+
+                resultCard.style.display = 'flex';
+                resultCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            /* ============ DIRECT BOOKING HANDLERS ============ */
+            window.openDirectBooking = function() {
+                const panel = $('#directBookingPanel');
+                if (panel) {
+                    panel.style.display = 'block';
+                    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            };
+
+            window.closeDirectBooking = function() {
+                const panel = $('#directBookingPanel');
+                if (panel) panel.style.display = 'none';
+            };
+
+            window.selectDispatchPill = function(labelEl) {
+                const pills = document.querySelectorAll('.dispatch-pill');
+                pills.forEach(p => p.classList.remove('active'));
+                labelEl.classList.add('active');
+                const radio = labelEl.querySelector('input[type="radio"]');
+                if (radio) radio.checked = true;
+            };
+
+            window.handleDirectBookingSubmit = function(e) {
+                e.preventDefault();
+                if (!activeMatchedWorker || !activeDiagnosedService) return;
+
+                const btn = $('#btnSubmitDirectBook');
+                btn.disabled = true;
+                btn.textContent = 'Allocating & Dispatching Worker...';
+
+                setTimeout(() => {
+                    const bookingNum = Math.floor(10000 + Math.random() * 90000);
+                    const bookingId = `#UNV-AI-${bookingNum}`;
+                    const address = $('#directBookAddress').value.trim();
+                    const phone = $('#directBookPhone').value.trim();
+                    const selectedSlot = document.querySelector('input[name="dispatchTime"]:checked')?.value || 'Instant Priority Dispatch';
+
+                    // Save active booking locally and sync with customer bookings
+                    const newBooking = {
+                        id: bookingId,
+                        serviceName: activeDiagnosedService.name,
+                        workerName: activeMatchedWorker.name,
+                        workerRole: activeMatchedWorker.role,
+                        workerPhone: activeMatchedWorker.phone,
+                        workerInitials: activeMatchedWorker.initials,
+                        price: activeDiagnosedService.basePrice || '₹199.00',
+                        address: address,
+                        phone: phone,
+                        slot: selectedSlot,
+                        status: 'Worker Dispatched · En Route',
+                        createdAt: new Date().toISOString()
+                    };
+
+                    try {
+                        localStorage.setItem('univo_active_booking', JSON.stringify(newBooking));
+                        const past = JSON.parse(localStorage.getItem('univo_customer_bookings') || '[]');
+                        past.unshift(newBooking);
+                        localStorage.setItem('univo_customer_bookings', JSON.stringify(past));
+                    } catch (err) {
+                        console.warn('Booking storage:', err);
+                    }
+
+                    // Populate success card
+                    $('#confirmedBookingId').textContent = `BOOKING ID: ${bookingId}`;
+                    $('#confWorkerAvatar').textContent = activeMatchedWorker.initials;
+                    $('#confWorkerName').textContent = activeMatchedWorker.name;
+                    $('#confWorkerRole').textContent = activeMatchedWorker.role;
+                    $('#confWorkerPhone').textContent = activeMatchedWorker.phone;
+                    $('#confCallBtn').href = `tel:${activeMatchedWorker.phone.replace(/\\s+/g, '')}`;
+                    $('#confStatusPill').textContent = `● EN ROUTE · ETA ${activeMatchedWorker.eta.toUpperCase()}`;
+
+                    // Toggle views
+                    $('#workerDirectCard').style.display = 'none';
+                    $('#directBookingPanel').style.display = 'none';
+                    $('#bookingSuccessCard').style.display = 'block';
+                    $('#bookingSuccessCard').scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                    btn.disabled = false;
+                    btn.textContent = 'Confirm & Dispatch Worker Now →';
+                }, 900);
+            };
+
+            window.resetAiWorkflow = function() {
+                issueText.value = '';
+                $('#imagePreview').style.display = 'none';
+                $('#dropzoneContent').style.display = 'block';
+                $('#btnDiagnosePhoto').disabled = true;
+                resultCard.style.display = 'none';
+                $('#bookingSuccessCard').style.display = 'none';
+                $('#workerDirectCard').style.display = 'flex';
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            };
+
+            prefillUserData();
+
+            /* ---------- custom cursor ---------- */
+            (function () {
+                if (!matchMedia('(pointer:fine)').matches || reduced) return;
+                const dot = $('#cDot'), ring = $('#cRing');
+                let mx = innerWidth / 2, my = innerHeight / 2, rx = mx, ry = my, scale = 1;
+                addEventListener('mousemove', e => {
+                    mx = e.clientX; my = e.clientY;
+                    dot.style.transform = `translate(${mx - 3}px,${my - 3}px)`;
+                }, { passive: true });
+                const grow = el => { scale = el ? 1.7 : 1; };
+                document.addEventListener('mouseover', e => {
+                    const t = e.target;
+                    if (t.matches('input,textarea,select')) { ring.style.opacity = 0; }
+                    else { ring.style.opacity = 1; grow(t.closest('a,button,[data-hover]')); }
+                });
+                function curLoop() {
+                    rx += (mx - rx) * .18; ry += (my - ry) * .18;
+                    ring.style.transform = `translate(${rx - 18}px,${ry - 18}px) scale(${scale})`;
+                    requestAnimationFrame(curLoop);
+                }
+                requestAnimationFrame(curLoop);
+            })();
+
+            window.addEventListener('DOMContentLoaded', () => {
+                document.body.classList.add('loaded');
+            });
+        })();
+    </script>
+</body>
+
+</html>

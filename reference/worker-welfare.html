@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cooperative Welfare & Social Security Portal — UNIVO</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap"
+        rel="stylesheet">
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* ============ DESIGN TOKENS ============ */
+        :root {
+            --cream: #F4ECDC;
+            --cream-soft: #FAF6EF;
+            --ink: #221812;
+            --ink-soft: #4a3b32;
+            --terra: #C15A2E;
+            --gold: #D9A441;
+            --green: #246d3e;
+            --green-soft: rgba(36, 109, 62, 0.08);
+            --hair: rgba(34, 24, 18, 0.12);
+            --serif: 'Fraunces', Georgia, serif;
+            --sans: 'Instrument Sans', 'Helvetica Neue', sans-serif;
+            --mono: 'Space Mono', monospace;
+            --ease: cubic-bezier(.22, 1, .36, 1);
+            --pad: 4vw;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--cream);
+            color: var(--ink);
+            font: 400 15px/1.6 var(--sans);
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        ::selection {
+            background: var(--terra);
+            color: var(--cream);
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        button {
+            font: inherit;
+            color: inherit;
+            background: none;
+            border: 0;
+            cursor: pointer;
+        }
+
+        .mono {
+            font-family: var(--mono);
+            font-size: 11px;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+        }
+
+        #grain {
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+            mix-blend-mode: multiply;
+            opacity: .05;
+            pointer-events: none;
+            z-index: 2500;
+        }
+
+        /* ============ HEADER ============ */
+        header {
+            padding: 1.2rem var(--pad);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--hair);
+            background: rgba(244, 236, 220, 0.96);
+            backdrop-filter: blur(16px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: .7rem;
+            font-family: var(--serif);
+            font-size: 1.35rem;
+            font-weight: 500;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: .9rem;
+            flex-wrap: wrap;
+        }
+
+        .pill-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            background: #fff;
+            border: 1px solid var(--hair);
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* Hero Banner */
+        .welfare-hero {
+            max-width: 1350px;
+            width: 100%;
+            margin: 1.8rem auto 1.4rem;
+            padding: 0 var(--pad);
+        }
+
+        .hero-banner {
+            background: linear-gradient(135deg, rgba(255,255,255,0.96), rgba(244,236,220,0.88)), url('interior_bg.jpeg') no-repeat center / cover;
+            border: 1.5px solid var(--hair);
+            border-radius: 24px;
+            padding: clamp(1.8rem, 3.2vw, 2.6rem);
+            box-shadow: 0 12px 36px rgba(34, 24, 18, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .hero-left h1 {
+            font-family: var(--serif);
+            font-size: clamp(1.9rem, 3.2vw, 2.8rem);
+            font-weight: 400;
+            line-height: 1.15;
+        }
+
+        .hero-left h1 em {
+            font-style: italic;
+            color: var(--terra);
+        }
+
+        /* Main Container */
+        main {
+            max-width: 1350px;
+            width: 100%;
+            margin: 0 auto 5rem;
+            padding: 0 var(--pad);
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* Card styles */
+        .welfare-card {
+            background: #fff;
+            border: 1.5px solid var(--hair);
+            border-radius: 22px;
+            padding: 2.2rem;
+            box-shadow: 0 8px 24px rgba(34, 24, 18, 0.03);
+            display: flex;
+            flex-direction: column;
+            gap: 1.3rem;
+            transition: all .25s var(--ease);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--hair);
+            padding-bottom: 0.9rem;
+            flex-wrap: wrap;
+            gap: .6rem;
+        }
+
+        .card-title {
+            font-family: var(--serif);
+            font-size: 1.45rem;
+            font-weight: 500;
+        }
+
+        .grid-2col {
+            display: grid;
+            grid-template-columns: 1.25fr 1fr;
+            gap: 1.8rem;
+        }
+
+        .grid-3col {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 980px) {
+            .grid-2col {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Buttons */
+        .btn-primary {
+            background: var(--ink);
+            color: var(--cream);
+            padding: 0.85rem 1.6rem;
+            border-radius: 999px;
+            font-family: var(--mono);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .12em;
+            text-align: center;
+            transition: all .2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .6rem;
+        }
+
+        .btn-primary:hover {
+            background: var(--terra);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(193, 90, 46, 0.28);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--ink-soft);
+            border: 1px solid var(--hair);
+            padding: 0.85rem 1.4rem;
+            border-radius: 999px;
+            font-family: var(--mono);
+            font-size: 11px;
+            text-align: center;
+            transition: all .2s;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--ink);
+            color: var(--ink);
+        }
+
+        /* Feature 2: Missing Benefits Alert Banner */
+        .missing-benefits-banner {
+            background: linear-gradient(135deg, rgba(193, 90, 46, 0.08), rgba(217, 164, 65, 0.08));
+            border: 1.5px dashed var(--terra);
+            border-radius: 20px;
+            padding: 1.8rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1.4rem;
+        }
+
+        /* Feature 4: Welfare Health Score Gauge */
+        .score-pill-row {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .score-item {
+            flex: 1;
+            min-width: 140px;
+            background: var(--cream-soft);
+            border: 1px solid var(--hair);
+            border-radius: 16px;
+            padding: 1.2rem;
+            text-align: center;
+        }
+
+        .score-val {
+            font-family: var(--serif);
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--green);
+            line-height: 1.1;
+        }
+
+        /* Feature 5: Life-Event Tiles */
+        .crisis-tile {
+            background: #fff;
+            border: 1.5px solid var(--hair);
+            border-radius: 18px;
+            padding: 1.4rem;
+            display: flex;
+            flex-direction: column;
+            gap: .8rem;
+            cursor: pointer;
+            transition: all .2s var(--ease);
+        }
+
+        .crisis-tile:hover,
+        .crisis-tile.active {
+            border-color: var(--terra);
+            box-shadow: 0 8px 24px rgba(193, 90, 46, 0.12);
+            transform: translateY(-2px);
+        }
+
+        /* Modal for 1-Click Access */
+        .claim-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(20, 14, 10, 0.68);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            z-index: 5000;
+        }
+
+        .claim-modal-card {
+            background: #fff;
+            border: 1.5px solid var(--hair);
+            border-radius: 24px;
+            max-width: 600px;
+            width: 100%;
+            padding: 2.4rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.4rem;
+            position: relative;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="grain"></div>
+
+    <!-- ============================================== -->
+    <!-- HEADER                                         -->
+    <!-- ============================================== -->
+    <header>
+        <div style="display:flex; align-items:center; gap:.8rem">
+            <a class="brand" href="worker-dashboard.html">UNIVO</a>
+            <span class="mono" style="font-size:10px; background:var(--ink); color:var(--cream); padding:3px 10px; border-radius:999px">
+                COOPERATIVE WELFARE PORTAL
+            </span>
+        </div>
+
+        <div class="header-actions">
+            <!-- Link Back to Worker Dashboard -->
+            <a href="worker-dashboard.html" class="btn-secondary" style="font-weight:700">
+                ← Return to Worker Dashboard
+            </a>
+
+            <!-- Co-op Member Badge -->
+            <div class="pill-badge" style="border-color:var(--terra)">
+                <span class="mono" style="color:var(--terra); font-weight:700">MEMBER: #TN-COOP-MEM-984</span>
+            </div>
+
+            <!-- Profile Info -->
+            <div class="pill-badge">
+                <div style="width:26px; height:26px; border-radius:50%; background:var(--ink); color:var(--cream); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700" id="avatarDisplay">
+                    RS
+                </div>
+                <span style="font-weight:600; font-size:12.5px" id="workerNameHeader">Rahan S</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- ============================================== -->
+    <!-- HERO HEADER                                    -->
+    <!-- ============================================== -->
+    <div class="welfare-hero">
+        <div class="hero-banner">
+            <div class="hero-left">
+                <div class="mono" style="color:var(--terra); font-size:10px; font-weight:700">
+                    SOCIETY #TN-COOP-410 · SOCIAL SECURITY & SOLIDARITY SYSTEM
+                </div>
+                <h1>Cooperative <em>Welfare & Protection.</em></h1>
+                <p style="color:var(--ink-soft); font-size:14px; margin-top:4px; max-width:65ch">
+                    As a verified technician of <strong>Chennai Central Artisan & Technicians Co-operative Society</strong>, you are entitled to comprehensive protection including equipment subsidies, medical cover, and crisis relief.
+                </p>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:.5rem; text-align:right">
+                <div class="mono" style="font-size:10px; color:#777">WELFARE STATUS</div>
+                <div style="display:inline-flex; align-items:center; gap:.5rem; background:var(--green-soft); color:var(--green); padding:6px 16px; border-radius:999px; font-weight:700; font-size:12px; border:1px solid rgba(36,109,62,0.3)">
+                    ✓ SOCIAL PROTECTION ACTIVE
+                </div>
+                <div class="mono" style="font-size:9.5px; color:#888">ANNUAL WELFARE GRANT FUND: ₹25,000 CAP</div>
+            </div>
+        </div>
+    </div>
+
+    <main>
+        <!-- ============================================== -->
+        <!-- FEATURE 2: "BENEFITS YOU'RE MISSING" (AI FINDER) -->
+        <!-- ============================================== -->
+        <div class="missing-benefits-banner">
+            <div>
+                <div class="mono" style="color:var(--terra); font-size:10.5px; font-weight:700">
+                    💡 AI WELFARE FINDER · UNCLAIMED ASSISTANCE
+                </div>
+                <h2 style="font-family:var(--serif); font-size:1.7rem; margin-top:4px">
+                    You have <em style="color:var(--terra)">₹12,500</em> in eligible benefits ready to claim.
+                </h2>
+                <p style="font-size:13px; color:var(--ink-soft); margin-top:3px">
+                    The Benefit Eligibility Engine evaluated your trade passport and identified 3 high-value grants you haven't accessed yet.
+                </p>
+            </div>
+            <div style="display:flex; gap:.8rem; flex-wrap:wrap">
+                <button type="button" class="btn-primary" onclick="openClaimModal('Tool Modernization Subsidy', '₹5,000', 'Digital Insulation Tester & Multimeter Kit')">
+                    Claim ₹5,000 Tool Grant in 1-Click →
+                </button>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- FEATURE 4: WELFARE HEALTH SCORE               -->
+        <!-- ============================================== -->
+        <div class="welfare-card">
+            <div class="card-header">
+                <div>
+                    <span class="mono" style="color:var(--terra); font-size:10px">FEATURE 04 · PROTECTION AUDIT</span>
+                    <h2 class="card-title">Welfare Health Score</h2>
+                </div>
+                <div style="display:flex; align-items:center; gap:.8rem">
+                    <span style="font-family:var(--serif); font-size:2rem; font-weight:700; color:var(--green); line-height:1">84 / 100</span>
+                    <span class="mono" style="font-size:10.5px; color:var(--green); font-weight:700">STRONG PROTECTION</span>
+                </div>
+            </div>
+
+            <p style="font-size:13px; color:var(--ink-soft)">
+                Comprehensive overview of your social security safety net across 5 fundamental pillars:
+            </p>
+
+            <div class="score-pill-row">
+                <div class="score-item">
+                    <div class="score-val">90%</div>
+                    <strong style="font-size:13px; display:block; margin-top:4px">Health Insurance</strong>
+                    <span style="font-size:11px; color:#777">₹5L Cashless Active</span>
+                </div>
+                <div class="score-item">
+                    <div class="score-val">80%</div>
+                    <strong style="font-size:13px; display:block; margin-top:4px">Financial Buffer</strong>
+                    <span style="font-size:11px; color:#777">₹10K 0% Credit Line</span>
+                </div>
+                <div class="score-item">
+                    <div class="score-val">75%</div>
+                    <strong style="font-size:13px; display:block; margin-top:4px">Trade Training</strong>
+                    <span style="font-size:11px; color:#777">1 Active Course</span>
+                </div>
+                <div class="score-item">
+                    <div class="score-val">95%</div>
+                    <strong style="font-size:13px; display:block; margin-top:4px">Emergency SOS</strong>
+                    <span style="font-size:11px; color:#777">Injury Relief Ready</span>
+                </div>
+                <div class="score-item">
+                    <div class="score-val">80%</div>
+                    <strong style="font-size:13px; display:block; margin-top:4px">General Welfare</strong>
+                    <span style="font-size:11px; color:#777">Pension Dividend</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- FEATURE 1 & 3: BENEFIT ELIGIBILITY ENGINE & 1-CLICK ACCESS -->
+        <!-- ============================================== -->
+        <div class="welfare-card">
+            <div class="card-header">
+                <div>
+                    <span class="mono" style="color:var(--terra); font-size:10px">FEATURE 01 & 03 · AUTOMATED ELIGIBILITY CHECK</span>
+                    <h2 class="card-title">One-Click Benefit Access Catalog</h2>
+                </div>
+                <span class="mono" style="font-size:10.5px; color:var(--green)">100% PRE-FILLED FROM PASSPORT</span>
+            </div>
+
+            <p style="font-size:13px; color:var(--ink-soft)">
+                The Benefit Eligibility Engine automatically matches your 15-section Trade Passport credentials. No paperwork or government gazette searches required.
+            </p>
+
+            <div class="grid-3col">
+                <!-- Scheme 1 -->
+                <div style="background:var(--cream-soft); border:1px solid var(--hair); border-radius:18px; padding:1.4rem; display:flex; flex-direction:column; gap:.8rem">
+                    <div style="display:flex; justify-content:space-between; align-items:center">
+                        <span style="font-size:26px">🧰</span>
+                        <span class="mono" style="background:var(--green-soft); color:var(--green); padding:3px 8px; border-radius:999px; font-weight:700; font-size:9.5px">
+                            ✓ 100% ELIGIBLE
+                        </span>
+                    </div>
+                    <div>
+                        <strong style="font-size:14.5px">Tool Modernization Grant (₹5,000)</strong>
+                        <p style="font-size:12px; color:var(--ink-soft); margin-top:3px">
+                            Direct subsidy for digital insulation meters and electrician toolkit upgrades.
+                        </p>
+                    </div>
+                    <div style="font-size:11.5px; color:#666; border-top:1px solid var(--hair); padding-top:.5rem">
+                        Criteria: Level 3 Trade Passport + 30 Days Co-op Tenure (Passed).
+                    </div>
+                    <button type="button" class="btn-primary" style="font-size:10.5px; padding:0.65rem" onclick="openClaimModal('Tool Modernization Grant', '₹5,000', 'Direct deposit to UPI rahan.elec@okhdfcbank')">
+                        Claim in 1-Click →
+                    </button>
+                </div>
+
+                <!-- Scheme 2 -->
+                <div style="background:var(--cream-soft); border:1px solid var(--hair); border-radius:18px; padding:1.4rem; display:flex; flex-direction:column; gap:.8rem">
+                    <div style="display:flex; justify-content:space-between; align-items:center">
+                        <span style="font-size:26px">🛡️</span>
+                        <span class="mono" style="background:var(--green-soft); color:var(--green); padding:3px 8px; border-radius:999px; font-weight:700; font-size:9.5px">
+                            ✓ 100% ELIGIBLE
+                        </span>
+                    </div>
+                    <div>
+                        <strong style="font-size:14.5px">Safety PPE & Insulation Gear (₹2,500)</strong>
+                        <p style="font-size:12px; color:var(--ink-soft); margin-top:3px">
+                            1000V rated protective gloves, safety helmet, and arc-flash face shield kit.
+                        </p>
+                    </div>
+                    <div style="font-size:11.5px; color:#666; border-top:1px solid var(--hair); padding-top:.5rem">
+                        Criteria: Clean Safety PCC Record + Active Emergency Dispatcher (Passed).
+                    </div>
+                    <button type="button" class="btn-primary" style="font-size:10.5px; padding:0.65rem" onclick="openClaimModal('Insulated PPE Safety Kit', '₹2,500', 'Voucher dispatched to Chennai Co-op Supply Depot')">
+                        Claim in 1-Click →
+                    </button>
+                </div>
+
+                <!-- Scheme 3 -->
+                <div style="background:var(--cream-soft); border:1px solid var(--hair); border-radius:18px; padding:1.4rem; display:flex; flex-direction:column; gap:.8rem">
+                    <div style="display:flex; justify-content:space-between; align-items:center">
+                        <span style="font-size:26px">🎓</span>
+                        <span class="mono" style="background:var(--green-soft); color:var(--green); padding:3px 8px; border-radius:999px; font-weight:700; font-size:9.5px">
+                            ✓ 100% ELIGIBLE
+                        </span>
+                    </div>
+                    <div>
+                        <strong style="font-size:14.5px">Solar Rooftop Upskilling Scholarship (₹5,000)</strong>
+                        <p style="font-size:12px; color:var(--ink-soft); margin-top:3px">
+                            Full tuition waiver for NSDC-recognized 4-hour Solar Inverter accreditation course.
+                        </p>
+                    </div>
+                    <div style="font-size:11.5px; color:#666; border-top:1px solid var(--hair); padding-top:.5rem">
+                        Criteria: NTC Electrical Diploma in Passport (Passed).
+                    </div>
+                    <button type="button" class="btn-primary" style="font-size:10.5px; padding:0.65rem" onclick="openClaimModal('Solar Rooftop Trade Scholarship', '100% Tuition (₹5,000)', 'Online module activation code')">
+                        Claim in 1-Click →
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- FEATURE 5: LIFE-EVENT SUPPORT (CRISIS RELIEF)  -->
+        <!-- ============================================== -->
+        <div class="welfare-card">
+            <div class="card-header">
+                <div>
+                    <span class="mono" style="color:var(--terra); font-size:10px">FEATURE 05 · CRISIS & EMERGENCY RELIEF</span>
+                    <h2 class="card-title">Life-Event Support</h2>
+                </div>
+                <span class="mono" style="font-size:10.5px; color:var(--terra)">INSTANT RESPONSE TRIAGE</span>
+            </div>
+
+            <p style="font-size:13px; color:var(--ink-soft)">
+                If you are experiencing an unexpected crisis, select your event below. The cooperative immediately mobilizes tailored emergency funds, daily wage cover, and hospital clearances:
+            </p>
+
+            <div class="grid-2col">
+                <div class="crisis-tile" onclick="triggerCrisis('injury')">
+                    <div style="display:flex; align-items:center; gap:.8rem">
+                        <span style="font-size:24px">🩹</span>
+                        <div>
+                            <strong style="font-size:14.5px">Work-Related Injury / Shock on Site</strong>
+                            <div style="font-size:12px; color:var(--ink-soft)">Electric shock, ladder fall, or hand injury</div>
+                        </div>
+                    </div>
+                    <div style="background:var(--cream-soft); padding:.8rem; border-radius:10px; font-size:12px">
+                        <strong>Instant Relief:</strong> Immediate ₹15,000 emergency medical cash advance + ₹600/day temporary wage protection.
+                    </div>
+                </div>
+
+                <div class="crisis-tile" onclick="triggerCrisis('weather')">
+                    <div style="display:flex; align-items:center; gap:.8rem">
+                        <span style="font-size:24px">🌧️</span>
+                        <div>
+                            <strong style="font-size:14.5px">Monsoon Season / Loss of Outdoor Work</strong>
+                            <div style="font-size:12px; color:var(--ink-soft)">Severe cyclone, flood disruption, or grid shutdowns</div>
+                        </div>
+                    </div>
+                    <div style="background:var(--cream-soft); padding:.8rem; border-radius:10px; font-size:12px">
+                        <strong>Instant Relief:</strong> Priority indoor commercial maintenance dispatches + ₹3,000 climate disruption allowance.
+                    </div>
+                </div>
+
+                <div class="crisis-tile" onclick="triggerCrisis('family')">
+                    <div style="display:flex; align-items:center; gap:.8rem">
+                        <span style="font-size:24px">👨‍👩‍👧</span>
+                        <div>
+                            <strong style="font-size:14.5px">Family Medical Emergency</strong>
+                            <div style="font-size:12px; color:var(--ink-soft)">Hospitalization for spouse, children, or elderly parents</div>
+                        </div>
+                    </div>
+                    <div style="background:var(--cream-soft); padding:.8rem; border-radius:10px; font-size:12px">
+                        <strong>Instant Relief:</strong> 1-hour cashless admission approval under TN Co-op Welfare Policy #UNV-TN-HLTH-2026.
+                    </div>
+                </div>
+
+                <div class="crisis-tile" onclick="triggerCrisis('tools')">
+                    <div style="display:flex; align-items:center; gap:.8rem">
+                        <span style="font-size:24px">🛠️</span>
+                        <div>
+                            <strong style="font-size:14.5px">Tool Theft or Accidental Breakage</strong>
+                            <div style="font-size:12px; color:var(--ink-soft)">Lost drill machine, insulation meter, or vehicle trouble</div>
+                        </div>
+                    </div>
+                    <div style="background:var(--cream-soft); padding:.8rem; border-radius:10px; font-size:12px">
+                        <strong>Instant Relief:</strong> Same-day loaner toolkit issued from depot + zero-interest equipment replacement loan.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dynamic Crisis Response Box -->
+            <div id="crisisResponseBox" style="display:none; background:rgba(193,90,46,0.06); border:1.5px solid var(--terra); border-radius:16px; padding:1.4rem; flex-direction:column; gap:.8rem">
+                <div style="display:flex; justify-content:space-between; align-items:center">
+                    <strong style="font-size:14.5px; color:var(--terra)" id="crisisTitle">Emergency Support Activated</strong>
+                    <span class="mono" style="font-size:10px; color:var(--green)">DISPATCH OFFICER ALERTED</span>
+                </div>
+                <p style="font-size:13px; color:var(--ink-soft); line-height:1.6" id="crisisDetails"></p>
+                <div style="display:flex; gap:1rem">
+                    <button type="button" class="btn-primary" style="background:var(--terra)" onclick="alert('Cooperative Welfare Officer Er. S. Ramanathan has been notified. Direct phone call incoming within 5 minutes.')">
+                        Contact Welfare Desk Hotline (24/7) →
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ============================================== -->
+    <!-- ONE-CLICK BENEFIT CLAIM GUIDED MODAL           -->
+    <!-- ============================================== -->
+    <div class="claim-modal-overlay" id="claimModal">
+        <div class="claim-modal-card">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start">
+                <div>
+                    <span class="mono" style="color:var(--terra); font-size:10px; font-weight:700">GUIDED APPLICATION · PRE-FILLED</span>
+                    <h3 style="font-family:var(--serif); font-size:1.6rem; font-weight:500; margin-top:2px" id="modalSchemeName">Tool Modernization Grant</h3>
+                </div>
+                <button type="button" onclick="closeClaimModal()" style="font-size:24px; color:#888">&times;</button>
+            </div>
+
+            <p style="font-size:13.5px; color:var(--ink-soft); line-height:1.6">
+                All statutory details have been automatically verified from your <strong>15-Section Worker Passport</strong>:
+            </p>
+
+            <div style="background:var(--cream-soft); border:1px solid var(--hair); border-radius:16px; padding:1.2rem; display:flex; flex-direction:column; gap:.6rem; font-size:13px">
+                <div><strong>Beneficiary:</strong> <span id="mWorkerName">Rahan S</span> (Member #TN-COOP-MEM-984)</div>
+                <div><strong>Aadhaar KYC:</strong> UIDAI Biometric Level 3 Passed (Masked •••• 8924)</div>
+                <div><strong>Grant Value:</strong> <span id="mGrantValue" style="color:var(--green); font-weight:700">₹5,000.00</span></div>
+                <div><strong>Disbursement Mode:</strong> <span id="mDisburseMode">Direct UPI to rahan.elec@okhdfcbank</span></div>
+            </div>
+
+            <div style="font-size:12px; color:var(--green); font-weight:600">
+                ✓ Pre-approved by Chennai Central Artisan & Technicians Co-operative Society #TN-COOP-410.
+            </div>
+
+            <div style="display:flex; gap:1rem; justify-content:flex-end">
+                <button type="button" class="btn-secondary" onclick="closeClaimModal()">Cancel</button>
+                <button type="button" class="btn-primary" id="btnConfirmClaim" onclick="executeClaim()">
+                    Confirm & Disburse Grant in 1-Click →
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT -->
+    <script>
+        (function () {
+            // Load worker details
+            try {
+                const pass = JSON.parse(localStorage.getItem('univo_worker_passport_data') || '{}');
+                if (pass.fullName) {
+                    document.getElementById('workerNameHeader').textContent = pass.fullName;
+                    document.getElementById('mWorkerName').textContent = pass.fullName;
+                    const initials = pass.fullName.split(' ').map(n => n[0]).join('').toUpperCase();
+                    document.getElementById('avatarDisplay').textContent = initials || 'RS';
+                }
+            } catch (e) {}
+
+            // Modal Controls
+            window.openClaimModal = function (schemeName, grantVal, disburseMode) {
+                document.getElementById('modalSchemeName').textContent = schemeName;
+                document.getElementById('mGrantValue').textContent = grantVal;
+                document.getElementById('mDisburseMode').textContent = disburseMode;
+                document.getElementById('claimModal').style.display = 'flex';
+            };
+
+            window.closeClaimModal = function () {
+                document.getElementById('claimModal').style.display = 'none';
+            };
+
+            window.executeClaim = function () {
+                const scheme = document.getElementById('modalSchemeName').textContent;
+                const val = document.getElementById('mGrantValue').textContent;
+                alert(`✓ Success! Claim for ${scheme} (${val}) has been approved by Co-op #TN-COOP-410! Funds routed to your linked settlement account.`);
+                closeClaimModal();
+            };
+
+            // Crisis Triage Trigger
+            window.triggerCrisis = function (type) {
+                const box = document.getElementById('crisisResponseBox');
+                const title = document.getElementById('crisisTitle');
+                const details = document.getElementById('crisisDetails');
+
+                box.style.display = 'flex';
+
+                if (type === 'injury') {
+                    title.textContent = '🩹 On-Site Injury Triage Activated';
+                    details.textContent = 'Work-related injury logged for Member #TN-COOP-MEM-984. Emergency medical allowance of ₹15,000 has been earmarked for instant hospital deposit. Duty dispatches are automatically paused.';
+                } else if (type === 'weather') {
+                    title.textContent = '🌧️ Climate / Rain Work Disruption Relief';
+                    details.textContent = 'Monsoon downtime assistance active. Base sustenance allowance of ₹3,000 approved, and your dispatch queue has been switched exclusively to sheltered indoor commercial facilities.';
+                } else if (type === 'family') {
+                    title.textContent = '👨‍👩‍👧 Family Medical Hospital Admission';
+                    details.textContent = 'Cashless admission pre-authorization token #TN-COOP-MED-881 generated. Valid across Apollo, Fortis, and Kauvery hospitals in Chennai under Co-op group policy.';
+                } else if (type === 'tools') {
+                    title.textContent = '🛠️ Tool Replacement Protocol';
+                    details.textContent = 'Loaner toolkit ready for pickup at Anna Salai depot. Zero-interest equipment replacement credit of ₹10,000 activated with 60-day flexible repayment.';
+                }
+
+                box.scrollIntoView({ behavior: 'smooth' });
+            };
+        })();
+    </script>
+</body>
+
+</html>

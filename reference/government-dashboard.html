@@ -1,0 +1,2913 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Government Workforce & Policy Command — Univo</title>
+    <meta name="description" content="National and State Workforce Intelligence Portal. Real-time labor telemetry, cooperative federation audits, skilling gaps, and statutory welfare monitoring across India.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Space+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <!-- Leaflet.js Interactive Real Map Client -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <style>
+        :root {
+            --cream: #F4ECDC;
+            --cream2: #EDE1CB;
+            --ink: #221812;
+            --ink-soft: #2d2219;
+            --terra: #C15A2E;
+            --terra-light: rgba(193, 90, 46, 0.12);
+            --gold: #D9A441;
+            --gold-light: rgba(217, 164, 65, 0.16);
+            --umber: #241509;
+            --hair: rgba(34, 24, 18, .18);
+            --serif: 'Fraunces', Georgia, serif;
+            --sans: 'Instrument Sans', 'Helvetica Neue', sans-serif;
+            --mono: 'Space Mono', monospace;
+            --ease: cubic-bezier(.22, 1, .36, 1);
+            --pad: clamp(1.2rem, 3.5vw, 3.2rem);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            scrollbar-width: thin;
+            scrollbar-color: var(--terra) var(--cream2);
+        }
+
+        body {
+            background: var(--cream);
+            color: var(--ink);
+            font: 400 15px/1.6 var(--sans);
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        ::selection {
+            background: var(--terra);
+            color: var(--cream);
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        button {
+            font: inherit;
+            color: inherit;
+            background: none;
+            border: 0;
+            cursor: pointer;
+        }
+
+        .mono {
+            font-family: var(--mono);
+            font-size: 11px;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+        }
+
+        /* grain */
+        #grain {
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+            mix-blend-mode: multiply;
+            opacity: .05;
+            pointer-events: none;
+            z-index: 2500;
+        }
+
+        /* Top Header */
+        header {
+            padding: 1.1rem var(--pad);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--hair);
+            background: rgba(244, 236, 220, 0.92);
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .brand-group {
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+        }
+
+        .brand {
+            font-family: var(--serif);
+            font-size: 1.35rem;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: .6rem;
+            color: var(--ink);
+        }
+
+        .brand svg {
+            width: 20px;
+            height: 20px;
+            color: var(--terra);
+        }
+
+        .badge-gov {
+            background: rgba(193, 90, 46, 0.12);
+            color: var(--terra);
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: 700;
+            border: 1px solid rgba(193, 90, 46, 0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+        }
+
+        .badge-pulse {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #2e7d32;
+            box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.2);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .officer-pill {
+            display: flex;
+            align-items: center;
+            gap: .8rem;
+            background: rgba(255, 255, 255, 0.65);
+            padding: .4rem .9rem;
+            border-radius: 999px;
+            border: 1px solid var(--hair);
+            font-size: 12px;
+        }
+
+        .officer-avatar {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: var(--ink);
+            color: var(--cream);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 11px;
+        }
+
+        .btn-ghost {
+            padding: .45rem .85rem;
+            border-radius: 8px;
+            font-size: 11px;
+            font-family: var(--mono);
+            color: var(--ink-soft);
+            border: 1px solid var(--hair);
+            transition: all .2s;
+        }
+
+        .btn-ghost:hover {
+            border-color: var(--terra);
+            color: var(--terra);
+            background: rgba(193, 90, 46, 0.05);
+        }
+
+        /* Hero Sub-header */
+        .dash-hero {
+            padding: 2.2rem var(--pad) 1.5rem;
+            border-bottom: 1px solid var(--hair);
+            background: linear-gradient(180deg, rgba(237, 225, 203, 0.5) 0%, transparent 100%);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+        }
+
+        .dash-hero-title h1 {
+            font-family: var(--serif);
+            font-size: clamp(1.8rem, 3vw, 2.5rem);
+            font-weight: 400;
+            line-height: 1.2;
+            letter-spacing: -.02em;
+        }
+
+        .dash-hero-title h1 em {
+            font-style: italic;
+            color: var(--terra);
+        }
+
+        .dash-hero-title p {
+            color: var(--ink-soft);
+            font-size: 13.5px;
+            max-width: 680px;
+            margin-top: .35rem;
+        }
+
+        .dash-hero-controls {
+            display: flex;
+            gap: .8rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .select-filter {
+            background: #fff;
+            border: 1.5px solid var(--hair);
+            padding: .6rem 1rem;
+            border-radius: 10px;
+            font-family: var(--sans);
+            font-size: 13px;
+            color: var(--ink);
+            outline: none;
+            cursor: pointer;
+            transition: border-color .2s;
+        }
+
+        .select-filter:focus {
+            border-color: var(--terra);
+        }
+
+        .btn-primary {
+            background: var(--ink);
+            color: var(--cream);
+            padding: .65rem 1.2rem;
+            border-radius: 999px;
+            font-family: var(--mono);
+            font-size: 11px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            transition: all .25s;
+        }
+
+        .btn-primary:hover {
+            background: var(--terra);
+            color: #fff;
+            transform: translateY(-1px);
+        }
+
+        /* KPI Banner */
+        .kpi-grid {
+            padding: 1.8rem var(--pad);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.2rem;
+        }
+
+        .kpi-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--hair);
+            border-radius: 20px;
+            padding: 1.4rem 1.6rem;
+            display: flex;
+            flex-direction: column;
+            gap: .4rem;
+            position: relative;
+            overflow: hidden;
+            transition: transform .25s, box-shadow .25s;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 28px rgba(34, 24, 18, 0.08);
+            background: #fff;
+        }
+
+        .kpi-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--terra);
+            opacity: 0;
+            transition: opacity .25s;
+        }
+
+        .kpi-card:hover::after {
+            opacity: 1;
+        }
+
+        .kpi-label {
+            font-family: var(--mono);
+            font-size: 10.5px;
+            color: var(--ink-soft);
+            letter-spacing: .12em;
+            text-transform: uppercase;
+        }
+
+        .kpi-val {
+            font-family: var(--serif);
+            font-size: 2.2rem;
+            font-weight: 500;
+            color: var(--ink);
+            line-height: 1.1;
+        }
+
+        .kpi-meta {
+            font-size: 11.5px;
+            color: #2e7d32;
+            display: flex;
+            align-items: center;
+            gap: .3rem;
+            font-weight: 600;
+        }
+
+        /* OFFICIAL EXECUTIVE DISTRICT STATISTICAL SCORECARD */
+        .executive-dossier-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1.5px solid var(--hair);
+            border-radius: 24px;
+            padding: 1.8rem 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.4rem;
+            box-shadow: 0 12px 32px rgba(34, 24, 18, 0.06);
+            transition: all .3s var(--ease);
+        }
+
+        .executive-dossier-card.highlight-mode {
+            border-color: var(--terra);
+            box-shadow: 0 16px 40px rgba(193, 90, 46, 0.12);
+        }
+
+        .dossier-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 1.2rem;
+            border-bottom: 1px solid var(--hair);
+            padding-bottom: 1.1rem;
+        }
+
+        .dossier-tag {
+            color: var(--terra);
+            font-size: 10.5px;
+            font-weight: 700;
+            letter-spacing: .14em;
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+        }
+
+        .dossier-tag::before {
+            content: '';
+            display: inline-block;
+            width: 14px;
+            height: 2px;
+            background: currentColor;
+        }
+
+        .dossier-title {
+            font-family: var(--serif);
+            font-size: 1.85rem;
+            font-weight: 500;
+            line-height: 1.2;
+            margin-top: .2rem;
+        }
+
+        .dossier-subtitle {
+            font-size: 13px;
+            color: var(--ink-soft);
+            margin-top: .25rem;
+        }
+
+        .dossier-actions {
+            display: flex;
+            align-items: center;
+            gap: .8rem;
+            flex-wrap: wrap;
+        }
+
+        .dossier-metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 1rem;
+        }
+
+        .dossier-box {
+            background: rgba(244, 236, 220, 0.45);
+            border: 1px solid var(--hair);
+            border-radius: 16px;
+            padding: 1.1rem 1.2rem;
+            display: flex;
+            flex-direction: column;
+            gap: .25rem;
+            transition: all .2s;
+        }
+
+        .dossier-box:hover {
+            background: #fff;
+            border-color: var(--terra);
+            transform: translateY(-2px);
+        }
+
+        .dossier-box .lbl {
+            font-size: 10px;
+            color: var(--ink-soft);
+        }
+
+        .dossier-box .val {
+            font-family: var(--serif);
+            font-size: 1.55rem;
+            font-weight: 500;
+            color: var(--ink);
+            line-height: 1.15;
+        }
+
+        .dossier-box .sub {
+            font-size: 11px;
+            color: var(--ink-soft);
+        }
+
+        .dossier-advisory-box {
+            background: rgba(244, 236, 220, 0.6);
+            border: 1px solid rgba(193, 90, 46, 0.25);
+            border-radius: 14px;
+            padding: 1.1rem 1.4rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1.2rem;
+        }
+
+        /* SECTION LAYOUT WRAPPER */
+        .dash-section {
+            padding: 0 var(--pad) 2.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.4rem;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            gap: 1rem;
+            border-bottom: 1.5px solid var(--hair);
+            padding-bottom: 1rem;
+        }
+
+        .section-header-title {
+            display: flex;
+            flex-direction: column;
+            gap: .3rem;
+        }
+
+        .section-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            font-family: var(--mono);
+            font-size: 10.5px;
+            font-weight: 700;
+            letter-spacing: .14em;
+            color: var(--terra);
+        }
+
+        .section-tag::before {
+            content: '';
+            display: inline-block;
+            width: 14px;
+            height: 2px;
+            background: currentColor;
+        }
+
+        .section-title {
+            font-family: var(--serif);
+            font-size: 1.65rem;
+            font-weight: 500;
+            line-height: 1.2;
+        }
+
+        .section-title em {
+            font-style: italic;
+            color: var(--terra);
+        }
+
+        .section-sub {
+            font-size: 13px;
+            color: var(--ink-soft);
+        }
+
+        .pill-switch-group {
+            display: inline-flex;
+            background: rgba(244, 236, 220, 0.85);
+            border: 1px solid var(--hair);
+            padding: 3px;
+            border-radius: 999px;
+            gap: 3px;
+        }
+
+        .pill-btn {
+            padding: .4rem .95rem;
+            border-radius: 999px;
+            font-family: var(--mono);
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--ink-soft);
+            transition: all .2s;
+            cursor: pointer;
+        }
+
+        .pill-btn:hover {
+            color: var(--ink);
+        }
+
+        .pill-btn.active {
+            background: var(--ink);
+            color: var(--cream);
+            box-shadow: 0 2px 8px rgba(34, 24, 18, 0.2);
+        }
+
+        /* FEATURE 1: BEFORE VS AFTER UNIVO JOB OPPORTUNITIES & SKILLS OVERVIEW */
+        .overview-grid {
+            display: grid;
+            grid-template-columns: 1.65fr 1.35fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 1080px) {
+            .overview-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .chart-card {
+            background: rgba(255, 255, 255, 0.82);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--hair);
+            border-radius: 22px;
+            padding: 1.6rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.1rem;
+            position: relative;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: .8rem;
+        }
+
+        .chart-legend {
+            display: flex;
+            align-items: center;
+            gap: 1.1rem;
+            font-size: 11px;
+            font-family: var(--mono);
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+        }
+
+        .legend-color {
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+        }
+
+        .chart-svg-wrap {
+            width: 100%;
+            height: 250px;
+            position: relative;
+        }
+
+        .chart-svg-wrap svg {
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+
+        .overview-side-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+
+        .stat-bar-group {
+            display: flex;
+            flex-direction: column;
+            gap: .7rem;
+        }
+
+        .stat-bar-item {
+            display: flex;
+            flex-direction: column;
+            gap: .25rem;
+        }
+
+        .stat-bar-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+        }
+
+        .stat-bar-track {
+            height: 8px;
+            background: rgba(34, 24, 18, 0.08);
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .stat-bar-fill {
+            height: 100%;
+            border-radius: 999px;
+            transition: width .6s var(--ease);
+        }
+
+        /* FEATURE 2: WORKFORCE INTELLIGENCE REAL MAP */
+        .map-section-grid {
+            display: grid;
+            grid-template-columns: 1.9fr 1.1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 1024px) {
+            .map-section-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .map-canvas-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--hair);
+            border-radius: 24px;
+            padding: 1.6rem;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            min-height: 560px;
+        }
+
+        .map-layer-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: .8rem;
+            padding-bottom: .8rem;
+            border-bottom: 1px solid var(--hair);
+        }
+
+        .real-map-stage {
+            flex: 1;
+            width: 100%;
+            height: 480px;
+            min-height: 460px;
+            border-radius: 18px;
+            border: 1.5px solid var(--hair);
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 2px 10px rgba(34, 24, 18, 0.08);
+            background: #EDE1CB;
+        }
+
+        #realWorkforceMap {
+            width: 100%;
+            height: 100%;
+            z-index: 5;
+        }
+
+        .leaflet-container {
+            font-family: var(--sans) !important;
+            background: #EDE1CB !important;
+        }
+
+        /* Map custom badges & popup */
+        .worker-cluster-pin {
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid var(--terra);
+            border-radius: 999px;
+            padding: 4px 10px;
+            font-family: var(--mono);
+            font-size: 10.5px;
+            font-weight: 700;
+            color: var(--ink);
+            white-space: nowrap;
+            box-shadow: 0 4px 14px rgba(34, 24, 18, 0.28);
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            transition: transform .2s ease;
+        }
+
+        .worker-cluster-pin:hover {
+            transform: scale(1.12);
+            border-color: var(--ink);
+            z-index: 999;
+        }
+
+        .worker-cluster-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--terra);
+        }
+
+        .demand-surge-badge {
+            background: rgba(193, 90, 46, 0.95);
+            color: #fff;
+            padding: 3px 9px;
+            border-radius: 6px;
+            font-family: var(--mono);
+            font-size: 9.5px;
+            font-weight: 700;
+            letter-spacing: .06em;
+            border: 1.5px solid #fff;
+            box-shadow: 0 4px 14px rgba(193, 90, 46, 0.5);
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        @keyframes demandPulse {
+            0% { transform: scale(0.96); opacity: 0.9; }
+            50% { transform: scale(1.12); opacity: 0.55; }
+            100% { transform: scale(0.96); opacity: 0.9; }
+        }
+
+        .pulse-demand-icon {
+            animation: demandPulse 2s infinite ease-in-out;
+        }
+
+        .leaflet-popup-content-wrapper {
+            background: rgba(244, 236, 220, 0.98) !important;
+            backdrop-filter: blur(12px) !important;
+            border: 1.5px solid var(--hair) !important;
+            border-radius: 16px !important;
+            color: var(--ink) !important;
+            box-shadow: 0 16px 36px rgba(34, 24, 18, 0.2) !important;
+            padding: 4px !important;
+        }
+
+        .leaflet-popup-tip {
+            background: rgba(244, 236, 220, 0.98) !important;
+        }
+
+        .map-quick-bar {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            overflow-x: auto;
+            padding-bottom: .2rem;
+        }
+
+        .quick-dist-btn {
+            background: rgba(244, 236, 220, 0.6);
+            border: 1px solid var(--hair);
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 10px;
+            font-family: var(--mono);
+            color: var(--ink-soft);
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+        .quick-dist-btn:hover,
+        .quick-dist-btn.active {
+            background: var(--ink);
+            color: var(--cream);
+            border-color: var(--ink);
+        }
+
+        .map-legend-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(244, 236, 220, 0.6);
+            padding: .6rem 1rem;
+            border-radius: 12px;
+            font-size: 11px;
+            border: 1px solid var(--hair);
+            flex-wrap: wrap;
+            gap: .6rem;
+        }
+
+        .map-legend-items {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-family: var(--mono);
+            font-size: 10px;
+        }
+
+        .legend-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+        }
+
+        .map-inspector-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--hair);
+            border-radius: 24px;
+            padding: 1.8rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.3rem;
+        }
+
+        .inspector-header {
+            display: flex;
+            flex-direction: column;
+            gap: .3rem;
+            border-bottom: 1px solid var(--hair);
+            padding-bottom: 1rem;
+        }
+
+        .inspector-state-title {
+            font-family: var(--serif);
+            font-size: 1.6rem;
+            font-weight: 500;
+        }
+
+        .inspector-metric-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: .8rem;
+        }
+
+        .inspector-metric-box {
+            background: rgba(244, 236, 220, 0.45);
+            border: 1px solid var(--hair);
+            border-radius: 14px;
+            padding: .85rem;
+            display: flex;
+            flex-direction: column;
+            gap: .2rem;
+        }
+
+        .inspector-metric-box .val {
+            font-family: var(--serif);
+            font-size: 1.4rem;
+            font-weight: 500;
+        }
+
+        .inspector-metric-box .lbl {
+            font-family: var(--mono);
+            font-size: 9.5px;
+            color: var(--ink-soft);
+        }
+
+        .skills-tag-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .4rem;
+            margin-top: .4rem;
+        }
+
+        .skill-tag {
+            background: #fff;
+            border: 1px solid var(--hair);
+            padding: 3px 9px;
+            border-radius: 999px;
+            font-size: 11px;
+            color: var(--ink);
+            display: inline-flex;
+            align-items: center;
+            gap: .3rem;
+        }
+
+        /* FEATURE 3: AI DEMAND FORECASTING */
+        .ai-feature-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(244, 236, 220, 0.7) 100%);
+            backdrop-filter: blur(14px);
+            border: 1.5px solid rgba(193, 90, 46, 0.35);
+            border-radius: 26px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.8rem;
+            box-shadow: 0 16px 40px rgba(193, 90, 46, 0.08);
+            position: relative;
+        }
+
+        .ai-banner-notice {
+            background: rgba(34, 24, 18, 0.04);
+            border-left: 3px solid var(--terra);
+            padding: .75rem 1.1rem;
+            border-radius: 0 12px 12px 0;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: .8rem;
+        }
+
+        .ai-pill-label {
+            background: var(--terra);
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-family: var(--mono);
+            font-size: 9.5px;
+            font-weight: 700;
+            letter-spacing: .12em;
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+        }
+
+        .ai-forecast-grid {
+            display: grid;
+            grid-template-columns: 1.4fr 1.6fr;
+            gap: 1.8rem;
+        }
+
+        @media (max-width: 1024px) {
+            .ai-forecast-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .ai-curve-card {
+            background: #fff;
+            border: 1px solid var(--hair);
+            border-radius: 20px;
+            padding: 1.4rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.1rem;
+        }
+
+        .shortage-alerts-container {
+            display: flex;
+            flex-direction: column;
+            gap: .9rem;
+        }
+
+        .shortage-alert-card {
+            background: #fff;
+            border: 1.5px solid var(--hair);
+            border-radius: 16px;
+            padding: 1.1rem 1.3rem;
+            display: flex;
+            flex-direction: column;
+            gap: .6rem;
+            position: relative;
+            transition: transform .2s, border-color .2s;
+        }
+
+        .shortage-alert-card:hover {
+            transform: translateX(4px);
+            border-color: var(--terra);
+        }
+
+        .shortage-card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .shortage-trade-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--ink);
+        }
+
+        .shortage-badge-critical {
+            background: rgba(193, 90, 46, 0.14);
+            color: var(--terra);
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-family: var(--mono);
+            font-size: 9.5px;
+            font-weight: 700;
+            border: 1px solid rgba(193, 90, 46, 0.3);
+        }
+
+        .shortage-badge-moderate {
+            background: rgba(217, 164, 65, 0.16);
+            color: #9c6c00;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-family: var(--mono);
+            font-size: 9.5px;
+            font-weight: 700;
+            border: 1px solid rgba(217, 164, 65, 0.3);
+        }
+
+        .shortage-region {
+            font-size: 12px;
+            color: var(--ink-soft);
+        }
+
+        .shortage-meter {
+            display: flex;
+            align-items: center;
+            gap: .8rem;
+            font-size: 11.5px;
+            font-family: var(--mono);
+        }
+
+        .shortage-bar {
+            flex: 1;
+            height: 7px;
+            background: rgba(34, 24, 18, 0.08);
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .shortage-bar-fill {
+            height: 100%;
+            background: var(--terra);
+            border-radius: 999px;
+        }
+
+        .shortage-action-btn {
+            align-self: flex-start;
+            font-family: var(--mono);
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--terra);
+            text-decoration: underline;
+            cursor: pointer;
+            margin-top: 2px;
+        }
+
+        .sim-slider-box {
+            background: rgba(244, 236, 220, 0.5);
+            border: 1px solid var(--hair);
+            border-radius: 14px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: .6rem;
+        }
+
+        .sim-slider-box input[type="range"] {
+            width: 100%;
+            accent-color: var(--terra);
+            cursor: pointer;
+        }
+
+        /* EXISTING SECTIONS (TABLE & POLICY DIRECTIVE) */
+        .command-body {
+            padding: 0 var(--pad) 3rem;
+            display: grid;
+            grid-template-columns: 1.6fr 1fr;
+            gap: 1.8rem;
+        }
+
+        @media (max-width: 1080px) {
+            .command-body {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--hair);
+            border-radius: 24px;
+            padding: 1.8rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--hair);
+            padding-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: .8rem;
+        }
+
+        .card-title {
+            font-family: var(--serif);
+            font-size: 1.35rem;
+            font-weight: 500;
+        }
+
+        /* Table */
+        .table-wrap {
+            overflow-x: auto;
+            max-height: 480px;
+            position: relative;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th {
+            font-family: var(--mono);
+            font-size: 10px;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            text-align: left;
+            padding: .7rem 1rem;
+            color: var(--ink-soft);
+            border-bottom: 1.5px solid var(--hair);
+            background: rgba(244, 236, 220, 0.9);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        td {
+            padding: .85rem 1rem;
+            border-bottom: 1px solid rgba(34, 24, 18, 0.08);
+        }
+
+        tr:hover td {
+            background: rgba(244, 236, 220, 0.4);
+        }
+
+        tr.row-highlight td {
+            background: rgba(193, 90, 46, 0.12) !important;
+            border-top: 1.5px solid var(--terra);
+            border-bottom: 1.5px solid var(--terra);
+            font-weight: 600;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 999px;
+            font-size: 10px;
+            font-family: var(--mono);
+            font-weight: 700;
+        }
+
+        .status-green {
+            background: rgba(46, 125, 50, 0.12);
+            color: #2e7d32;
+        }
+
+        .status-gold {
+            background: rgba(217, 164, 65, 0.16);
+            color: #9c6c00;
+        }
+
+        .status-blue {
+            background: rgba(25, 118, 210, 0.12);
+            color: #1565c0;
+        }
+
+        /* Directive Composer */
+        .directive-composer {
+            display: flex;
+            flex-direction: column;
+            gap: .9rem;
+        }
+
+        .directive-composer input,
+        .directive-composer textarea,
+        .directive-composer select {
+            width: 100%;
+            background: #fff;
+            border: 1.5px solid var(--hair);
+            border-radius: 12px;
+            padding: .8rem 1rem;
+            font-family: var(--sans);
+            font-size: 13.5px;
+            outline: none;
+        }
+
+        .directive-composer input:focus,
+        .directive-composer textarea:focus,
+        .directive-composer select:focus {
+            border-color: var(--terra);
+        }
+
+        footer {
+            margin-top: auto;
+            padding: 1.4rem var(--pad);
+            border-top: 1px solid var(--hair);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--ink-soft);
+            font-size: 11px;
+            flex-wrap: wrap;
+            gap: .8rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="grain"></div>
+
+    <header>
+        <div class="brand-group">
+            <a class="brand" href="ref.html">
+                <svg viewBox="0 0 100 100" fill="currentColor">
+                    <circle cx="50" cy="50" r="17" />
+                </svg>
+                Univo
+            </a>
+            <span class="badge-gov mono">
+                <span class="badge-pulse"></span>
+                Gov Policy Command · Live
+            </span>
+        </div>
+
+        <div class="nav-actions">
+            <div class="officer-pill">
+                <div class="officer-avatar" id="officerInitial">G</div>
+                <div style="line-height:1.2">
+                    <div style="font-weight:600" id="officerDisplayName">girubhakaran</div>
+                    <div class="mono" style="font-size:9.5px; color:var(--ink-soft)" id="officerRole">Special Commissioner / Secretary</div>
+                </div>
+            </div>
+            <a href="ref.html" class="btn-ghost">Back to Ecosystem</a>
+            <button class="btn-ghost" onclick="logoutGov()">Logout</button>
+        </div>
+    </header>
+
+    <!-- HERO HEADER -->
+    <div class="dash-hero">
+        <div class="dash-hero-title">
+            <span class="mono" style="color:var(--terra); font-weight:700">MACRO WORKFORCE TELEMETRY · TAMIL NADU & PAN-INDIA</span>
+            <h1>Government Workforce & <em>Policy Directorate</em></h1>
+            <p>Aggregated labor economics, real-time cooperative supply/demand indexes, statutory welfare payouts, and trade certification auditing across all 38 districts.</p>
+        </div>
+
+        <div class="dash-hero-controls">
+            <!-- 1. STATE SELECTION -->
+            <div style="display:flex; flex-direction:column; gap:2px">
+                <label class="mono" style="font-size:9px; color:var(--ink-soft); font-weight:700">TERRITORIAL JURISDICTION</label>
+                <select class="select-filter mono" id="stateFilter" style="font-weight:700">
+                    <option value="TN" selected>State: Tamil Nadu (38 Districts)</option>
+                    <option value="PAN_INDIA">National Overview (Pan-India)</option>
+                </select>
+            </div>
+
+            <!-- 2. DISTRICT SELECTION (ALL 38 DISTRICTS OF TAMIL NADU) -->
+            <div style="display:flex; flex-direction:column; gap:2px">
+                <label class="mono" style="font-size:9px; color:var(--ink-soft); font-weight:700">DISTRICT COMMAND FILTER</label>
+                <select class="select-filter mono" id="districtFilter" style="min-width:280px">
+                    <!-- Populated dynamically via JS with all 38 districts -->
+                </select>
+            </div>
+
+            <div style="display:flex; align-items:flex-end; padding-top:14px">
+                <button class="btn-primary" id="btnExportGazette" onclick="exportDistrictGazette()">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
+                    </svg>
+                    <span id="exportBtnText">Export Gazette</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CORE KPI BANNER (SYNCHRONIZED PER DISTRICT) -->
+    <section class="kpi-grid">
+        <div class="kpi-card">
+            <span class="kpi-label">Active Verified Workforce</span>
+            <div class="kpi-val" id="kpiWorkers">1,923,450</div>
+            <div class="kpi-meta" id="kpiWorkersMeta">↑ +28.4% employment lift via UNIVO</div>
+        </div>
+
+        <div class="kpi-card">
+            <span class="kpi-label">Total Jobs Completed</span>
+            <div class="kpi-val" id="kpiJobs">4,812,940</div>
+            <div class="kpi-meta" id="kpiJobsMeta">99.1% verified completion rate</div>
+        </div>
+
+        <div class="kpi-card">
+            <span class="kpi-label">Service Coverage Ratio</span>
+            <div class="kpi-val" id="kpiCoverage">87.4%</div>
+            <div class="kpi-meta" id="kpiCoverageMeta">Across 38 districts & 14 urban hubs</div>
+        </div>
+
+        <div class="kpi-card">
+            <span class="kpi-label">Living Wage Adherence</span>
+            <div class="kpi-val" id="kpiWage">98.4%</div>
+            <div class="kpi-meta" id="kpiWageMeta">₹785 / day state weighted avg (+₹195/d lift)</div>
+        </div>
+    </section>
+
+    <!-- EXECUTIVE OFFICIAL DISTRICT STATISTICAL SCORECARD -->
+    <section class="dash-section" style="padding-bottom: 1rem">
+        <div class="executive-dossier-card" id="districtExecutiveDossier">
+            <div class="dossier-top">
+                <div>
+                    <span class="mono dossier-tag" id="dossierHeaderTag">DISTRICT STATISTICAL DOSSIER · TAMIL NADU WORKFORCE MISSION</span>
+                    <h2 class="dossier-title" id="dossierDistTitle">All 38 Districts · Macro State Aggregation</h2>
+                    <p class="dossier-subtitle" id="dossierDistSub">Tamil Nadu State Labor Welfare & Skill Development Directorate Executive Command View</p>
+                </div>
+                <div class="dossier-actions">
+                    <span class="status-badge status-green mono" id="dossierGrowthPill">✦ +28.4% LIFT VIA UNIVO</span>
+                    <button class="btn-ghost mono" onclick="exportDistrictGazette()" style="font-size:10px">📥 Export District Statistics</button>
+                </div>
+            </div>
+
+            <!-- 5 Key District Statistical Pillars for Officials -->
+            <div class="dossier-metrics-grid">
+                <div class="dossier-box">
+                    <span class="lbl mono">State Formalization Rank</span>
+                    <div class="val" id="dossierRank">State Summary</div>
+                    <span class="sub" id="dossierRankSub">38/38 Districts Active</span>
+                </div>
+                <div class="dossier-box">
+                    <span class="lbl mono">Registered Cooperatives</span>
+                    <div class="val" id="dossierCoops">412 Societies</div>
+                    <span class="sub" id="dossierCoopsSub">100% Verified By Registrar</span>
+                </div>
+                <div class="dossier-box">
+                    <span class="lbl mono">Living Wage Floor Adherence</span>
+                    <div class="val" id="dossierWage">98.4%</div>
+                    <span class="sub" id="dossierWageSub">Avg ₹785/day (State Floor: ₹650)</span>
+                </div>
+                <div class="dossier-box">
+                    <span class="lbl mono">Direct Benefit Welfare (DBT)</span>
+                    <div class="val" id="dossierWelfare">₹42.8 Cr</div>
+                    <span class="sub" id="dossierWelfareSub">Aadhaar-Linked Social Security</span>
+                </div>
+                <div class="dossier-box">
+                    <span class="lbl mono">Employment Lift via UNIVO</span>
+                    <div class="val" id="dossierLift" style="color:#2e7d32">+28.4%</div>
+                    <span class="sub" id="dossierLiftSub">+425,450 Net New Livelihoods</span>
+                </div>
+            </div>
+
+            <!-- Actionable Official Advisory & Directive Dispatcher -->
+            <div class="dossier-advisory-box">
+                <div class="advisory-content" style="flex:1">
+                    <div class="mono" style="font-size:10px; font-weight:700; color:var(--terra)">STATUTORY DIRECTIVE ADVISORY FOR DISTRICT COLLECTOR & NODAL OFFICER:</div>
+                    <p id="dossierAdvisoryText" style="font-size:13px; margin-top:3px; color:var(--ink)">
+                        State-wide unorganized labor formalization is operating within optimal statutory compliance bounds. UNIVO platform has driven a +28.4% employment increase statewide (+425,450 net new livelihoods). Ensure prompt DBT welfare releases and apprentice mobility subsidies.
+                    </p>
+                </div>
+                <button class="btn-primary" onclick="quickDraftDistrictDirective()" style="white-space:nowrap; padding:.65rem 1.1rem">
+                    <span>Draft Directive for this District</span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- FEATURE 1: BEFORE VS AFTER UNIVO JOB OPPORTUNITIES & SKILLS OVERVIEW -->
+    <section class="dash-section" id="nationalOverviewSection">
+        <div class="section-header">
+            <div class="section-header-title">
+                <span class="section-tag">01 · LONGITUDINAL TELEMETRY · BEFORE & AFTER AUDIT</span>
+                <h2 class="section-title">Job Opportunities & Skills: <em>Before vs After UNIVO</em></h2>
+                <p class="section-sub">Audited shift in employment frequency and multi-trade skilling diversity following cooperative formalization through the UNIVO platform.</p>
+            </div>
+            <div class="pill-switch-group" id="timeframeSwitch">
+                <button class="pill-btn" data-timeframe="30d">30 Days</button>
+                <button class="pill-btn active" data-timeframe="90d">90 Days</button>
+                <button class="pill-btn" data-timeframe="1y">1 Year</button>
+                <button class="pill-btn" data-timeframe="all">All-Time</button>
+            </div>
+        </div>
+
+        <div class="overview-grid">
+            <!-- Left: Interactive Before vs After Job Opportunities & Skills Graph -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div>
+                        <div style="font-weight:600; font-size:15.5px">Job Opportunity & Skill Horizon Inflection</div>
+                        <div style="font-size:12px; color:var(--ink-soft)" id="trendSubtitle">Auditing pre-platform baseline vs post-UNIVO cooperative growth in <span id="trendDistrictTag" style="font-weight:700; color:var(--ink)">Chennai Metro</span></div>
+                    </div>
+                    <div class="chart-legend">
+                        <span class="legend-item"><span class="legend-color" style="background:var(--terra)"></span> <strong>Job Opportunities (Post-UNIVO)</strong></span>
+                        <span class="legend-item"><span class="legend-color" style="background:var(--gold)"></span> <strong>Certified Trade Skills (+366%)</strong></span>
+                        <span class="legend-item" style="opacity:0.7"><span style="display:inline-block; width:12px; height:2px; background:#666; border-top:2px dashed #666"></span> Pre-UNIVO Baseline</span>
+                    </div>
+                </div>
+
+                <!-- SVG Before vs After Trend Line with Vertical Inflection Milestone -->
+                <div class="chart-svg-wrap" style="height:230px">
+                    <svg viewBox="0 0 620 230" preserveAspectRatio="none" id="trendSvg">
+                        <defs>
+                            <linearGradient id="chartGradPre" x1="0" y1="0" x2="1" y2="0">
+                                <stop offset="0%" stop-color="#221812" stop-opacity="0.04" />
+                                <stop offset="100%" stop-color="#221812" stop-opacity="0.08" />
+                            </linearGradient>
+                            <linearGradient id="chartGradPost" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#C15A2E" stop-opacity="0.28" />
+                                <stop offset="100%" stop-color="#C15A2E" stop-opacity="0.0" />
+                            </linearGradient>
+                            <linearGradient id="chartGradGoldPost" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#D9A441" stop-opacity="0.25" />
+                                <stop offset="100%" stop-color="#D9A441" stop-opacity="0.0" />
+                            </linearGradient>
+                        </defs>
+
+                        <!-- Shaded Phase 1: Pre-UNIVO Baseline (Grey tint) -->
+                        <rect x="35" y="20" width="240" height="175" fill="url(#chartGradPre)" rx="8" />
+                        <text x="50" y="42" font-family="'Space Mono'" font-size="9" font-weight="700" fill="#777" letter-spacing="0.1em">BEFORE UNIVO: STAGNANT INFORMAL BASELINE</text>
+
+                        <!-- Shaded Phase 2: Post-UNIVO Growth Surge (Warm tint) -->
+                        <rect x="280" y="20" width="315" height="175" fill="rgba(193,90,46,0.03)" rx="8" />
+                        <text x="295" y="42" font-family="'Space Mono'" font-size="9" font-weight="700" fill="#C15A2E" letter-spacing="0.1em">✦ POST-UNIVO: EXPONENTIAL JOB OPPORTUNITIES & SKILLS</text>
+
+                        <!-- Horizontal Grid lines -->
+                        <line x1="35" y1="65" x2="595" y2="65" stroke="rgba(34,24,18,0.06)" stroke-dasharray="4" />
+                        <line x1="35" y1="115" x2="595" y2="115" stroke="rgba(34,24,18,0.06)" stroke-dasharray="4" />
+                        <line x1="35" y1="165" x2="595" y2="165" stroke="rgba(34,24,18,0.06)" stroke-dasharray="4" />
+                        <line x1="35" y1="195" x2="595" y2="195" stroke="rgba(34,24,18,0.18)" />
+
+                        <!-- VERTICAL INFLECTION MILESTONE DIVIDER LINE -->
+                        <line x1="275" y1="20" x2="275" y2="195" stroke="#C15A2E" stroke-width="2" stroke-dasharray="5, 4" />
+                        <circle cx="275" cy="55" r="5" fill="#C15A2E" stroke="#fff" stroke-width="2" />
+                        <text x="282" y="58" font-family="'Space Mono'" font-size="9" font-weight="700" fill="#C15A2E">📍 UNIVO LAUNCH</text>
+
+                        <!-- POST-UNIVO AREA FILL (Terra Jobs) -->
+                        <path id="pathAreaJobs" d="M35 170 L 150 168 L 275 162 Q 380 120, 480 75 T 595 42 L 595 195 L 35 195 Z" fill="url(#chartGradPost)" />
+
+                        <!-- LINE 1: JOB OPPORTUNITIES (Flat Before, Steep Surging After) -->
+                        <!-- Pre-UNIVO flat dashed segment -->
+                        <path d="M35 170 L 150 168 L 275 162" fill="none" stroke="#777" stroke-width="2.5" stroke-dasharray="4, 4" />
+                        <!-- Post-UNIVO surging solid curve -->
+                        <path id="pathLineJobs" d="M275 162 Q 380 120, 480 75 T 595 42" fill="none" stroke="#C15A2E" stroke-width="3.5" stroke-linecap="round" />
+
+                        <!-- LINE 2: CERTIFIED TRADE SKILLS (Single basic before, multi-trade guilds after) -->
+                        <!-- Pre-UNIVO flat skill line (low, 3 basic trades) -->
+                        <path d="M35 182 L 150 180 L 275 176" fill="none" stroke="#999" stroke-width="2" stroke-dasharray="3, 3" />
+                        <!-- Post-UNIVO multi-skill expansion (14 certified guilds) -->
+                        <path id="pathLineWorkers" d="M275 176 Q 380 145, 480 100 T 595 68" fill="none" stroke="#D9A441" stroke-width="2.8" stroke-linecap="round" />
+
+                        <!-- Interactive Marker Knots -->
+                        <circle cx="80" cy="170" r="4" fill="#777" stroke="#fff" stroke-width="1.5" />
+                        <circle cx="190" cy="168" r="4" fill="#777" stroke="#fff" stroke-width="1.5" />
+                        <circle cx="410" cy="108" r="4.5" fill="#C15A2E" stroke="#fff" stroke-width="2" />
+                        <circle cx="515" cy="62" r="5" fill="#C15A2E" stroke="#fff" stroke-width="2" />
+                        <circle cx="595" cy="42" r="5.5" fill="#C15A2E" stroke="#fff" stroke-width="2.5" />
+                        <circle cx="595" cy="68" r="5" fill="#D9A441" stroke="#fff" stroke-width="2" />
+
+                        <!-- X-Axis Labels -->
+                        <text x="35" y="215" font-family="'Space Mono'" font-size="9" fill="#777">-6 Months (Informal)</text>
+                        <text x="145" y="215" font-family="'Space Mono'" font-size="9" fill="#777">-3 Months (Baseline)</text>
+                        <text x="245" y="215" font-family="'Space Mono'" font-size="9.5" font-weight="700" fill="#C15A2E">UNIVO Deployment</text>
+                        <text x="440" y="215" font-family="'Space Mono'" font-size="9" fill="#2d2219">+3 Months (Scale)</text>
+                        <text x="545" y="215" font-family="'Space Mono'" font-size="9" font-weight="700" fill="#2e7d32">Now (Peak)</text>
+                    </svg>
+                </div>
+
+                <!-- BEFORE VS AFTER UNIVO TRANSFORMATION SCORECARD -->
+                <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:.7rem; border-top:1.5px solid var(--hair); padding-top:.9rem">
+                    <div style="background:rgba(244, 236, 220, 0.5); border:1px solid var(--hair); border-radius:12px; padding:.75rem; display:flex; flex-direction:column; gap:2px">
+                        <span class="mono" style="font-size:9px; color:var(--ink-soft); font-weight:700">MONTHLY JOB OPPORTUNITIES</span>
+                        <div style="font-size:11px; color:#888; text-decoration:line-through">Before: 24,500 / mo</div>
+                        <div style="font-family:var(--serif); font-size:1.25rem; font-weight:600; color:#2e7d32" id="baJobVol">98,400+ / mo</div>
+                        <span class="mono" style="font-size:9px; color:#2e7d32; font-weight:700">↑ +302% Net Surge</span>
+                    </div>
+
+                    <div style="background:rgba(244, 236, 220, 0.5); border:1px solid var(--hair); border-radius:12px; padding:.75rem; display:flex; flex-direction:column; gap:2px">
+                        <span class="mono" style="font-size:9px; color:var(--ink-soft); font-weight:700">CERTIFIED TRADE SKILLS</span>
+                        <div style="font-size:11px; color:#888; text-decoration:line-through">Before: 3 Basic Trades</div>
+                        <div style="font-family:var(--serif); font-size:1.25rem; font-weight:600; color:var(--terra)" id="baSkillVol">14 Guild Sectors</div>
+                        <span class="mono" style="font-size:9px; color:var(--terra); font-weight:700">↑ +366% Diversity</span>
+                    </div>
+
+                    <div style="background:rgba(244, 236, 220, 0.5); border:1px solid var(--hair); border-radius:12px; padding:.75rem; display:flex; flex-direction:column; gap:2px">
+                        <span class="mono" style="font-size:9px; color:var(--ink-soft); font-weight:700">ARTISAN IDLE DAYS</span>
+                        <div style="font-size:11px; color:#888; text-decoration:line-through">Before: 16.4 days / mo</div>
+                        <div style="font-family:var(--serif); font-size:1.25rem; font-weight:600; color:#2e7d32" id="baIdleDays">1.8 days / mo</div>
+                        <span class="mono" style="font-size:9px; color:#2e7d32; font-weight:700">↓ -89% Idle Time</span>
+                    </div>
+
+                    <div style="background:rgba(244, 236, 220, 0.5); border:1px solid var(--hair); border-radius:12px; padding:.75rem; display:flex; flex-direction:column; gap:2px">
+                        <span class="mono" style="font-size:9px; color:var(--ink-soft); font-weight:700">AVG DAILY WAGE REALIZATION</span>
+                        <div style="font-size:11px; color:#888; text-decoration:line-through">Before: ₹450 / day</div>
+                        <div style="font-family:var(--serif); font-size:1.25rem; font-weight:600; color:var(--ink)" id="baWageRate">₹890 / day</div>
+                        <span class="mono" style="font-size:9px; color:var(--terra); font-weight:700">↑ +₹260/d Living Wage</span>
+                    </div>
+                </div>
+
+                <div style="font-size:11px; color:var(--ink-soft); background:rgba(244,236,220,0.5); border:1px solid var(--hair); border-radius:10px; padding:.55rem .85rem; display:flex; align-items:center; gap:.5rem">
+                    <span style="color:#2e7d32; font-size:14px">✓</span>
+                    <span><strong>Statutory Finding:</strong> Digital Trade Passports and Cooperative Federation directly transformed localized informal gig intermittency into predictable daily livelihoods while expanding certified technical competencies across all districts.</span>
+                </div>
+            </div>
+
+            <!-- Right: Service Coverage & UNIVO PLATFORM EMPLOYMENT LIFT IN EACH DISTRICT -->
+            <div class="overview-side-cards">
+                <div class="chart-card">
+                    <div style="display:flex; justify-content:space-between; align-items:center">
+                        <div style="font-weight:600; font-size:14px">Service Coverage Density</div>
+                        <span class="mono" style="font-size:10px; color:var(--terra)" id="overviewCoverageTag">87.4% MET</span>
+                    </div>
+
+                    <div class="stat-bar-group">
+                        <div class="stat-bar-item">
+                            <div class="stat-bar-labels">
+                                <span>Urban Municipalities</span>
+                                <span class="mono" id="covUrban">94.6%</span>
+                            </div>
+                            <div class="stat-bar-track">
+                                <div class="stat-bar-fill" id="covBarUrban" style="width:94.6%; background:var(--terra)"></div>
+                            </div>
+                        </div>
+
+                        <div class="stat-bar-item">
+                            <div class="stat-bar-labels">
+                                <span>Semi-Urban / Taluks</span>
+                                <span class="mono" id="covTaluk">88.2%</span>
+                            </div>
+                            <div class="stat-bar-track">
+                                <div class="stat-bar-fill" id="covBarTaluk" style="width:88.2%; background:var(--gold)"></div>
+                            </div>
+                        </div>
+
+                        <div class="stat-bar-item">
+                            <div class="stat-bar-labels">
+                                <span>Rural Welfare Hubs</span>
+                                <span class="mono" id="covRural">72.4%</span>
+                            </div>
+                            <div class="stat-bar-track">
+                                <div class="stat-bar-fill" id="covBarRural" style="width:72.4%; background:var(--ink-soft)"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SHOWCASE: HOW MUCH EMPLOYMENT IN EACH DISTRICT INCREASED BECAUSE OF UNIVO WEBSITE -->
+                    <div style="border-top:1.5px solid var(--hair); padding-top:.9rem; display:flex; flex-direction:column; gap:.75rem">
+                        <div style="display:flex; justify-content:space-between; align-items:center">
+                            <div>
+                                <span class="mono" style="font-size:9.5px; color:var(--terra); font-weight:700">✦ UNIVO WEBSITE EMPLOYMENT IMPACT</span>
+                                <div style="font-weight:600; font-size:14px; margin-top:1px">
+                                    Employment Lift: <span id="liftDistrictName" style="color:var(--ink)">Chennai Metro</span>
+                                </div>
+                            </div>
+                            <span class="status-badge status-green mono" id="liftGrowthBadge" style="font-size:11px; padding:4px 10px">
+                                +34.4% NET SURGE
+                            </span>
+                        </div>
+
+                        <!-- Comparative Employment Lift Bar (Pre-UNIVO Baseline vs Current Onboarded) -->
+                        <div style="background:rgba(244, 236, 220, 0.5); border:1px solid var(--hair); border-radius:12px; padding:.75rem .9rem; display:flex; flex-direction:column; gap:.4rem">
+                            <div style="display:flex; justify-content:space-between; font-size:11.5px">
+                                <span style="color:var(--ink-soft)">Pre-Website Baseline: <strong id="liftBaselineVal">259,000</strong></span>
+                                <span style="color:#2e7d32; font-weight:700">Via UNIVO: <strong id="liftCurrentVal">348,200</strong> (<span id="liftNetAddedVal">+89,200</span>)</span>
+                            </div>
+                            <!-- Visual Growth Progression Bar -->
+                            <div style="height:12px; background:rgba(34,24,18,0.1); border-radius:999px; overflow:hidden; display:flex">
+                                <div id="liftBaseBar" style="width:74%; background:var(--ink); height:100%" title="Pre-Platform Baseline"></div>
+                                <div id="liftGainBar" style="width:26%; background:linear-gradient(90deg, #2e7d32, #4caf50); height:100%" title="Net Employment Growth via UNIVO"></div>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; font-size:10px; font-family:var(--mono); color:var(--ink-soft)">
+                                <span>■ Baseline Informal Livelihoods</span>
+                                <span style="color:#2e7d32">■ Net Gain via UNIVO Website (<span id="liftPctTag">+34.4%</span>)</span>
+                            </div>
+                        </div>
+
+                        <!-- 3 Attributed Value Addition Chips -->
+                        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:.6rem">
+                            <div style="background:#fff; border:1px solid var(--hair); border-radius:10px; padding:.6rem .7rem; display:flex; flex-direction:column; gap:1px">
+                                <span class="mono" style="font-size:9px; color:var(--ink-soft)">Net Formalized</span>
+                                <span style="font-family:var(--serif); font-size:1.25rem; font-weight:600; color:#2e7d32" id="chipNetWorkers">+89,200</span>
+                                <span style="font-size:9.5px; color:var(--ink-soft)">New Livelihoods</span>
+                            </div>
+                            <div style="background:#fff; border:1px solid var(--hair); border-radius:10px; padding:.6rem .7rem; display:flex; flex-direction:column; gap:1px">
+                                <span class="mono" style="font-size:9px; color:var(--ink-soft)">Website Bookings</span>
+                                <span style="font-family:var(--serif); font-size:1.25rem; font-weight:600; color:var(--ink)" id="chipDispatches">892.1K</span>
+                                <span style="font-size:9.5px; color:var(--ink-soft)">Jobs Dispatched</span>
+                            </div>
+                            <div style="background:#fff; border:1px solid var(--hair); border-radius:10px; padding:.6rem .7rem; display:flex; flex-direction:column; gap:1px">
+                                <span class="mono" style="font-size:9px; color:var(--ink-soft)">Wage Uplift</span>
+                                <span style="font-family:var(--serif); font-size:1.25rem; font-weight:600; color:var(--terra)" id="chipWageLift">+₹260/d</span>
+                                <span style="font-size:9.5px; color:var(--ink-soft)">+41% Income Lift</span>
+                            </div>
+                        </div>
+
+                        <!-- Clickable District Employment Surge Quick Jumps -->
+                        <div style="margin-top:2px">
+                            <span class="mono" style="font-size:9px; color:var(--ink-soft); font-weight:700">DISTRICT EMPLOYMENT SURGES VIA UNIVO (CLICK TO INSPECT):</span>
+                            <div style="display:flex; flex-wrap:wrap; gap:.4rem; margin-top:4px" id="districtSurgePills">
+                                <button class="quick-dist-btn active" onclick="selectDistrictFromMap('Chennai')">Chennai +34.4%</button>
+                                <button class="quick-dist-btn" onclick="selectDistrictFromMap('Coimbatore')">Coimbatore +29.6%</button>
+                                <button class="quick-dist-btn" onclick="selectDistrictFromMap('Tiruppur')">Tiruppur +26.1%</button>
+                                <button class="quick-dist-btn" onclick="selectDistrictFromMap('Madurai')">Madurai +24.3%</button>
+                                <button class="quick-dist-btn" onclick="selectDistrictFromMap('Salem')">Salem +22.8%</button>
+                                <button class="quick-dist-btn" onclick="selectDistrictFromMap('Thanjavur')">Thanjavur +22.4%</button>
+                                <button class="quick-dist-btn" onclick="selectDistrictFromMap('ALL')">State Avg +28.4%</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FEATURE 2: REAL WORKFORCE INTELLIGENCE MAP WITH WORKER SPREAD & DEMAND ZONES -->
+    <section class="dash-section" id="workforceMapSection">
+        <div class="section-header">
+            <div class="section-header-title">
+                <span class="section-tag">02 · GEOSPATIAL INTELLIGENCE · REAL MAP</span>
+                <h2 class="section-title">District Workforce <em>& Demand Zone Map</em></h2>
+                <p class="section-sub">Interactive cartographic map showing exact worker distribution spread, highlighted high-demand surge corridors, and cooperative hubs in the selected district.</p>
+            </div>
+
+            <!-- Layer Toggles -->
+            <div class="pill-switch-group" id="mapLayerSwitch">
+                <button class="pill-btn active" data-layer="spread">Worker Spread</button>
+                <button class="pill-btn" data-layer="demand">Highlight Demand Zones</button>
+                <button class="pill-btn" data-layer="skills">Trade Specializations</button>
+                <button class="pill-btn" data-layer="all">Composite View</button>
+            </div>
+        </div>
+
+        <div class="map-section-grid">
+            <!-- Real Map Canvas Card -->
+            <div class="map-canvas-card">
+                <div class="map-layer-bar">
+                    <div style="font-size:12.5px; font-weight:600; display:flex; align-items:center; gap:.5rem">
+                        <span class="badge-pulse"></span>
+                        <span id="activeMapDistrictBadge" class="mono" style="color:var(--terra); font-weight:700">DISTRICT: CHENNAI METRO</span>
+                        <span style="color:var(--ink-soft); font-size:11.5px" id="activeLayerLabel">· Real Geographic Spread & Peak Demand Corridor</span>
+                    </div>
+
+                    <!-- Quick District Jump Pills -->
+                    <div class="map-quick-bar">
+                        <span class="mono" style="font-size:9.5px; color:var(--ink-soft); font-weight:700">FOCUS:</span>
+                        <button class="quick-dist-btn active" onclick="selectDistrictFromMap('Chennai')">Chennai</button>
+                        <button class="quick-dist-btn" onclick="selectDistrictFromMap('Coimbatore')">Coimbatore</button>
+                        <button class="quick-dist-btn" onclick="selectDistrictFromMap('Tiruppur')">Tiruppur</button>
+                        <button class="quick-dist-btn" onclick="selectDistrictFromMap('Madurai')">Madurai</button>
+                        <button class="quick-dist-btn" onclick="selectDistrictFromMap('Salem')">Salem</button>
+                        <button class="quick-dist-btn" onclick="selectDistrictFromMap('Thanjavur')">Thanjavur</button>
+                        <button class="quick-dist-btn" onclick="selectDistrictFromMap('ALL')">All TN</button>
+                    </div>
+                </div>
+
+                <!-- Leaflet Real Interactive Map Stage -->
+                <div class="real-map-stage">
+                    <div id="realWorkforceMap"></div>
+                </div>
+
+                <!-- Custom Map Legend Bar -->
+                <div class="map-legend-bar">
+                    <div class="map-legend-items">
+                        <span class="legend-indicator">
+                            <span style="width:12px; height:12px; border-radius:50%; background:#C15A2E; border:2px solid #fff; display:inline-block"></span>
+                            Worker Spread Cluster
+                        </span>
+                        <span class="legend-indicator">
+                            <span style="width:14px; height:14px; border-radius:50%; background:rgba(193,90,46,0.25); border:2px dashed #C15A2E; display:inline-block" class="pulse-demand-icon"></span>
+                            Highlighted Peak Demand Zone
+                        </span>
+                        <span class="legend-indicator">
+                            <span style="width:14px; height:14px; border-radius:50%; background:rgba(217,164,65,0.2); border:1.5px solid #D9A441; display:inline-block"></span>
+                            Moderate Demand Corridor
+                        </span>
+                        <span class="legend-indicator">
+                            <span style="width:10px; height:10px; border-radius:2px; background:#221812; display:inline-block"></span>
+                            Cooperative HQ Hub
+                        </span>
+                    </div>
+                    <button class="btn-ghost mono" style="font-size:10px; padding:3px 8px" onclick="resetMapToState()">↺ Reset to State View</button>
+                </div>
+            </div>
+
+            <!-- Map Inspector & Territory Dossier -->
+            <div class="map-inspector-card">
+                <div class="inspector-header">
+                    <div style="display:flex; justify-content:space-between; align-items:center">
+                        <span class="mono" style="color:var(--terra); font-size:10px; font-weight:700">DISTRICT GEOGRAPHIC DOSSIER</span>
+                        <span class="status-badge status-green mono" id="inspectorBadge">PRIMARY HUB</span>
+                    </div>
+                    <div class="inspector-state-title" id="inspectorName">Chennai Metro District</div>
+                    <div style="font-size:12px; color:var(--ink-soft)" id="inspectorSub">Capital Urban Metropolis · High Demand Zone</div>
+                </div>
+
+                <div class="inspector-metric-row">
+                    <div class="inspector-metric-box">
+                        <span class="lbl">Active Worker Spread</span>
+                        <span class="val" id="inspectorWorkers">348,200</span>
+                    </div>
+                    <div class="inspector-metric-box">
+                        <span class="lbl">Peak Demand Zone Index</span>
+                        <span class="val" id="inspectorDemand" style="color:var(--terra)">152%</span>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="mono" style="font-size:10px; font-weight:700; color:var(--ink-soft); margin-bottom:.3rem">LEADING CERTIFIED GUILDS IN REGION:</div>
+                    <div class="skills-tag-wrap" id="inspectorSkills">
+                        <span class="skill-tag">⚡ Electrical & Inverter Wiring</span>
+                        <span class="skill-tag">❄️ Commercial HVAC</span>
+                        <span class="skill-tag">🔧 Modern Facility Plumbing</span>
+                    </div>
+                </div>
+
+                <!-- Live Highlighted Demand Corridor Analysis -->
+                <div style="background:rgba(244, 236, 220, 0.55); border:1px solid rgba(193, 90, 46, 0.3); border-radius:14px; padding:1.1rem; display:flex; flex-direction:column; gap:.4rem">
+                    <div class="mono" style="font-size:10px; font-weight:700; color:var(--terra); display:flex; align-items:center; gap:.4rem">
+                        <span>🔥</span> <span id="inspectorDemandCorridorTitle">HIGHLIGHTED PEAK DEMAND CORRIDOR</span>
+                    </div>
+                    <p style="font-size:12.5px; color:var(--ink)" id="inspectorGapText">
+                        Peak service demand concentrated in Anna Nagar and Teynampet commercial sectors (152% index). Worker spread shows high density in Guindy and Ambattur industrial clusters, but cold-chain technician deficit requires rapid apprentice mobilization.
+                    </p>
+                </div>
+
+                <button class="btn-primary" style="justify-content:center" onclick="quickDraftDistrictDirective()">
+                    <span>Issue Mobility Order for this Zone</span>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- FEATURE 3: AI DEMAND FORECASTING -->
+    <section class="dash-section" id="aiForecastingSection">
+        <div class="ai-feature-card">
+            <div class="section-header" style="border-bottom-color: rgba(193, 90, 46, 0.25)">
+                <div class="section-header-title">
+                    <span class="ai-pill-label">✦ AI DEMAND FORECASTING</span>
+                    <h2 class="section-title">Predictive Workforce <em>& Skill Horizon</em></h2>
+                    <p class="section-sub">Machine learning models project upcoming service volumes, anticipate critical trade deficits, and prescribe preemptive skilling interventions.</p>
+                </div>
+
+                <div class="pill-switch-group" id="forecastHorizonSwitch">
+                    <button class="pill-btn" data-horizon="30">Next 30 Days</button>
+                    <button class="pill-btn active" data-horizon="60">Next 60 Days</button>
+                    <button class="pill-btn" data-horizon="90">Next 90 Days</button>
+                </div>
+            </div>
+
+            <!-- Prominent statutory labeling separating AI predictions from actuals -->
+            <div class="ai-banner-notice">
+                <div>
+                    <strong>STATUTORY NOTICE · PREDICTIVE MODELING:</strong> The metrics and shortfall indexes below are forecasted using neural seasonal trend analysis and unorganized job requisition logs. They represent policy guidance models, distinct from official verified actual audits.
+                </div>
+                <span class="mono" style="font-size:10px; color:var(--terra); font-weight:700">MODEL ACCURACY: 94.2%</span>
+            </div>
+
+            <div class="ai-forecast-grid">
+                <!-- Left: Forecast Curve Chart & Simulation -->
+                <div class="ai-curve-card">
+                    <div style="display:flex; justify-content:space-between; align-items:center">
+                        <div>
+                            <div style="font-weight:600; font-size:14.5px" id="forecastTitleCard">Projected Demand vs Supply Capacity</div>
+                            <div style="font-size:11.5px; color:var(--ink-soft)" id="forecastSubLabel">Forecasting horizon: Next 60 Days</div>
+                        </div>
+                        <span class="status-badge status-gold mono">AI SIMULATION</span>
+                    </div>
+
+                    <!-- Forecast SVG Chart with Prediction Interval -->
+                    <div class="chart-svg-wrap" style="height:190px">
+                        <svg viewBox="0 0 500 190" preserveAspectRatio="none">
+                            <defs>
+                                <linearGradient id="aiForecastBand" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="#C15A2E" stop-opacity="0.3" />
+                                    <stop offset="100%" stop-color="#C15A2E" stop-opacity="0.05" />
+                                </linearGradient>
+                            </defs>
+
+                            <!-- Baseline Grid -->
+                            <line x1="30" y1="30" x2="480" y2="30" stroke="rgba(34,24,18,0.08)" stroke-dasharray="3" />
+                            <line x1="30" y1="90" x2="480" y2="90" stroke="rgba(34,24,18,0.08)" stroke-dasharray="3" />
+                            <line x1="30" y1="150" x2="480" y2="150" stroke="rgba(34,24,18,0.18)" />
+
+                            <!-- Historic Actual (Solid Line) -->
+                            <path d="M30 130 Q 120 115, 210 100" fill="none" stroke="#221812" stroke-width="2.5" />
+                            <circle cx="210" cy="100" r="4" fill="#221812" />
+
+                            <!-- AI Confidence Fan / Interval -->
+                            <polygon points="210,100 480,35 480,95 210,100" fill="url(#aiForecastBand)" />
+
+                            <!-- AI Predicted Demand Curve (Dashed Terra Line) -->
+                            <path id="aiForecastLine" d="M210 100 Q 340 70, 480 50" fill="none" stroke="#C15A2E" stroke-width="2.8" stroke-dasharray="5,4" />
+                            <circle cx="480" cy="50" r="5" fill="#C15A2E" />
+
+                            <!-- Current Available Workforce Supply Line -->
+                            <line x1="30" y1="110" x2="480" y2="95" stroke="#D9A441" stroke-width="2" stroke-dasharray="2,3" />
+
+                            <text x="30" y="170" font-family="'Space Mono'" font-size="9" fill="#888">Today (Actual)</text>
+                            <text x="210" y="170" font-family="'Space Mono'" font-size="9" fill="#888">+30 Days</text>
+                            <text x="440" y="170" font-family="'Space Mono'" font-size="9" fill="#C15A2E" font-weight="700">+60 Days (Peak)</text>
+                        </svg>
+                    </div>
+
+                    <!-- Policy Incentive Simulator -->
+                    <div class="sim-slider-box">
+                        <div style="display:flex; justify-content:space-between; align-items:center">
+                            <span class="mono" style="font-size:10.5px; font-weight:700">SIMULATE COOPERATIVE MOBILITY SUBSIDY</span>
+                            <span class="mono" style="color:var(--terra); font-weight:700" id="subsidyLabel">+₹60 / day</span>
+                        </div>
+                        <input type="range" id="subsidySlider" min="0" max="150" value="60" step="15">
+                        <div style="font-size:11.5px; color:var(--ink-soft)" id="simEffectText">
+                            ✓ Model projects a <strong>14.2% reduction in regional shortages</strong> with ₹60/day apprentice travel stipends.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Predicted Skill Shortages & Alerts -->
+                <div class="shortage-alerts-container" id="shortageAlertsContainer">
+                    <div style="font-weight:600; font-size:14.5px; margin-bottom:.2rem">Predicted Critical Skill Shortages</div>
+
+                    <!-- Shortage Card 1 -->
+                    <div class="shortage-alert-card" id="shortageCard1">
+                        <div class="shortage-card-top">
+                            <div class="shortage-trade-name" id="shortageTrade1">HVAC & Inverter Electronics Technicians</div>
+                            <span class="shortage-badge-critical" id="shortageBadge1">24% SHORTFALL</span>
+                        </div>
+                        <div class="shortage-region" id="shortageRegion1">📍 Chennai Metro, Chengalpattu & Tiruvallur (High-density urban corridors)</div>
+                        <div class="shortage-meter">
+                            <span>Projected Gap:</span>
+                            <div class="shortage-bar"><div class="shortage-bar-fill" id="shortageFill1" style="width:76%"></div></div>
+                            <span style="color:var(--terra)" id="shortageWorkers1">-3,420 workers</span>
+                        </div>
+                        <button class="shortage-action-btn" onclick="draftDirectiveFromShortage('HVAC Technicians', 'Chennai & Chengalpattu', 24)">
+                            ⚡ Pre-fill Statutory Directive to Mobilize Cooperative Apprentices
+                        </button>
+                    </div>
+
+                    <!-- Shortage Card 2 -->
+                    <div class="shortage-alert-card" id="shortageCard2">
+                        <div class="shortage-card-top">
+                            <div class="shortage-trade-name" id="shortageTrade2">Industrial High-Tension Electricians</div>
+                            <span class="shortage-badge-critical" id="shortageBadge2">19% SHORTFALL</span>
+                        </div>
+                        <div class="shortage-region" id="shortageRegion2">📍 Coimbatore & Tiruppur Industrial Clusters</div>
+                        <div class="shortage-meter">
+                            <span>Projected Gap:</span>
+                            <div class="shortage-bar"><div class="shortage-bar-fill" id="shortageFill2" style="width:81%; background:var(--gold)"></div></div>
+                            <span style="color:var(--terra)" id="shortageWorkers2">-1,850 workers</span>
+                        </div>
+                        <button class="shortage-action-btn" onclick="draftDirectiveFromShortage('High-Tension Electricians', 'Coimbatore & Tiruppur', 19)">
+                            ⚡ Pre-fill Statutory Directive to Mobilize Cooperative Apprentices
+                        </button>
+                    </div>
+
+                    <!-- Shortage Card 3 -->
+                    <div class="shortage-alert-card" id="shortageCard3">
+                        <div class="shortage-card-top">
+                            <div class="shortage-trade-name" id="shortageTrade3">Sanitation & Municipal Pipeline Guilds</div>
+                            <span class="shortage-badge-moderate" id="shortageBadge3">15% SHORTFALL</span>
+                        </div>
+                        <div class="shortage-region" id="shortageRegion3">📍 Cuddalore, Nagapattinam & Coastal Delta Zones</div>
+                        <div class="shortage-meter">
+                            <span>Projected Gap:</span>
+                            <div class="shortage-bar"><div class="shortage-bar-fill" id="shortageFill3" style="width:85%; background:var(--ink)"></div></div>
+                            <span style="color:var(--terra)" id="shortageWorkers3">-940 workers</span>
+                        </div>
+                        <button class="shortage-action-btn" onclick="draftDirectiveFromShortage('Sanitation Guilds', 'Delta Coastal Belt', 15)">
+                            ⚡ Pre-fill Statutory Directive to Mobilize Cooperative Apprentices
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- REGIONAL WORKFORCE DISTRIBUTION TABLE (ALL 38 DISTRICTS WITH UNIVO EMPLOYMENT LIFT) -->
+    <main class="command-body">
+        <!-- Left: District Labor Metrics & Demand Density -->
+        <section class="card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">All 38 Tamil Nadu Districts Directory</h2>
+                    <p style="font-size:12px; color:var(--ink-soft)">Monitored under Tamil Nadu Unorganized Workers Social Security Mandate 2026 · Demonstrating Website Employment Lift</p>
+                </div>
+                <div style="display:flex; align-items:center; gap:.5rem">
+                    <input type="text" id="tableSearchInput" placeholder="Quick search district..." class="select-filter" style="padding:.4rem .8rem; font-size:12px; width:200px">
+                    <span class="status-badge status-green mono">38 DISTRICTS AUDITED</span>
+                </div>
+            </div>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>District / Zone</th>
+                            <th>Pre-Website Baseline</th>
+                            <th>Current Formalized</th>
+                            <th>Net Gain via UNIVO</th>
+                            <th>Employment Lift (%)</th>
+                            <th>Avg Daily Wage & Lift</th>
+                            <th>Policy Health</th>
+                        </tr>
+                    </thead>
+                    <tbody id="metricsTableBody">
+                        <!-- Populated dynamically via JS with all 38 districts -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Right: Policy Advisory Dispatch & Statutory Circulars -->
+        <section class="card" id="directiveComposerCard">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Issue Statutory Policy Directive</h2>
+                    <p style="font-size:12px; color:var(--ink-soft)">Broadcast immediate guidance or welfare subsidies to cooperatives</p>
+                </div>
+            </div>
+
+            <form class="directive-composer" id="directiveForm">
+                <div>
+                    <label class="mono" style="font-size:10px; font-weight:700">Target Jurisdiction / Recipient</label>
+                    <select id="targetAudience" style="margin-top:4px">
+                        <option value="All Cooperatives">All 412 Registered Cooperatives (Tamil Nadu)</option>
+                        <option value="Chennai Cooperatives">Chennai District Labor Federations Only</option>
+                        <option value="Coimbatore Cooperatives">Coimbatore District Federations</option>
+                        <option value="Tiruppur Cooperatives">Tiruppur Textile Guilds</option>
+                        <option value="Construction & Masonry">Construction & Masonry Guilds</option>
+                        <option value="Technical Trades">Electrical & Technical Trade Guilds</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="mono" style="font-size:10px; font-weight:700">Directive Title / Gazette Reference</label>
+                    <input type="text" id="directiveTitle" placeholder="e.g. Advisory on Monsoon Occupational Safety Reserves" required style="margin-top:4px">
+                </div>
+
+                <div>
+                    <label class="mono" style="font-size:10px; font-weight:700">Policy Body / Executive Action</label>
+                    <textarea id="directiveContent" rows="4" placeholder="Enter executive order details, welfare top-up parameters, or statutory guidelines..." required style="margin-top:4px"></textarea>
+                </div>
+
+                <button type="submit" class="btn-primary" style="justify-content:center; padding:.85rem">
+                    <span>Broadcast Statutory Directive</span>
+                    <svg width="14" height="12" viewBox="0 0 14 12" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 6h11M8 1.5 12.5 6 8 10.5" />
+                    </svg>
+                </button>
+            </form>
+
+            <div id="directiveNotice" style="display:none; padding:.8rem; background:rgba(46, 125, 50, 0.12); color:#2e7d32; border-radius:10px; font-size:12.5px; border:1px solid #2e7d32">
+                ✓ Directive successfully dispatched and signed cryptographically under National Government Gazette ID #TN-DIR-2026-904.
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <span class="mono">© 2026 UNIVO — AN INDIAN INNOVATION.</span>
+        <span class="mono">MINISTRY OF LABOUR & EMPLOYMENT · STATE OF TAMIL NADU (38 DISTRICTS)</span>
+    </footer>
+
+    <script>
+        (function() {
+            "use strict";
+
+            // User Identity & Session
+            const activeGov = JSON.parse(localStorage.getItem('univo_active_government') || '{}');
+            if (activeGov.officer_name) {
+                document.getElementById('officerDisplayName').textContent = activeGov.officer_name;
+                document.getElementById('officerInitial').textContent = activeGov.officer_name.replace('Dr. ', '').charAt(0);
+            }
+            if (activeGov.designation) {
+                document.getElementById('officerRole').textContent = activeGov.designation;
+            }
+
+            // =========================================================================
+            // COMPLETE GEOGRAPHIC & STATISTICAL DICTIONARY WITH WEBSITE EMPLOYMENT LIFT
+            // =========================================================================
+            const TN_DISTRICTS_DATA = {
+                "ALL": {
+                    name: "All 38 Districts · Macro State Aggregation",
+                    category: "Tamil Nadu State Labor Welfare & Skill Development Directorate",
+                    rank: "State Aggregate",
+                    rankSub: "38 of 38 Districts Audited",
+                    baselineWorkers: "1,498,000",
+                    workers: "1,923,450",
+                    netGain: "+425,450",
+                    employmentLiftPct: "+28.4%",
+                    dispatches: "4,812,940",
+                    wageLift: "+₹195 / day (+33%)",
+                    jobs: "4,812,940",
+                    coverage: "87.4%",
+                    wage: "98.4%",
+                    avgRate: "₹785 / day",
+                    coops: "412 Societies",
+                    welfare: "₹42.8 Cr",
+                    topSkill: "Multi-Trade Guilds",
+                    skillsList: ["⚡ Electrical Wiring & Inverters", "🔧 Plumbing & Sanitation", "❄️ HVAC Diagnostics", "🧱 Masonry & Tile Craft", "🧵 Textile Processing"],
+                    demand: "144%",
+                    status: "Optimal",
+                    geo: { center: [11.1271, 78.6569], zoom: 7.2, radius: 180000 },
+                    demandZones: [
+                        { name: "Chennai Metropolitan Area", center: [13.0827, 80.2707], radius: 18000, demand: "152%", level: "critical", desc: "Peak urban service requests" },
+                        { name: "Coimbatore Industrial Belt", center: [11.0168, 76.9558], radius: 16000, demand: "138%", level: "critical", desc: "Engineering and motors maintenance" },
+                        { name: "Tiruppur Export Cluster", center: [11.1085, 77.3411], radius: 12000, demand: "135%", level: "moderate", desc: "Garment machinery peak" },
+                        { name: "Madurai Cultural Corridor", center: [9.9252, 78.1198], radius: 14000, demand: "128%", level: "moderate", desc: "Heritage & civil construction" },
+                        { name: "Hosur-Krishnagiri EV Belt", center: [12.7409, 77.8253], radius: 11000, demand: "142%", level: "critical", desc: "EV battery and tech assembly" }
+                    ],
+                    workerClusters: [
+                        { name: "Chennai Northern Port Guild", lat: 13.125, lng: 80.292, count: "68,400", skill: "Electrical & Logistics" },
+                        { name: "Chennai Central Trade Guild", lat: 13.055, lng: 80.245, count: "112,000", skill: "HVAC & Facilities" },
+                        { name: "Coimbatore Engineering Cluster", lat: 11.025, lng: 76.965, count: "89,200", skill: "Industrial Machinists" },
+                        { name: "Tiruppur Knitwear Guild", lat: 11.115, lng: 77.355, count: "94,000", skill: "Knitting Mechanics" },
+                        { name: "Madurai Civil Guilds", lat: 9.935, lng: 78.135, count: "64,500", skill: "Stone & Brick Masonry" },
+                        { name: "Salem Steel Workers", lat: 11.675, lng: 78.135, count: "51,200", skill: "Welders & Fitters" },
+                        { name: "Trichy BHEL Fabrication Ancillary", lat: 10.795, lng: 78.715, count: "48,000", skill: "Pipefitters & Boiler" },
+                        { name: "Tirunelveli Wind Clean-Tech", lat: 8.725, lng: 77.745, count: "34,200", skill: "Windmill Techs" }
+                    ],
+                    shortage: { trade: "HVAC & Inverter Electronics Technicians", pct: 24, region: "Chennai Metro, Chengalpattu & Tiruvallur", gap: "-3,420 workers" },
+                    advisory: "State-wide unorganized labor formalization is operating within optimal statutory compliance bounds. UNIVO platform has driven a +28.4% employment increase statewide (+425,450 net new livelihoods). Ensure prompt DBT welfare releases."
+                },
+                "Chennai": {
+                    name: "Chennai Metro District",
+                    category: "Capital Metropolis · Tier 1 High-Density Corridor",
+                    rank: "#1 of 38 Districts",
+                    rankSub: "Highest State Formalization",
+                    baselineWorkers: "259,000",
+                    workers: "348,200",
+                    netGain: "+89,200",
+                    employmentLiftPct: "+34.4%",
+                    dispatches: "892,100",
+                    wageLift: "+₹260 / day (+41%)",
+                    jobs: "892,100",
+                    coverage: "97.4%",
+                    wage: "99.2%",
+                    avgRate: "₹890 / day",
+                    coops: "48 Societies",
+                    welfare: "₹8.4 Cr",
+                    topSkill: "Technical & Electrical Services",
+                    skillsList: ["⚡ Electrical & Inverter Repair", "❄️ Commercial HVAC Systems", "🔧 Plumbing & Drainage", "💻 Smart Home Automation"],
+                    demand: "152%",
+                    status: "High Demand",
+                    geo: { center: [13.0827, 80.2707], zoom: 11.5, radius: 14000 },
+                    demandZones: [
+                        { name: "Central Commercial Surge (Anna Nagar & Teynampet)", center: [13.065, 80.235], radius: 4200, demand: "158%", level: "critical", desc: "⚡ PEAK DEMAND ZONE · 158% Requisition Volume · Commercial HVAC & Electrical Deficit" },
+                        { name: "South Coastal Corridor (Adyar & Guindy)", center: [13.005, 80.215], radius: 3600, demand: "144%", level: "critical", desc: "High residential facility requisition rate" },
+                        { name: "Northern Industrial Zone (Ambattur & Madhavaram)", center: [13.115, 80.165], radius: 3800, demand: "128%", level: "moderate", desc: "Industrial motor & plant wiring demand" }
+                    ],
+                    workerClusters: [
+                        { name: "Anna Nagar Technicians Hub", lat: 13.085, lng: 80.210, count: "52,400", skill: "HVAC & Smart Home" },
+                        { name: "Teynampet / T.Nagar Guild", lat: 13.042, lng: 80.238, count: "48,100", skill: "Electrical & Inverters" },
+                        { name: "Guindy Industrial Roster", lat: 13.008, lng: 80.205, count: "46,800", skill: "Mechanical & Diagnostics" },
+                        { name: "Adyar Coastal Sentry", lat: 13.001, lng: 80.256, count: "39,500", skill: "Plumbing & Appliance" },
+                        { name: "Ambattur Industrial Estate Hub", lat: 13.098, lng: 80.155, count: "44,200", skill: "Factory Maintenance" },
+                        { name: "Royapuram / Harbour Marine Guild", lat: 13.112, lng: 80.295, count: "36,000", skill: "Port Wiring & Heavy Fitters" },
+                        { name: "Sholinganallur / OMR Corridor Hub", lat: 12.901, lng: 80.227, count: "41,200", skill: "Home Automation Techs" }
+                    ],
+                    shortage: { trade: "HVAC & Inverter Electronics Technicians", pct: 24, region: "Zone 8 Anna Nagar & Zone 9 Teynampet", gap: "-3,420 workers" },
+                    advisory: "UNIVO website integration has increased Chennai verified employment by +34.4% (+89,200 workers). Summer surge creates acute demand in Anna Nagar cooling guilds. Fast-track emergency apprentice certifications."
+                },
+                "Coimbatore": {
+                    name: "Coimbatore District",
+                    category: "Precision Engineering, Motors & Foundry Hub",
+                    rank: "#2 of 38 Districts",
+                    rankSub: "Industrial Manufacturing Anchor",
+                    baselineWorkers: "186,600",
+                    workers: "241,800",
+                    netGain: "+55,200",
+                    employmentLiftPct: "+29.6%",
+                    dispatches: "612,400",
+                    wageLift: "+₹230 / day (+38%)",
+                    jobs: "612,400",
+                    coverage: "94.6%",
+                    wage: "98.6%",
+                    avgRate: "₹840 / day",
+                    coops: "36 Societies",
+                    welfare: "₹6.1 Cr",
+                    topSkill: "Industrial Electronics & Diagnostics",
+                    skillsList: ["Motor Winding & Pumps", "Precision Tool Craft", "Appliance Maintenance", "Solar Power Grid"],
+                    demand: "138%",
+                    status: "Optimal",
+                    geo: { center: [11.0168, 76.9558], zoom: 11.2, radius: 16000 },
+                    demandZones: [
+                        { name: "Peelamedu & Sulur Industrial Belt", center: [11.032, 77.035], radius: 4600, demand: "145%", level: "critical", desc: "⚡ PEAK DEMAND ZONE · Motor pump automation & machine fitters" },
+                        { name: "Gandhipuram Central Commercial Hub", center: [11.018, 76.968], radius: 3200, demand: "132%", level: "moderate", desc: "Domestic diagnostics & refrigeration surge" },
+                        { name: "Pollachi Agri-Industrial Corridor", center: [10.662, 77.008], radius: 4100, demand: "115%", level: "balanced", desc: "Coconut processing & agro pumps" }
+                    ],
+                    workerClusters: [
+                        { name: "Peelamedu Tech Guild", lat: 11.031, lng: 77.015, count: "46,200", skill: "Foundry & Electronics" },
+                        { name: "Gandhipuram Service Sentry", lat: 11.017, lng: 76.968, count: "52,400", skill: "Appliance & Wiring" },
+                        { name: "Sulur Heavy Mechanics", lat: 11.025, lng: 77.125, count: "38,100", skill: "Textile Machinery Fitters" },
+                        { name: "Pollachi Agro-Electricians", lat: 10.665, lng: 77.012, count: "34,800", skill: "Irrigation & Motor Winding" },
+                        { name: "Mettupalayam Foothills Guild", lat: 11.301, lng: 76.945, count: "28,200", skill: "Vehicle & Agro Craft" }
+                    ],
+                    shortage: { trade: "Industrial Automation Mechanics", pct: 19, region: "Pollachi & Sulur Industrial Belt", gap: "-1,850 workers" },
+                    advisory: "UNIVO website integration has increased Coimbatore verified employment by +29.6% (+55,200 workers). Motor and pump manufacturing clusters show stable formalization."
+                },
+                "Tiruppur": {
+                    name: "Tiruppur District",
+                    category: "India's Knitwear Capital · Global Apparel Export Hub",
+                    rank: "#3 of 38 Districts",
+                    rankSub: "Textile Export Heavyweight",
+                    baselineWorkers: "150,200",
+                    workers: "189,400",
+                    netGain: "+39,200",
+                    employmentLiftPct: "+26.1%",
+                    dispatches: "482,000",
+                    wageLift: "+₹210 / day (+36%)",
+                    jobs: "482,000",
+                    coverage: "92.1%",
+                    wage: "98.2%",
+                    avgRate: "₹790 / day",
+                    coops: "28 Societies",
+                    welfare: "₹4.7 Cr",
+                    topSkill: "Textile Machinery & Craft",
+                    skillsList: ["Circular Knitting Mechanics", "Automated Cutting Systems", "Steam Boiler Maintenance"],
+                    demand: "135%",
+                    status: "High Demand",
+                    geo: { center: [11.1085, 77.3411], zoom: 11.3, radius: 15000 },
+                    demandZones: [
+                        { name: "Tiruppur North Garment Cluster", center: [11.125, 77.348], radius: 3800, demand: "148%", level: "critical", desc: "⚡ PEAK DEMAND ZONE · Automated circular knitting machines" },
+                        { name: "Palladam Powerloom & Sizing Belt", center: [10.998, 77.285], radius: 4200, demand: "128%", level: "moderate", desc: "Heavy yarn sizing & weaving machinery" }
+                    ],
+                    workerClusters: [
+                        { name: "Avinashi Road Technicians", lat: 11.121, lng: 77.332, count: "48,500", skill: "Knitting Mechanics" },
+                        { name: "Palladam Textile Fleet", lat: 10.995, lng: 77.291, count: "39,200", skill: "Powerloom & Electricals" },
+                        { name: "Udumalaipettai Agro Guild", lat: 10.582, lng: 77.248, count: "29,400", skill: "Motors & Civil Labor" }
+                    ],
+                    shortage: { trade: "High-Speed Circular Knitting Mechanics", pct: 18, region: "Tiruppur North & Palladam", gap: "-2,120 workers" },
+                    advisory: "UNIVO website integration has increased Tiruppur employment by +26.1% (+39,200 workers). Machine uptime demand remains high; prioritize emergency deployments."
+                },
+                "Madurai": {
+                    name: "Madurai District",
+                    category: "Cultural Capital · Central Southern Regional Hub",
+                    rank: "#4 of 38 Districts",
+                    rankSub: "Heritage & Trade Epicenter",
+                    baselineWorkers: "124,400",
+                    workers: "154,600",
+                    netGain: "+30,200",
+                    employmentLiftPct: "+24.3%",
+                    dispatches: "395,000",
+                    wageLift: "+₹190 / day (+34%)",
+                    jobs: "395,000",
+                    coverage: "89.4%",
+                    wage: "97.5%",
+                    avgRate: "₹750 / day",
+                    coops: "24 Societies",
+                    welfare: "₹3.9 Cr",
+                    topSkill: "Masonry & Heritage Construction",
+                    skillsList: ["Heritage Restoration", "Civil Masonry", "Electrical", "Plumbing"],
+                    demand: "128%",
+                    status: "Review",
+                    geo: { center: [9.9252, 78.1198], zoom: 11.4, radius: 14000 },
+                    demandZones: [
+                        { name: "Temple City Heritage Conservation Zone", center: [9.919, 78.121], radius: 3200, demand: "136%", level: "critical", desc: "⚡ PEAK DEMAND ZONE · Traditional stone & temple restoration" },
+                        { name: "Thiruparankundram Industrial Area", center: [9.878, 78.072], radius: 3500, demand: "122%", level: "moderate", desc: "Electrical & domestic building services" }
+                    ],
+                    workerClusters: [
+                        { name: "Madurai Central Artisans", lat: 9.921, lng: 78.118, count: "42,800", skill: "Stone Masonry & Heritage" },
+                        { name: "Melur Agro Machinery", lat: 10.028, lng: 78.338, count: "29,100", skill: "Pumps & Tractors" },
+                        { name: "Thiruparankundram Civil Fleet", lat: 9.882, lng: 78.075, count: "34,200", skill: "Domestic Electricals" }
+                    ],
+                    shortage: { trade: "Heritage Stone & Temple Masonry Artisans", pct: 15, region: "Thiruparankundram & Melur", gap: "-1,420 workers" },
+                    advisory: "UNIVO website integration has increased Madurai formal employment by +24.3% (+30,200 workers). Heritage restoration apprentices require preservation stipends."
+                },
+                "Salem": {
+                    name: "Salem District",
+                    category: "Salem Steel, Sago Processing & Mining Industries",
+                    rank: "#5 of 38 Districts",
+                    rankSub: "Steel & Metallurgy Center",
+                    baselineWorkers: "107,600",
+                    workers: "132,100",
+                    netGain: "+24,500",
+                    employmentLiftPct: "+22.8%",
+                    dispatches: "335,000",
+                    wageLift: "+₹185 / day (+32%)",
+                    jobs: "335,000",
+                    coverage: "91.2%",
+                    wage: "97.8%",
+                    avgRate: "₹760 / day",
+                    coops: "22 Societies",
+                    welfare: "₹3.4 Cr",
+                    topSkill: "Steel Fabrication & Woodcraft",
+                    skillsList: ["Structural Fabrication", "Wood Carving", "Industrial Electronics"],
+                    demand: "124%",
+                    status: "Optimal",
+                    geo: { center: [11.6643, 78.1460], zoom: 11.2, radius: 15000 },
+                    demandZones: [
+                        { name: "Mettur Dam Heavy Thermal & Chemical Corridor", center: [11.792, 77.801], radius: 4200, demand: "138%", level: "critical", desc: "⚡ PEAK DEMAND ZONE · High-pressure alloy welders" },
+                        { name: "Salem Central Steel Fabrication", center: [11.658, 78.152], radius: 3400, demand: "122%", level: "moderate", desc: "Steel furniture & structural welding" }
+                    ],
+                    workerClusters: [
+                        { name: "Salem Urban Welders", lat: 11.665, lng: 78.148, count: "39,800", skill: "Steel Fabrication" },
+                        { name: "Mettur Industrial Sentry", lat: 11.795, lng: 77.805, count: "34,500", skill: "Chemical Plant Mechanics" },
+                        { name: "Attur Sago Machinery Guild", lat: 11.595, lng: 78.598, count: "24,800", skill: "Agro Equipment Techs" }
+                    ],
+                    shortage: { trade: "Alloy Steel Welders & Fitters", pct: 16, region: "Mettur Dam Industrial & Omalur", gap: "-1,320 workers" },
+                    advisory: "UNIVO website integration has driven a +22.8% employment increase in Salem (+24,500 workers). Mettur thermal corridor formalization remains steady."
+                },
+                "Thanjavur": {
+                    name: "Thanjavur District",
+                    category: "Delta Cultural Capital · Agriculture, Bronze & Veena Craft",
+                    rank: "#13 of 38 Districts",
+                    rankSub: "Delta Agri-Cultural Core",
+                    baselineWorkers: "64,700",
+                    workers: "79,200",
+                    netGain: "+14,500",
+                    employmentLiftPct: "+22.4%",
+                    dispatches: "198,000",
+                    wageLift: "+₹175 / day (+33%)",
+                    jobs: "198,000",
+                    coverage: "86.4%",
+                    wage: "96.5%",
+                    avgRate: "₹710 / day",
+                    coops: "14 Societies",
+                    welfare: "₹2.0 Cr",
+                    topSkill: "Bronze Casting & Agro-Craft",
+                    skillsList: ["Thanjavur Art Plates", "Bronze Casting", "Agro Machinery", "Electrical"],
+                    demand: "124%",
+                    status: "Optimal",
+                    geo: { center: [10.7870, 79.1378], zoom: 11.3, radius: 15000 },
+                    demandZones: [
+                        { name: "Kumbakonam Temple Artisanal Sector", center: [10.961, 79.388], radius: 3600, demand: "135%", level: "critical", desc: "⚡ PEAK DEMAND ZONE · Bronze casting & brass temple craft" },
+                        { name: "Thanjavur Delta Agrarian Sentry", center: [10.785, 79.141], radius: 3800, demand: "118%", level: "moderate", desc: "Irrigation equipment and paddy machinery" }
+                    ],
+                    workerClusters: [
+                        { name: "Kumbakonam Bronze Guild", lat: 10.962, lng: 79.391, count: "24,500", skill: "Bronze Sculpting" },
+                        { name: "Thanjavur City Sentry", lat: 10.788, lng: 79.135, count: "26,800", skill: "Domestic Electricals" },
+                        { name: "Pattukkottai Marine Border", lat: 10.428, lng: 79.318, count: "16,400", skill: "Coconut & Marine Pumps" }
+                    ],
+                    shortage: { trade: "Artisanal Metalworkers & Veena Makers", pct: 19, region: "Kumbakonam & Thanjavur Town", gap: "-890 workers" },
+                    advisory: "UNIVO website integration has driven a +22.4% employment increase in Thanjavur (+14,500 workers). Kumbakonam artisanal bronze casting needs statutory GI export validation."
+                }
+            };
+
+            // Generic Fallback Coordinates & Zones for all other 38 Districts with realistic employment lift
+            const DISTRICT_COORDS = {
+                "Ariyalur": [11.1401, 79.0786], "Chengalpattu": [12.6819, 79.9888], "Cuddalore": [11.7480, 79.7714],
+                "Dharmapuri": [12.1211, 78.1582], "Dindigul": [10.3673, 77.9803], "Erode": [11.3410, 77.7172],
+                "Kallakurichi": [11.7384, 78.9639], "Kanchipuram": [12.8342, 79.7036], "Kanyakumari": [8.0883, 77.5385],
+                "Karur": [10.9601, 78.0766], "Krishnagiri": [12.5186, 78.2137], "Mayiladuthurai": [11.1075, 79.6522],
+                "Nagapattinam": [10.7672, 79.8449], "Namakkal": [11.2189, 78.1674], "Nilgiris": [11.4102, 76.6950],
+                "Perambalur": [11.2342, 78.8820], "Pudukkottai": [10.3833, 78.8001], "Ramanathapuram": [9.3639, 78.8395],
+                "Ranipet": [12.9224, 79.3329], "Sivaganga": [9.8433, 78.4809], "Tenkasi": [8.9594, 77.3150],
+                "Theni": [10.0104, 77.4768], "Thoothukudi": [8.7642, 78.1348], "Tiruchirappalli": [10.7905, 78.7047],
+                "Tirunelveli": [8.7139, 77.7567], "Tirupathur": [12.4958, 78.5678], "Tiruvallur": [13.1432, 79.9083],
+                "Tiruvannamalai": [12.2253, 79.0747], "Tiruvarur": [10.7725, 79.6365], "Vellore": [12.9165, 79.1325],
+                "Viluppuram": [11.9401, 79.4861], "Virudhunagar": [9.5872, 77.9514]
+            };
+
+            // Enrich all other districts with geographic centers, worker spread, and demand zones
+            Object.keys(DISTRICT_COORDS).forEach(dKey => {
+                if (!TN_DISTRICTS_DATA[dKey]) {
+                    const curWorkersNum = Math.floor(Math.random() * 40 + 35);
+                    const baseWorkersNum = Math.round(curWorkersNum * (1 / (1 + (Math.random() * 0.1 + 0.18))));
+                    const gainNum = curWorkersNum - baseWorkersNum;
+                    const liftPctNum = ((gainNum / baseWorkersNum) * 100).toFixed(1);
+
+                    TN_DISTRICTS_DATA[dKey] = {
+                        name: `${dKey} District`,
+                        category: `Tamil Nadu Regional District Directorate`,
+                        rank: `#${Math.floor(Math.random() * 20 + 10)} of 38 Districts`,
+                        rankSub: `Audited Labor Jurisdiction`,
+                        baselineWorkers: `${baseWorkersNum},000`,
+                        workers: `${curWorkersNum},000`,
+                        netGain: `+${gainNum},000`,
+                        employmentLiftPct: `+${liftPctNum}%`,
+                        dispatches: `${curWorkersNum * 2},500`,
+                        wageLift: `+₹${Math.floor(Math.random() * 40 + 160)} / day (+30%)`,
+                        jobs: `${curWorkersNum * 2},500`,
+                        coverage: `${(Math.random() * 5 + 85).toFixed(1)}%`,
+                        wage: "97.0%",
+                        avgRate: `₹${Math.floor(Math.random() * 60 + 720)} / day`,
+                        coops: `${Math.floor(Math.random() * 10 + 6)} Societies`,
+                        welfare: `₹${(Math.random() * 1.5 + 0.8).toFixed(1)} Cr`,
+                        topSkill: "Regional Guild Services",
+                        skillsList: ["⚡ Electrical Wiring", "🔧 Plumbing", "🧱 Masonry", "🚜 Agro Equipment"],
+                        demand: "118%",
+                        status: "Stable",
+                        shortage: { trade: "Certified Trade Technicians", pct: 17, region: `${dKey} Central Taluk`, gap: "-580 workers" },
+                        advisory: `UNIVO website integration has increased employment in ${dKey} by +${liftPctNum}%. Ensure smooth cooperative federation registration.`
+                    };
+                }
+
+                // Attach exact geospatial points
+                const [lat, lng] = DISTRICT_COORDS[dKey];
+                TN_DISTRICTS_DATA[dKey].geo = { center: [lat, lng], zoom: 11.2, radius: 14000 };
+                TN_DISTRICTS_DATA[dKey].demandZones = [
+                    { name: `${dKey} Urban Commercial Hub`, center: [lat + 0.015, lng + 0.015], radius: 3600, demand: "135%", level: "critical", desc: `⚡ PEAK DEMAND ZONE · Requisition surge in ${dKey}` },
+                    { name: `${dKey} Industrial / Taluk Corridor`, center: [lat - 0.02, lng - 0.02], radius: 4200, demand: "116%", level: "moderate", desc: "Active maintenance corridor" }
+                ];
+                TN_DISTRICTS_DATA[dKey].workerClusters = [
+                    { name: `${dKey} Town Central Cluster`, lat: lat + 0.008, lng: lng + 0.005, count: "18,400", skill: "Electrical & Facilities" },
+                    { name: `${dKey} East Taluk Guild`, lat: lat - 0.015, lng: lng + 0.025, count: "12,200", skill: "Masonry & Building" },
+                    { name: `${dKey} West Sentry Hub`, lat: lat + 0.022, lng: lng - 0.018, count: "9,800", skill: "Plumbing & Agro" }
+                ];
+            });
+
+            // Specific authentic overrides for top major industrial districts
+            TN_DISTRICTS_DATA["Chengalpattu"].baselineWorkers = "87,800";
+            TN_DISTRICTS_DATA["Chengalpattu"].workers = "112,400";
+            TN_DISTRICTS_DATA["Chengalpattu"].netGain = "+24,600";
+            TN_DISTRICTS_DATA["Chengalpattu"].employmentLiftPct = "+28.0%";
+            TN_DISTRICTS_DATA["Chengalpattu"].wageLift = "+₹220 / day (+37%)";
+
+            TN_DISTRICTS_DATA["Tiruchirappalli"].baselineWorkers = "97,500";
+            TN_DISTRICTS_DATA["Tiruchirappalli"].workers = "118,500";
+            TN_DISTRICTS_DATA["Tiruchirappalli"].netGain = "+21,000";
+            TN_DISTRICTS_DATA["Tiruchirappalli"].employmentLiftPct = "+21.5%";
+            TN_DISTRICTS_DATA["Tiruchirappalli"].wageLift = "+₹180 / day (+31%)";
+
+            // =========================================================================
+            // LEAFLET REAL MAP ENGINE INITIALIZATION
+            // =========================================================================
+            let realMap = null;
+            let boundaryLayer = null;
+            let workerSpreadLayer = null;
+            let demandZonesLayer = null;
+            let activeLayerMode = 'spread';
+
+            function initRealWorkforceMap() {
+                if (!window.L) {
+                    console.error('Leaflet JS is not loaded yet');
+                    return;
+                }
+
+                if (!realMap) {
+                    realMap = L.map('realWorkforceMap', {
+                        center: [11.1271, 78.6569],
+                        zoom: 7.2,
+                        zoomControl: false,
+                        attributionControl: false
+                    });
+
+                    // Official OpenStreetMap tiles with custom high-contrast cartography
+                    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        maxZoom: 18,
+                        attribution: '&copy; OpenStreetMap contributors'
+                    }).addTo(realMap);
+
+                    L.control.zoom({ position: 'bottomright' }).addTo(realMap);
+
+                    boundaryLayer = L.layerGroup().addTo(realMap);
+                    demandZonesLayer = L.layerGroup().addTo(realMap);
+                    workerSpreadLayer = L.layerGroup().addTo(realMap);
+                }
+
+                // Render Chennai by default
+                renderDistrictOnRealMap('Chennai');
+            }
+
+            function renderDistrictOnRealMap(distKey) {
+                if (!realMap) return;
+                const data = TN_DISTRICTS_DATA[distKey] || TN_DISTRICTS_DATA['ALL'];
+                const isAll = distKey === 'ALL';
+
+                // Clear previous layer groups
+                boundaryLayer.clearLayers();
+                demandZonesLayer.clearLayers();
+                workerSpreadLayer.clearLayers();
+
+                // Update District Badge on Map Header
+                document.getElementById('activeMapDistrictBadge').textContent = `DISTRICT: ${distKey.toUpperCase()}`;
+
+                // Smoothly fly to district geographic coordinates
+                realMap.flyTo(data.geo.center, data.geo.zoom, {
+                    animate: true,
+                    duration: 1.1
+                });
+
+                // 1. Draw District Perimeter Boundary
+                const boundaryCircle = L.circle(data.geo.center, {
+                    radius: data.geo.radius,
+                    color: '#C15A2E',
+                    weight: isAll ? 1 : 2,
+                    dashArray: '6, 8',
+                    fillColor: '#C15A2E',
+                    fillOpacity: isAll ? 0.02 : 0.04
+                });
+                boundaryCircle.bindTooltip(`${data.name} · Statutory Boundary`, { permanent: false, direction: 'top' });
+                boundaryLayer.addLayer(boundaryCircle);
+
+                // 2. Render Highlighted Demand Zones (CRITICAL & MODERATE)
+                if (data.demandZones && data.demandZones.length > 0) {
+                    data.demandZones.forEach(dz => {
+                        const isCritical = dz.level === 'critical';
+                        const zoneColor = isCritical ? '#C15A2E' : '#D9A441';
+
+                        const demandCircle = L.circle(dz.center, {
+                            radius: dz.radius,
+                            color: zoneColor,
+                            weight: isCritical ? 2.5 : 1.5,
+                            dashArray: isCritical ? '4, 6' : '6, 6',
+                            fillColor: zoneColor,
+                            fillOpacity: isCritical ? 0.22 : 0.12
+                        });
+
+                        const popupHtml = `
+                            <div style="padding:6px; min-width:210px">
+                                <div style="font-family:'Space Mono'; font-size:9.5px; font-weight:700; color:${zoneColor}">
+                                    ${isCritical ? '🔥 PEAK DEMAND SURGE ZONE' : '⚡ ACTIVE DEMAND CORRIDOR'}
+                                </div>
+                                <div style="font-weight:600; font-size:13.5px; margin:3px 0">${dz.name}</div>
+                                <div style="font-size:11.5px; color:#555">${dz.desc}</div>
+                                <div style="margin-top:6px; font-family:'Space Mono'; font-size:10px; font-weight:700">
+                                    Requisition Demand Index: <span style="color:${zoneColor}">${dz.demand}</span>
+                                </div>
+                            </div>
+                        `;
+                        demandCircle.bindPopup(popupHtml);
+
+                        // Pulse icon in center of demand zone
+                        const surgeIcon = L.divIcon({
+                            className: 'leaflet-demand-surge-icon',
+                            html: `<div class="demand-surge-badge pulse-demand-icon">🔥 ${dz.demand} Demand</div>`,
+                            iconSize: [110, 24],
+                            iconAnchor: [55, 12]
+                        });
+                        const surgeMarker = L.marker(dz.center, { icon: surgeIcon });
+                        surgeMarker.bindPopup(popupHtml);
+
+                        demandZonesLayer.addLayer(demandCircle);
+                        demandZonesLayer.addLayer(surgeMarker);
+                    });
+                }
+
+                // 3. Render Worker Spread Nodes in the Region
+                if (data.workerClusters && data.workerClusters.length > 0) {
+                    data.workerClusters.forEach(wc => {
+                        const clusterIcon = L.divIcon({
+                            className: 'leaflet-worker-cluster-wrap',
+                            html: `
+                                <div class="worker-cluster-pin">
+                                    <span class="worker-cluster-dot"></span>
+                                    <span>${wc.count}</span>
+                                </div>
+                            `,
+                            iconSize: [85, 26],
+                            iconAnchor: [42, 13]
+                        });
+
+                        const workerMarker = L.marker([wc.lat, wc.lng], { icon: clusterIcon });
+                        const workerPopup = `
+                            <div style="padding:6px; min-width:200px">
+                                <div style="font-family:'Space Mono'; font-size:9px; font-weight:700; color:#C15A2E">WORKER SPREAD ROSTER</div>
+                                <div style="font-weight:600; font-size:13px; margin:2px 0">${wc.name}</div>
+                                <div style="font-size:11.5px; color:#555">Dominant Guild: <strong>${wc.skill}</strong></div>
+                                <div style="font-size:11.5px; color:#555">Active Dispatched Workforce: <strong>${wc.count} Workers</strong></div>
+                                <button onclick="quickDraftDistrictDirective()" style="margin-top:6px; font-family:'Space Mono'; font-size:9.5px; color:#C15A2E; text-decoration:underline; font-weight:700">
+                                    ⚡ Mobilize Sentry Unit
+                                </button>
+                            </div>
+                        `;
+                        workerMarker.bindPopup(workerPopup);
+                        workerSpreadLayer.addLayer(workerMarker);
+                    });
+                }
+
+                // Apply Layer Visibility Filter
+                applyMapLayerFilter(activeLayerMode);
+            }
+
+            function applyMapLayerFilter(layer) {
+                if (!realMap) return;
+                activeLayerMode = layer;
+
+                if (layer === 'spread') {
+                    realMap.addLayer(workerSpreadLayer);
+                    realMap.removeLayer(demandZonesLayer);
+                    document.getElementById('activeLayerLabel').textContent = '· Worker Spread Clusters across District Taluks';
+                } else if (layer === 'demand') {
+                    realMap.removeLayer(workerSpreadLayer);
+                    realMap.addLayer(demandZonesLayer);
+                    document.getElementById('activeLayerLabel').textContent = '· High Demand Surge Zones & Unmet Corridors';
+                } else if (layer === 'skills') {
+                    realMap.addLayer(workerSpreadLayer);
+                    realMap.removeLayer(demandZonesLayer);
+                    document.getElementById('activeLayerLabel').textContent = '· Certified Guild Trade Specialization Clusters';
+                } else {
+                    realMap.addLayer(workerSpreadLayer);
+                    realMap.addLayer(demandZonesLayer);
+                    document.getElementById('activeLayerLabel').textContent = '· Composite View: Worker Spread & Demand Surge Zones';
+                }
+            }
+
+            // Layer Switch Buttons
+            document.querySelectorAll('#mapLayerSwitch .pill-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('#mapLayerSwitch .pill-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    applyMapLayerFilter(this.getAttribute('data-layer'));
+                });
+            });
+
+            window.selectDistrictFromMap = function(dist) {
+                document.querySelectorAll('.quick-dist-btn').forEach(b => b.classList.remove('active'));
+                const matchedBtns = Array.from(document.querySelectorAll('.quick-dist-btn')).filter(b => b.textContent.includes(dist));
+                matchedBtns.forEach(b => b.classList.add('active'));
+
+                const distSel = document.getElementById('districtFilter');
+                distSel.value = dist;
+                onDistrictSelected(dist);
+            };
+
+            window.resetMapToState = function() {
+                window.selectDistrictFromMap('ALL');
+            };
+
+            // DOM Elements
+            const stateFilter = document.getElementById('stateFilter');
+            const districtFilter = document.getElementById('districtFilter');
+            const metricsTableBody = document.getElementById('metricsTableBody');
+            const tableSearchInput = document.getElementById('tableSearchInput');
+
+            // Populate all 38 districts in the District Selector
+            function populateDistrictDropdown() {
+                districtFilter.innerHTML = '';
+                
+                const allOpt = document.createElement('option');
+                allOpt.value = 'ALL';
+                allOpt.textContent = 'All 38 Districts (Entire Tamil Nadu State)';
+                districtFilter.appendChild(allOpt);
+
+                const distKeys = Object.keys(TN_DISTRICTS_DATA).filter(k => k !== 'ALL').sort();
+                distKeys.forEach(dk => {
+                    const opt = document.createElement('option');
+                    opt.value = dk;
+                    opt.textContent = `${dk} District`;
+                    districtFilter.appendChild(opt);
+                });
+            }
+
+            // Populate Table with all 38 districts including UNIVO Employment Lift Metrics
+            function renderDistrictsTable(filterQuery = '') {
+                metricsTableBody.innerHTML = '';
+                const query = filterQuery.toLowerCase().trim();
+                const distKeys = Object.keys(TN_DISTRICTS_DATA).filter(k => k !== 'ALL').sort();
+
+                distKeys.forEach(dk => {
+                    const data = TN_DISTRICTS_DATA[dk];
+                    if (query && !dk.toLowerCase().includes(query) && !data.topSkill.toLowerCase().includes(query)) {
+                        return;
+                    }
+
+                    const tr = document.createElement('tr');
+                    tr.id = `row-${dk.replace(/\s+/g, '')}`;
+                    
+                    let badgeClass = 'status-green';
+                    if (data.status === 'Review') badgeClass = 'status-gold';
+                    else if (data.status === 'Stable') badgeClass = 'status-blue';
+
+                    tr.innerHTML = `
+                        <td>
+                            <strong>${dk}</strong>
+                            <div style="font-size:11px; color:var(--ink-soft)">${data.category.split('·')[0]}</div>
+                        </td>
+                        <td style="color:var(--ink-soft)">${data.baselineWorkers}</td>
+                        <td><strong>${data.workers}</strong></td>
+                        <td><strong style="color:#2e7d32">${data.netGain}</strong></td>
+                        <td><span class="status-badge status-green mono">${data.employmentLiftPct} LIFT</span></td>
+                        <td>
+                            ${data.avgRate} 
+                            <div style="font-size:10.5px; color:#2e7d32; font-weight:600">${data.wageLift.split(' ')[0]} lift</div>
+                        </td>
+                        <td><span class="status-badge ${badgeClass} mono">${data.status.toUpperCase()}</span></td>
+                    `;
+
+                    tr.style.cursor = 'pointer';
+                    tr.addEventListener('click', () => {
+                        districtFilter.value = dk;
+                        onDistrictSelected(dk);
+                    });
+
+                    metricsTableBody.appendChild(tr);
+                });
+            }
+
+            // Central State & District Update Function
+            function onDistrictSelected(districtKey) {
+                const data = TN_DISTRICTS_DATA[districtKey] || TN_DISTRICTS_DATA['ALL'];
+                const isAll = districtKey === 'ALL';
+
+                // 1. Update Core KPI Cards
+                document.getElementById('kpiWorkers').textContent = data.workers;
+                document.getElementById('kpiJobs').textContent = data.jobs;
+                document.getElementById('kpiCoverage').textContent = data.coverage;
+                document.getElementById('kpiWage').textContent = data.wage;
+                document.getElementById('kpiWageMeta').textContent = `${data.avgRate} avg (${data.wageLift.split(' ')[0]} lift)`;
+
+                if (isAll) {
+                    document.getElementById('kpiWorkersMeta').textContent = '↑ +28.4% employment lift via UNIVO';
+                    document.getElementById('kpiJobsMeta').textContent = '99.1% verified completion rate';
+                    document.getElementById('kpiCoverageMeta').textContent = 'Across 38 districts & 14 urban hubs';
+                } else {
+                    document.getElementById('kpiWorkersMeta').textContent = `↑ ${data.employmentLiftPct} lift via UNIVO (${data.netGain} jobs)`;
+                    document.getElementById('kpiJobsMeta').textContent = `${data.coops} registered`;
+                    document.getElementById('kpiCoverageMeta').textContent = `Demand Index: ${data.demand}`;
+                }
+
+                // 2. Update Executive Official Scorecard
+                const dossierCard = document.getElementById('districtExecutiveDossier');
+                dossierCard.classList.add('highlight-mode');
+                setTimeout(() => dossierCard.classList.remove('highlight-mode'), 800);
+
+                document.getElementById('dossierDistTitle').textContent = isAll ? 'All 38 Districts · Macro State Aggregation' : `${data.name} · Official Intelligence Dossier`;
+                document.getElementById('dossierDistSub').textContent = data.category;
+                document.getElementById('dossierRank').textContent = data.rank;
+                document.getElementById('dossierRankSub').textContent = data.rankSub;
+                document.getElementById('dossierCoops').textContent = data.coops;
+                document.getElementById('dossierCoopsSub').textContent = isAll ? '100% Verified By Registrar' : `${data.welfare} Social Security Released`;
+                document.getElementById('dossierWage').textContent = data.wage;
+                document.getElementById('dossierWageSub').textContent = `Avg ${data.avgRate} (${data.wageLift.split(' ')[0]} lift)`;
+                document.getElementById('dossierWelfare').textContent = data.welfare;
+                document.getElementById('dossierLift').textContent = data.employmentLiftPct;
+                document.getElementById('dossierLiftSub').textContent = `${data.netGain} Net New Livelihoods`;
+                document.getElementById('dossierGrowthPill').textContent = `✦ ${data.employmentLiftPct} LIFT VIA UNIVO`;
+                document.getElementById('dossierAdvisoryText').textContent = data.advisory;
+
+                // 3. Update UNIVO Website Employment Lift Section in Feature 1
+                document.getElementById('liftDistrictName').textContent = isAll ? 'Entire Tamil Nadu State' : data.name;
+                document.getElementById('liftGrowthBadge').textContent = `${data.employmentLiftPct} NET SURGE`;
+                document.getElementById('liftBaselineVal').textContent = data.baselineWorkers;
+                document.getElementById('liftCurrentVal').textContent = data.workers;
+                document.getElementById('liftNetAddedVal').textContent = data.netGain;
+                document.getElementById('liftPctTag').textContent = data.employmentLiftPct;
+                document.getElementById('chipNetWorkers').textContent = data.netGain;
+                document.getElementById('chipDispatches').textContent = isAll ? '4.8M' : `${data.dispatches.replace(',','').slice(0,3)}K`;
+                document.getElementById('chipWageLift').textContent = data.wageLift.split(' ')[0];
+
+                // Compute Bar Widths
+                const baseNum = parseFloat(data.baselineWorkers.replace(/,/g, ''));
+                const curNum = parseFloat(data.workers.replace(/,/g, ''));
+                const basePct = Math.round((baseNum / curNum) * 100);
+                const gainPct = 100 - basePct;
+                document.getElementById('liftBaseBar').style.width = `${basePct}%`;
+                document.getElementById('liftGainBar').style.width = `${gainPct}%`;
+
+                // 4. Update Before vs After Transformation Scorecard in Feature 1
+                document.getElementById('trendDistrictTag').textContent = isAll ? 'Entire Tamil Nadu State' : data.name;
+                if (isAll) {
+                    document.getElementById('baJobVol').textContent = '4,812,940 Total Dispatches';
+                    document.getElementById('baSkillVol').textContent = '14 Certified Guilds';
+                    document.getElementById('baWageRate').textContent = '₹785 / day state avg';
+                } else {
+                    document.getElementById('baJobVol').textContent = `${data.dispatches} Dispatches`;
+                    document.getElementById('baSkillVol').textContent = `${data.skillsList.length} Certified Guilds`;
+                    document.getElementById('baWageRate').textContent = data.avgRate;
+                }
+
+                // 5. Update Real Leaflet Map
+                renderDistrictOnRealMap(districtKey);
+
+                // 6. Update Map Inspector
+                document.getElementById('inspectorName').textContent = data.name;
+                document.getElementById('inspectorWorkers').textContent = data.workers;
+                document.getElementById('inspectorDemand').textContent = data.demand;
+                document.getElementById('inspectorBadge').textContent = data.status.toUpperCase();
+                document.getElementById('inspectorSub').textContent = data.category;
+
+                const skillsContainer = document.getElementById('inspectorSkills');
+                skillsContainer.innerHTML = '';
+                data.skillsList.forEach(sk => {
+                    const sp = document.createElement('span');
+                    sp.className = 'skill-tag';
+                    sp.textContent = `✦ ${sk}`;
+                    skillsContainer.appendChild(sp);
+                });
+
+                if (data.demandZones && data.demandZones.length > 0) {
+                    const primeZone = data.demandZones[0];
+                    document.getElementById('inspectorDemandCorridorTitle').textContent = `HIGHLIGHTED DEMAND CORRIDOR: ${primeZone.name.toUpperCase()}`;
+                    document.getElementById('inspectorGapText').textContent = `${primeZone.desc}. Current district worker spread accounts for ${data.workers} active artisans (+${data.employmentLiftPct} lift via website). Demand index stands at ${data.demand}.`;
+                }
+
+                // 7. Update AI Forecasting Shortage Alert
+                if (data.shortage) {
+                    document.getElementById('shortageTrade1').textContent = data.shortage.trade;
+                    document.getElementById('shortageBadge1').textContent = `${data.shortage.pct}% SHORTFALL`;
+                    document.getElementById('shortageRegion1').textContent = `📍 ${data.shortage.region}`;
+                    document.getElementById('shortageWorkers1').textContent = data.shortage.gap;
+                    document.getElementById('shortageFill1').style.width = `${100 - data.shortage.pct}%`;
+                    document.getElementById('forecastTitleCard').textContent = `Projected Demand: ${data.name}`;
+                    document.getElementById('forecastSubLabel').textContent = `Shortage risk: ${data.shortage.trade} (${data.shortage.gap})`;
+                }
+
+                // 8. Highlight Row in Table
+                document.querySelectorAll('#metricsTableBody tr').forEach(r => r.classList.remove('row-highlight'));
+                if (!isAll) {
+                    const row = document.getElementById(`row-${districtKey.replace(/\s+/g, '')}`);
+                    if (row) {
+                        row.classList.add('row-highlight');
+                        row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                }
+
+                // Update Export Button Label
+                document.getElementById('exportBtnText').textContent = isAll ? 'Export State Gazette' : `Export ${districtKey} Gazette`;
+            }
+
+            // Event Listeners
+            districtFilter.addEventListener('change', function() {
+                onDistrictSelected(this.value);
+            });
+
+            stateFilter.addEventListener('change', function() {
+                if (this.value === 'PAN_INDIA') {
+                    alert('Switching to National Pan-India Telemetry View. Aggregating across 28 States & 8 UTs.');
+                    districtFilter.value = 'ALL';
+                    onDistrictSelected('ALL');
+                } else {
+                    populateDistrictDropdown();
+                    districtFilter.value = 'ALL';
+                    onDistrictSelected('ALL');
+                }
+            });
+
+            tableSearchInput.addEventListener('input', function() {
+                renderDistrictsTable(this.value);
+            });
+
+            // Quick Actions for Officials
+            window.exportDistrictGazette = function() {
+                const dist = districtFilter.value;
+                const dName = dist === 'ALL' ? 'State of Tamil Nadu' : `${dist} District`;
+                alert(`✓ Exporting Official Statutory Labour Audit Gazette for ${dName} (PDF/CSV format) with authenticated digital seal.`);
+            };
+
+            window.quickDraftDistrictDirective = function() {
+                const dist = districtFilter.value;
+                const data = TN_DISTRICTS_DATA[dist] || TN_DISTRICTS_DATA['ALL'];
+                const titleInput = document.getElementById('directiveTitle');
+                const contentInput = document.getElementById('directiveContent');
+                const audienceInput = document.getElementById('targetAudience');
+
+                titleInput.value = `Executive Directive: Workforce Welfare & Trade Compliance — ${dist === 'ALL' ? 'State-Wide' : dist + ' District'}`;
+                contentInput.value = `Under Tamil Nadu Unorganized Workers Social Security Mandate 2026, all registered cooperatives operating in ${dist === 'ALL' ? 'Tamil Nadu' : dist + ' District'} are directed as follows:\n\n${data.advisory}\n\nStrict compliance is mandatory under Gazette order #TN-2026-LWSD.`;
+                
+                if (dist === 'Chennai') audienceInput.value = 'Chennai Cooperatives';
+                else if (dist === 'Coimbatore') audienceInput.value = 'Coimbatore Cooperatives';
+                else if (dist === 'Tiruppur') audienceInput.value = 'Tiruppur Cooperatives';
+                else audienceInput.value = 'All Cooperatives';
+
+                document.getElementById('directiveComposerCard').scrollIntoView({ behavior: 'smooth' });
+                titleInput.focus();
+            };
+
+            // Timeframe switch
+            const timeframeBtns = document.querySelectorAll('#timeframeSwitch .pill-btn');
+            const pathLineJobs = document.getElementById('pathLineJobs');
+            const pathAreaJobs = document.getElementById('pathAreaJobs');
+            const trendSubtitle = document.getElementById('trendSubtitle');
+
+            const TREND_DATA = {
+                '30d': {
+                    sub: 'Past 30 Days: Daily job dispatches & rapid apprentice certification surge',
+                    jobsD: 'M275 162 Q 380 135, 480 90 T 595 58',
+                    areaD: 'M35 170 L 150 168 L 275 162 Q 380 135, 480 90 T 595 58 L 595 195 L 35 195 Z'
+                },
+                '90d': {
+                    sub: 'Quarterly view: Pre-UNIVO flat baseline vs post-launch exponential employment lift',
+                    jobsD: 'M275 162 Q 380 120, 480 75 T 595 42',
+                    areaD: 'M35 170 L 150 168 L 275 162 Q 380 120, 480 75 T 595 42 L 595 195 L 35 195 Z'
+                },
+                '1y': {
+                    sub: 'Annual trajectory: Cumulative worker formalization and statutory onboarding',
+                    jobsD: 'M275 162 Q 380 105, 480 60 T 595 30',
+                    areaD: 'M35 170 L 150 168 L 275 162 Q 380 105, 480 60 T 595 30 L 595 195 L 35 195 Z'
+                },
+                'all': {
+                    sub: 'All-Time macro telemetry: Full before-and-after audit since UNIVO deployment',
+                    jobsD: 'M275 162 Q 380 95, 480 50 T 595 24',
+                    areaD: 'M35 170 L 150 168 L 275 162 Q 380 95, 480 50 T 595 24 L 595 195 L 35 195 Z'
+                }
+            };
+
+            timeframeBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    timeframeBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    const tf = this.getAttribute('data-timeframe');
+                    if (TREND_DATA[tf]) {
+                        pathLineJobs.setAttribute('d', TREND_DATA[tf].jobsD);
+                        pathAreaJobs.setAttribute('d', TREND_DATA[tf].areaD);
+                        trendSubtitle.textContent = TREND_DATA[tf].sub;
+                    }
+                });
+            });
+
+            // AI Forecast Horizon
+            const horizonBtns = document.querySelectorAll('#forecastHorizonSwitch .pill-btn');
+            const aiForecastLine = document.getElementById('aiForecastLine');
+            const forecastSubLabel = document.getElementById('forecastSubLabel');
+
+            const HORIZON_DATA = {
+                '30': {
+                    sub: 'Forecasting horizon: Next 30 Days (Immediate Sprint)',
+                    lineD: 'M210 100 Q 320 85, 480 75'
+                },
+                '60': {
+                    sub: 'Forecasting horizon: Next 60 Days (Mid-Quarter Seasonal Peak)',
+                    lineD: 'M210 100 Q 340 70, 480 50'
+                },
+                '90': {
+                    sub: 'Forecasting horizon: Next 90 Days (Monsoon Pre-Readiness Horizon)',
+                    lineD: 'M210 100 Q 350 55, 480 35'
+                }
+            };
+
+            horizonBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    horizonBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    const h = this.getAttribute('data-horizon');
+                    if (HORIZON_DATA[h]) {
+                        aiForecastLine.setAttribute('d', HORIZON_DATA[h].lineD);
+                        forecastSubLabel.textContent = HORIZON_DATA[h].sub;
+                    }
+                });
+            });
+
+            // Mobility Subsidy Simulator
+            const subsidySlider = document.getElementById('subsidySlider');
+            const subsidyLabel = document.getElementById('subsidyLabel');
+            const simEffectText = document.getElementById('simEffectText');
+
+            subsidySlider.addEventListener('input', function() {
+                const val = parseInt(this.value, 10);
+                subsidyLabel.textContent = `+₹${val} / day`;
+                const reducedPct = (val * 0.23).toFixed(1);
+                simEffectText.innerHTML = `✓ Model projects a <strong>${reducedPct}% reduction in trade shortages</strong>, absorbing ~${val * 18} displaced artisans into critical infrastructure queues.`;
+            });
+
+            // Pre-fill Directive from Shortage Warning
+            window.draftDirectiveFromShortage = function(trade, region, deficit) {
+                const formCard = document.getElementById('directiveComposerCard');
+                const titleInput = document.getElementById('directiveTitle');
+                const contentInput = document.getElementById('directiveContent');
+                const audienceInput = document.getElementById('targetAudience');
+
+                titleInput.value = `Statutory Mobility Directive: Addressing Projected ${deficit}% Shortage in ${trade}`;
+                contentInput.value = `Pursuant to AI Workforce Demand Forecasting insights, an anticipated deficit of ${deficit}% is identified for certified ${trade} across ${region}. All accredited cooperative federations are hereby authorized to activate emergency apprentice quotas and apply for the state travel subsidy fund under G.O. Ms 2026/LWSD.`;
+
+                if (trade.includes('Electrician')) audienceInput.value = 'Technical Trades';
+                else if (trade.includes('Sanitation')) audienceInput.value = 'All Cooperatives';
+
+                formCard.scrollIntoView({ behavior: 'smooth' });
+                titleInput.focus();
+            };
+
+            // Existing Directive Form Dispatch
+            document.getElementById('directiveForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const notice = document.getElementById('directiveNotice');
+                notice.style.display = 'block';
+                setTimeout(() => {
+                    notice.style.display = 'none';
+                    document.getElementById('directiveTitle').value = '';
+                    document.getElementById('directiveContent').value = '';
+                }, 4500);
+            });
+
+            // Initialization Sequence
+            populateDistrictDropdown();
+            renderDistrictsTable();
+            initRealWorkforceMap();
+            onDistrictSelected('Chennai');
+        })();
+
+        function logoutGov() {
+            localStorage.removeItem('univo_active_government');
+            window.location.href = 'government-login.html';
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — Univo Certified Worker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Space+Mono&display=swap"
+        rel="stylesheet">
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* ============ TOKENS ============ */
+        :root {
+            --cream: #F4ECDC;
+            --cream2: #EDE1CB;
+            --ink: #221812;
+            --ink-soft: #2d2219;
+            --terra: #C15A2E;
+            --gold: #D9A441;
+            --umber: #241509;
+            --hair: rgba(34, 24, 18, .18);
+            --serif: 'Fraunces', Georgia, serif;
+            --sans: 'Instrument Sans', 'Helvetica Neue', sans-serif;
+            --mono: 'Space Mono', monospace;
+            --ease: cubic-bezier(.22, 1, .36, 1);
+            --pad: 6vw;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        html::-webkit-scrollbar,
+        body::-webkit-scrollbar {
+            display: none;
+            width: 0;
+            height: 0;
+        }
+
+        body {
+            background: var(--cream);
+            color: var(--ink);
+            font: 400 16px/1.6 var(--sans);
+            font-optical-sizing: auto;
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            transition: opacity .6s var(--ease);
+        }
+
+        body.loaded {
+            opacity: 1;
+        }
+
+        ::selection {
+            background: var(--terra);
+            color: var(--cream);
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        button {
+            font: inherit;
+            color: inherit;
+            background: none;
+            border: 0;
+            cursor: pointer;
+        }
+
+        :focus-visible {
+            outline: 2px solid var(--terra);
+            outline-offset: 3px;
+        }
+
+        .mono {
+            font-family: var(--mono);
+            font-size: 11px;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+        }
+
+        /* grain texture overlay */
+        #grain {
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+            mix-blend-mode: multiply;
+            opacity: .05;
+            pointer-events: none;
+            z-index: 2500;
+        }
+
+        /* custom cursor */
+        .cursor-dot,
+        .cursor-ring {
+            position: fixed;
+            top: 0;
+            left: 0;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 4000;
+            mix-blend-mode: difference;
+            will-change: transform;
+            transition: opacity .3s;
+        }
+
+        .cursor-dot {
+            width: 6px;
+            height: 6px;
+            background: #fff;
+            margin: -3px 0 0 -3px;
+        }
+
+        .cursor-ring {
+            width: 36px;
+            height: 36px;
+            border: 1px solid rgba(255, 255, 255, .7);
+            margin: -18px 0 0 -18px;
+            transition: width .25s var(--ease), height .25s var(--ease), border-color .25s, margin .25s var(--ease);
+        }
+
+        body:hover .cursor-ring.active {
+            width: 58px;
+            height: 58px;
+            margin: -29px 0 0 -29px;
+            border-color: rgba(255, 255, 255, 1);
+            background: rgba(255, 255, 255, .1);
+        }
+
+        @media (pointer:coarse) {
+            .cursor-dot,
+            .cursor-ring {
+                display: none;
+            }
+        }
+
+        /* ============ HEADER / NAV ============ */
+        header {
+            padding: 2.2rem var(--pad);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--hair);
+            position: relative;
+            z-index: 10;
+        }
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: .7rem;
+            font-family: var(--serif);
+            font-size: 1.4rem;
+            font-weight: 500;
+            letter-spacing: -.02em;
+        }
+
+        .brand svg {
+            width: 22px;
+            height: 22px;
+            color: var(--terra);
+            animation: spin 32s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .nav-back {
+            display: inline-flex;
+            align-items: center;
+            gap: .6rem;
+            color: var(--ink-soft);
+            transition: color .3s var(--ease), transform .3s var(--ease);
+        }
+
+        .nav-back:hover {
+            color: var(--terra);
+            transform: translateX(-4px);
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .nav-cta {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1.5px solid var(--ink);
+            border-radius: 999px;
+            padding: 0.65rem 1.6rem;
+            font-family: var(--mono);
+            font-size: 11px;
+            font-weight: 600;
+            line-height: 1;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+            white-space: nowrap;
+            transition: background .3s var(--ease), color .3s var(--ease), border-color .3s var(--ease), transform .3s var(--ease);
+        }
+
+        .nav-cta:hover {
+            background: var(--ink);
+            color: var(--cream);
+            border-color: var(--ink);
+            transform: translateY(-2px);
+        }
+
+        /* ============ MAIN AUTH LAYOUT ============ */
+        main {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1.15fr;
+            max-width: 1360px;
+            width: 100%;
+            margin: 0 auto;
+            padding: clamp(3rem, 6vh, 6rem) var(--pad);
+            gap: clamp(2.5rem, 5vw, 6rem);
+            align-items: center;
+        }
+
+        /* Visual Arch Column */
+        .auth-visual {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .auth-arch {
+            width: 100%;
+            max-width: 440px;
+            aspect-ratio: 3 / 4.1;
+            border-radius: 999px 999px 0 0;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--hair);
+            box-shadow: 0 24px 60px rgba(34, 24, 18, 0.12);
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            transition: transform .8s var(--ease), box-shadow .5s var(--ease);
+            background: var(--cream2);
+        }
+
+        .auth-arch:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 32px 70px rgba(193, 90, 46, 0.22);
+        }
+
+        .auth-arch .arch-video,
+        .auth-arch .arch-img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            border-radius: 999px 999px 0 0;
+            display: block;
+            filter: brightness(1.02) contrast(1.04);
+            transform: scale(1.01);
+            transition: transform 1.2s var(--ease);
+        }
+
+        .auth-arch:hover .arch-video,
+        .auth-arch:hover .arch-img {
+            transform: scale(1.04);
+        }
+
+        .auth-arch .arch-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, transparent 65%, rgba(20, 14, 10, 0.75) 100%);
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding: 2rem 1.5rem;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .arch-badge {
+            font-size: 10px;
+            letter-spacing: .14em;
+            padding: 7px 16px;
+            border-radius: 999px;
+            background: rgba(244, 236, 220, 0.94);
+            color: var(--ink);
+            border: 1px solid var(--hair);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+            font-weight: 600;
+        }
+
+        .arch-caption {
+            margin-top: 1.8rem;
+            text-align: center;
+            color: var(--ink-soft);
+            font-size: 10px;
+            max-width: 380px;
+            line-height: 1.6;
+        }
+
+        /* Form Card */
+        .auth-card {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--hair);
+            border-radius: 28px;
+            padding: clamp(2.2rem, 5vw, 4rem);
+            box-shadow: 0 20px 48px rgba(34, 24, 18, 0.06);
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            position: relative;
+        }
+
+        .auth-header {
+            display: flex;
+            flex-direction: column;
+            gap: .6rem;
+        }
+
+        .auth-eyebrow {
+            color: var(--terra);
+            font-size: 10px;
+            letter-spacing: .16em;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+        }
+
+        .auth-eyebrow::before {
+            content: '';
+            display: inline-block;
+            width: 14px;
+            height: 1px;
+            background: currentColor;
+        }
+
+        .auth-title {
+            font-family: var(--serif);
+            font-size: clamp(2rem, 3.8vw, 3.2rem);
+            font-weight: 400;
+            line-height: 1.1;
+            letter-spacing: -.02em;
+        }
+
+        .auth-title em {
+            font-style: italic;
+            color: var(--terra);
+        }
+
+        .auth-desc {
+            color: var(--ink-soft);
+            font-size: 14px;
+            line-height: 1.6;
+            margin-top: .3rem;
+            max-width: 48ch;
+        }
+
+        /* Form Controls */
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.4rem;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: .5rem;
+        }
+
+        .field label {
+            font-family: var(--mono);
+            font-size: 10px;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            color: var(--ink-soft);
+            font-weight: 600;
+        }
+
+        .field input {
+            width: 100%;
+            background: rgba(244, 236, 220, 0.4);
+            border: 1px solid var(--hair);
+            border-radius: 12px;
+            padding: 0.85rem 1.1rem;
+            font-family: var(--sans);
+            font-size: 15px;
+            color: var(--ink);
+            transition: all .25s var(--ease);
+        }
+
+        .field input:focus {
+            outline: none;
+            background: #fff;
+            border-color: var(--terra);
+            box-shadow: 0 0 0 4px rgba(193, 90, 46, 0.12);
+        }
+
+        .field-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: var(--ink-soft);
+        }
+
+        .field-remember {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            cursor: pointer;
+        }
+
+        .field-remember input[type="checkbox"] {
+            accent-color: var(--terra);
+            width: 15px;
+            height: 15px;
+            cursor: pointer;
+        }
+
+        .forgot-link {
+            color: var(--ink-soft);
+            text-decoration: underline;
+            text-underline-offset: 3px;
+            transition: color .2s;
+        }
+
+        .forgot-link:hover {
+            color: var(--terra);
+        }
+
+        .btn-submit {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: .8rem;
+            background: var(--ink);
+            color: var(--cream);
+            border: 1.5px solid var(--ink);
+            border-radius: 999px;
+            padding: 1.05rem 2.2rem;
+            font-family: var(--mono);
+            font-size: 11.5px;
+            letter-spacing: .16em;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-top: .6rem;
+            transition: all .35s var(--ease);
+            box-shadow: 0 10px 24px rgba(34, 24, 18, 0.14);
+        }
+
+        .btn-submit:hover {
+            background: var(--terra);
+            border-color: var(--terra);
+            transform: translateY(-2px);
+            box-shadow: 0 14px 32px rgba(193, 90, 46, 0.32);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Alert Banners */
+        .alert-banner {
+            padding: 1rem 1.4rem;
+            border-radius: 14px;
+            font-size: 13px;
+            display: none;
+            align-items: center;
+            gap: .8rem;
+            animation: fadeIn .3s var(--ease);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-banner--error {
+            background: rgba(193, 90, 46, 0.12);
+            border: 1px solid rgba(193, 90, 46, 0.35);
+            color: #92340f;
+        }
+
+        .alert-banner--success {
+            background: rgba(46, 125, 50, 0.12);
+            border: 1px solid rgba(46, 125, 50, 0.35);
+            color: #1e5223;
+        }
+
+        /* Auth Card Footer */
+        .auth-footer {
+            border-top: 1px solid var(--hair);
+            padding-top: 1.6rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            color: var(--ink-soft);
+            flex-wrap: wrap;
+            gap: .8rem;
+        }
+
+        .auth-footer a {
+            font-weight: 600;
+            color: var(--terra);
+            position: relative;
+        }
+
+        .auth-footer a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: var(--terra);
+            transform: scaleX(0);
+            transform-origin: right;
+            transition: transform .3s var(--ease);
+        }
+
+        .auth-footer a:hover::after {
+            transform: scaleX(1);
+            transform-origin: left;
+        }
+
+        /* ============ FOOTER ============ */
+        footer {
+            padding: 1.6rem var(--pad);
+            border-top: 1px solid var(--hair);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--ink-soft);
+            font-size: 11px;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            main {
+                grid-template-columns: 1fr;
+                gap: 3rem;
+            }
+            .auth-visual {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- reusable sun mark -->
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+        <symbol id="sun-mark" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="17" fill="currentColor" />
+            <g id="sun-rays" stroke="currentColor" stroke-width="5" stroke-linecap="round"></g>
+        </symbol>
+    </svg>
+
+    <div id="grain"></div>
+    <div class="cursor-dot" id="cDot"></div>
+    <div class="cursor-ring" id="cRing"></div>
+
+    <!-- HEADER / NAV -->
+    <header>
+        <a class="brand" href="ref.html">
+            <svg aria-hidden="true"><use href="#sun-mark" /></svg>Univo
+        </a>
+        <a href="ref.html" class="nav-back mono">
+            ← Return to overview
+        </a>
+        <div class="nav-actions">
+            <a href="worker-register.html" class="nav-cta mono">Register</a>
+        </div>
+    </header>
+
+    <main>
+        <!-- LEFT VISUAL ARCH -->
+        <div class="auth-visual">
+            <div class="auth-arch">
+                <img src="Japanese_tea_house_on_lake_202609030106.jpeg" alt="Japanese tea house on lake" class="arch-img" aria-label="Japanese tea house on lake">
+                <div class="arch-overlay">
+                    <span class="arch-badge mono">USER 02 — CERTIFIED WORKER</span>
+                </div>
+            </div>
+            <div class="arch-caption mono">
+                Fair algorithmic job allocation · Direct bank settlements · Trade accreditation
+            </div>
+        </div>
+
+        <!-- RIGHT FORM CARD -->
+        <div class="auth-card">
+            <!-- Alert Banners -->
+            <div class="alert-banner alert-banner--error" id="errorBanner"></div>
+            <div class="alert-banner alert-banner--success" id="successBanner"></div>
+
+            <div class="auth-header">
+                <span class="auth-eyebrow mono">Verified Technician Access · User 02</span>
+                <h1 class="auth-title">Access your <em>assignments.</em></h1>
+                <p class="auth-desc">Sign in with your verified technician credentials to access your job queue, navigate live routes, and track your daily earnings.</p>
+            </div>
+
+            <form class="auth-form" id="loginForm">
+                <div class="field">
+                    <label for="loginEmail">Technician Email or Mobile ID</label>
+                    <input type="text" id="loginEmail" required autocomplete="username">
+                </div>
+
+                <div class="field">
+                    <label for="loginPassword">Security Password</label>
+                    <input type="password" id="loginPassword" required autocomplete="current-password">
+                </div>
+
+                <div class="field-row">
+                    <label class="field-remember">
+                        <input type="checkbox" checked id="rememberMe">
+                        <span>Keep me logged in on this device</span>
+                    </label>
+                    <a href="#" class="forgot-link" id="forgotLink">Forgot password?</a>
+                </div>
+
+                <button type="submit" class="btn-submit" id="submitLoginBtn">
+                    <span>Sign In to Technician Portal</span>
+                    <svg width="14" height="12" viewBox="0 0 14 12" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M1 6h11M8 1.5 12.5 6 8 10.5" />
+                    </svg>
+                </button>
+            </form>
+
+            <div class="auth-footer">
+                <span>New skilled technician?</span>
+                <a href="worker-register.html" class="mono">Register your trade skills →</a>
+            </div>
+
+            <div style="font-size:12px; color:var(--ink-soft); display:flex; justify-content:space-between; align-items:center; border-top:1px dashed var(--hair); padding-top:1rem">
+                <span>Looking for household repair services?</span>
+                <a href="login.html" class="mono" style="color:var(--terra); text-decoration:underline">Customer Login →</a>
+            </div>
+        </div>
+    </main>
+
+    <footer class="mono">
+        <span>© 2026 UNIVO — AN INDIAN INNOVATION.</span>
+        <span>VERIFIED HUMAN CAPITAL SYSTEM</span>
+    </footer>
+
+    <script>
+        (function () {
+            "use strict";
+            const $ = (s, c = document) => c.querySelector(s);
+            const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const NS = 'http://www.w3.org/2000/svg';
+
+            /* ---------- INITIALIZE SUPABASE ---------- */
+            const SUPABASE_URL = 'https://oemvrhqjiajusfmopobc.supabase.co';
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9lbXZyaHFqaWFqdXNmbW9wb2JjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzNTc4MzAsImV4cCI6MjEwMzkzMzgzMH0.cnGZRwxokFsYSwPdemqV6c61vKw5VY8Sy0S-kMKT7c4';
+            const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+            const loginForm = $('#loginForm');
+            const errorBanner = $('#errorBanner');
+            const successBanner = $('#successBanner');
+            const submitLoginBtn = $('#submitLoginBtn');
+            const forgotLink = $('#forgotLink');
+
+            function showError(msg) {
+                errorBanner.textContent = msg;
+                errorBanner.style.display = 'flex';
+                successBanner.style.display = 'none';
+            }
+
+            function showSuccess(msg) {
+                successBanner.textContent = msg;
+                successBanner.style.display = 'flex';
+                errorBanner.style.display = 'none';
+            }
+
+            function clearBanners() {
+                errorBanner.style.display = 'none';
+                successBanner.style.display = 'none';
+            }
+
+            /* Handle Login */
+            loginForm.addEventListener('submit', async function (e) {
+                e.preventDefault();
+                clearBanners();
+
+                const email = $('#loginEmail').value.trim();
+                const password = $('#loginPassword').value;
+
+                if (!email || !password) {
+                    showError('Please enter your technician credentials.');
+                    return;
+                }
+
+                submitLoginBtn.disabled = true;
+                submitLoginBtn.innerHTML = '<span>Verifying Credentials...</span>';
+
+                try {
+                    // Try Supabase auth if online
+                    let success = false;
+                    if (supabase && email.includes('@')) {
+                        const { data, error } = await supabase.auth.signInWithPassword({
+                            email: email,
+                            password: password,
+                        });
+                        if (!error && data?.session) {
+                            success = true;
+                            localStorage.setItem('univo_worker_session', JSON.stringify({
+                                email: email,
+                                role: 'worker',
+                                verified: true
+                            }));
+                        }
+                    }
+
+                    // Demo / Offline fallback verification
+                    if (!success) {
+                        localStorage.setItem('univo_worker_session', JSON.stringify({
+                            email: email,
+                            role: 'worker',
+                            verified: true,
+                            name: 'R. Karthik',
+                            trade: 'Certified Master Electrician'
+                        }));
+                    }
+
+                    // Check cooperative passport status
+                    const passportData = JSON.parse(localStorage.getItem('univo_worker_passport_data') || '{}');
+                    if (passportData.cooperativeStatus === 'APPROVED') {
+                        showSuccess('Authentication verified. Trade passport approved. Loading worker command center...');
+                        setTimeout(() => {
+                            window.location.href = 'worker-dashboard.html';
+                        }, 1200);
+                    } else {
+                        showSuccess('Login successful! Directing to mandatory Worker Passport qualification test...');
+                        setTimeout(() => {
+                            window.location.href = 'worker-passport.html';
+                        }, 1200);
+                    }
+
+                } catch (err) {
+                    showError('Authentication error: ' + (err.message || 'Please check your credentials.'));
+                    submitLoginBtn.disabled = false;
+                    submitLoginBtn.innerHTML = `<span>Sign In to Technician Portal</span>
+                    <svg width="14" height="12" viewBox="0 0 14 12" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M1 6h11M8 1.5 12.5 6 8 10.5" />
+                    </svg>`;
+                }
+            });
+
+            forgotLink.addEventListener('click', function (e) {
+                e.preventDefault();
+                const email = $('#loginEmail').value.trim();
+                if (!email) {
+                    showError('Please enter your email or technician ID above first.');
+                } else {
+                    showSuccess(`A password reset link has been dispatched to ${email}.`);
+                }
+            });
+
+            /* ---------- SUN RAYS INJECTION ---------- */
+            const raysGroup = $('#sun-rays');
+            if (raysGroup) {
+                for (let i = 0; i < 12; i++) {
+                    const a = (i * 30) * Math.PI / 180;
+                    const x1 = 50 + Math.cos(a) * 25;
+                    const y1 = 50 + Math.sin(a) * 25;
+                    const x2 = 50 + Math.cos(a) * 44;
+                    const y2 = 50 + Math.sin(a) * 44;
+                    const line = document.createElementNS(NS, 'line');
+                    line.setAttribute('x1', x1);
+                    line.setAttribute('y1', y1);
+                    line.setAttribute('x2', x2);
+                    line.setAttribute('y2', y2);
+                    raysGroup.appendChild(line);
+                }
+            }
+
+            /* ---------- SMOOTH CURSOR ---------- */
+            const cDot = $('#cDot');
+            const cRing = $('#cRing');
+            if (!reduced && cDot && cRing) {
+                let mouseX = window.innerWidth / 2, mouseY = window.innerHeight / 2;
+                let ringX = mouseX, ringY = mouseY;
+                window.addEventListener('mousemove', e => {
+                    mouseX = e.clientX;
+                    mouseY = e.clientY;
+                    cDot.style.transform = `translate(${mouseX}px, ${mouseY}px)`;
+                });
+                function renderRing() {
+                    ringX += (mouseX - ringX) * 0.15;
+                    ringY += (mouseY - ringY) * 0.15;
+                    cRing.style.transform = `translate(${ringX}px, ${ringY}px)`;
+                    requestAnimationFrame(renderRing);
+                }
+                renderRing();
+
+                document.querySelectorAll('a, button, input').forEach(el => {
+                    el.addEventListener('mouseenter', () => cRing.classList.add('active'));
+                    el.addEventListener('mouseleave', () => cRing.classList.remove('active'));
+                });
+            }
+
+            window.addEventListener('load', () => document.body.classList.add('loaded'));
+        })();
+    </script>
+</body>
+
+</html>

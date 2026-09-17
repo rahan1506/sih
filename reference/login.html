@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — Univo Customer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Space+Mono&display=swap"
+        rel="stylesheet">
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* ============ TOKENS ============ */
+        :root {
+            --cream: #F4ECDC;
+            --cream2: #EDE1CB;
+            --ink: #221812;
+            --ink-soft: #2d2219;
+            --terra: #C15A2E;
+            --gold: #D9A441;
+            --umber: #241509;
+            --hair: rgba(34, 24, 18, .18);
+            --serif: 'Fraunces', Georgia, serif;
+            --sans: 'Instrument Sans', 'Helvetica Neue', sans-serif;
+            --mono: 'Space Mono', monospace;
+            --ease: cubic-bezier(.22, 1, .36, 1);
+            --pad: 6vw;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        html::-webkit-scrollbar,
+        body::-webkit-scrollbar {
+            display: none;
+            width: 0;
+            height: 0;
+        }
+
+        body {
+            background: var(--cream);
+            color: var(--ink);
+            font: 400 16px/1.6 var(--sans);
+            font-optical-sizing: auto;
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            transition: opacity .6s var(--ease);
+        }
+
+        body.loaded {
+            opacity: 1;
+        }
+
+        ::selection {
+            background: var(--terra);
+            color: var(--cream);
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        button {
+            font: inherit;
+            color: inherit;
+            background: none;
+            border: 0;
+            cursor: pointer;
+        }
+
+        :focus-visible {
+            outline: 2px solid var(--terra);
+            outline-offset: 3px;
+        }
+
+        .mono {
+            font-family: var(--mono);
+            font-size: 11px;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+        }
+
+        /* grain texture overlay */
+        #grain {
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+            mix-blend-mode: multiply;
+            opacity: .05;
+            pointer-events: none;
+            z-index: 2500;
+        }
+
+        /* custom cursor */
+        .cursor-dot,
+        .cursor-ring {
+            position: fixed;
+            top: 0;
+            left: 0;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 4000;
+            mix-blend-mode: difference;
+            will-change: transform;
+        }
+
+        .cursor-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--cream);
+        }
+
+        .cursor-ring {
+            width: 36px;
+            height: 36px;
+            border: 1px solid rgba(244, 236, 220, .85);
+            opacity: 0;
+            transition: width .25s, height .25s, opacity .25s;
+        }
+
+        @media (pointer: coarse) {
+            .cursor-dot,
+            .cursor-ring {
+                display: none;
+            }
+        }
+
+        @media (pointer: fine) {
+            body, a, button, label {
+                cursor: none;
+            }
+            input, select, textarea {
+                cursor: auto;
+            }
+        }
+
+        /* ============ TOP NAV ============ */
+        header {
+            padding: 1.6rem var(--pad);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--hair);
+            background: rgba(244, 236, 220, 0.85);
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .brand {
+            font-family: var(--serif);
+            font-size: 1.25rem;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: .65rem;
+            letter-spacing: -.01em;
+        }
+
+        .brand svg {
+            width: 20px;
+            height: 20px;
+            color: var(--terra);
+            animation: spin 32s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .nav-back {
+            display: inline-flex;
+            align-items: center;
+            gap: .6rem;
+            color: var(--ink-soft);
+            transition: color .3s var(--ease), transform .3s var(--ease);
+        }
+
+        .nav-back:hover {
+            color: var(--terra);
+            transform: translateX(-4px);
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .nav-cta {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1.5px solid var(--ink);
+            border-radius: 999px;
+            padding: 0.65rem 1.6rem;
+            font-family: var(--mono);
+            font-size: 11px;
+            font-weight: 600;
+            line-height: 1;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+            white-space: nowrap;
+            transition: background .3s var(--ease), color .3s var(--ease), border-color .3s var(--ease), transform .3s var(--ease);
+        }
+
+        .nav-cta:hover {
+            background: var(--ink);
+            color: var(--cream);
+            border-color: var(--ink);
+            transform: translateY(-2px);
+        }
+
+        /* ============ MAIN AUTH LAYOUT ============ */
+        main {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1.15fr;
+            max-width: 1360px;
+            width: 100%;
+            margin: 0 auto;
+            padding: clamp(3rem, 6vh, 6rem) var(--pad);
+            gap: clamp(2.5rem, 5vw, 6rem);
+            align-items: center;
+        }
+
+        /* Visual Arch Column */
+        .auth-visual {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .auth-arch {
+            width: 100%;
+            max-width: 440px;
+            aspect-ratio: 3 / 4.1;
+            border-radius: 999px 999px 0 0;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--hair);
+            box-shadow: 0 24px 60px rgba(34, 24, 18, 0.12);
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            transition: transform .8s var(--ease), box-shadow .5s var(--ease);
+        }
+
+        .auth-arch:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 32px 70px rgba(193, 90, 46, 0.22);
+        }
+
+        .auth-arch .arch-img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            border-radius: 999px 999px 0 0;
+            display: block;
+            filter: brightness(1.05) contrast(1.04);
+            transform: scale(1.01);
+            transition: transform 1.2s var(--ease);
+        }
+
+        .auth-arch:hover .arch-img {
+            transform: scale(1.04);
+        }
+
+        .auth-arch .arch-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, transparent 65%, rgba(20, 14, 10, 0.75) 100%);
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding: 2rem 1.5rem;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .arch-badge {
+            font-size: 10px;
+            letter-spacing: .14em;
+            padding: 7px 16px;
+            border-radius: 999px;
+            background: rgba(244, 236, 220, 0.94);
+            color: var(--ink);
+            border: 1px solid var(--hair);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+            font-weight: 600;
+        }
+
+        .arch-sun {
+            width: 54px;
+            height: 54px;
+            color: var(--terra);
+            animation: spin 24s linear infinite;
+        }
+
+        .arch-title {
+            font-family: var(--serif);
+            font-style: italic;
+            font-size: clamp(1.4rem, 2.5vw, 1.8rem);
+            color: var(--terra);
+            line-height: 1.2;
+        }
+
+        .arch-badge {
+            font-size: 10px;
+            letter-spacing: .14em;
+            padding: 6px 14px;
+            border-radius: 999px;
+            background: rgba(193, 90, 46, 0.12);
+            color: var(--terra);
+            border: 1px solid rgba(193, 90, 46, 0.28);
+        }
+
+        .arch-caption {
+            color: var(--ink-soft);
+            margin-top: 1.4rem;
+            text-align: center;
+            max-width: 32ch;
+            font-size: 11px;
+            letter-spacing: .1em;
+        }
+
+        /* Form Card Column */
+        .auth-card {
+            background: rgba(237, 225, 203, 0.45);
+            border: 1px solid var(--hair);
+            border-radius: 24px;
+            padding: clamp(2rem, 4vw, 3.5rem);
+            backdrop-filter: blur(16px);
+            box-shadow: 0 16px 48px rgba(34, 24, 18, 0.06);
+            display: flex;
+            flex-direction: column;
+            gap: 1.8rem;
+            animation: cardIn 1s var(--ease) both;
+            position: relative;
+            overflow: hidden;
+        }
+
+        @keyframes cardIn {
+            from {
+                opacity: 0;
+                transform: translateY(24px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .auth-header {
+            display: flex;
+            flex-direction: column;
+            gap: .7rem;
+        }
+
+        .auth-eyebrow {
+            color: var(--terra);
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .auth-title {
+            font-family: var(--serif);
+            font-size: clamp(2rem, 3.8vw, 3rem);
+            font-weight: 500;
+            line-height: 1.1;
+            letter-spacing: -.025em;
+        }
+
+        .auth-title em {
+            font-style: italic;
+            color: var(--terra);
+        }
+
+        .auth-desc {
+            color: var(--ink-soft);
+            font-size: 0.96rem;
+            max-width: 44ch;
+        }
+
+        /* Alert Banners */
+        .alert-banner {
+            padding: 0.85rem 1.2rem;
+            border-radius: 12px;
+            font-size: 13.5px;
+            display: none;
+            align-items: center;
+            gap: 0.75rem;
+            line-height: 1.4;
+            transition: all .3s var(--ease);
+        }
+
+        .alert-banner--error {
+            background: rgba(193, 90, 46, 0.12);
+            border: 1px solid rgba(193, 90, 46, 0.4);
+            color: var(--terra);
+        }
+
+        .alert-banner--success {
+            background: rgba(54, 128, 77, 0.12);
+            border: 1px solid rgba(54, 128, 77, 0.4);
+            color: #246d3e;
+        }
+
+        /* Form Fields */
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.4rem;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: .5rem;
+        }
+
+        .field label {
+            font-family: var(--mono);
+            font-size: 10px;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+            color: var(--ink-soft);
+        }
+
+        .field input {
+            font-family: var(--sans);
+            font-size: 15px;
+            padding: .85rem 1rem;
+            background: rgba(244, 236, 220, 0.85);
+            border: 1px solid var(--hair);
+            border-radius: 12px;
+            color: var(--ink);
+            transition: border-color .3s var(--ease), background .3s var(--ease), box-shadow .3s var(--ease);
+        }
+
+        .field input::placeholder {
+            color: rgba(45, 34, 25, 0.45);
+        }
+
+        .field input:focus {
+            outline: none;
+            border-color: var(--terra);
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(193, 90, 46, 0.15);
+        }
+
+        .field-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+        }
+
+        .field-remember {
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+            color: var(--ink-soft);
+        }
+
+        .field-remember input[type="checkbox"] {
+            accent-color: var(--terra);
+        }
+
+        .forgot-link {
+            color: var(--ink-soft);
+            text-decoration: underline;
+            text-underline-offset: 3px;
+            transition: color .3s;
+        }
+
+        .forgot-link:hover {
+            color: var(--terra);
+        }
+
+        /* Actions */
+        .btn-submit {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .8rem;
+            width: 100%;
+            padding: 1rem 2rem;
+            background: var(--ink);
+            color: var(--cream);
+            border-radius: 999px;
+            font-family: var(--mono);
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+            transition: all .35s var(--ease);
+            margin-top: .6rem;
+            cursor: pointer;
+        }
+
+        .btn-submit svg {
+            transition: transform .35s var(--ease);
+        }
+
+        .btn-submit:hover:not(:disabled) {
+            background: var(--terra);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px rgba(193, 90, 46, 0.3);
+        }
+
+        .btn-submit:hover:not(:disabled) svg {
+            transform: translateX(4px);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.65;
+            cursor: wait;
+        }
+
+        .auth-footer {
+            border-top: 1px solid var(--hair);
+            padding-top: 1.4rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            color: var(--ink-soft);
+            flex-wrap: wrap;
+            gap: .8rem;
+        }
+
+        .auth-footer a {
+            font-weight: 600;
+            color: var(--terra);
+            position: relative;
+        }
+
+        .auth-footer a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: var(--terra);
+            transform: scaleX(0);
+            transform-origin: right;
+            transition: transform .3s var(--ease);
+        }
+
+        .auth-footer a:hover::after {
+            transform: scaleX(1);
+            transform-origin: left;
+        }
+
+        /* ============ FOOTER ============ */
+        footer {
+            padding: 1.6rem var(--pad);
+            border-top: 1px solid var(--hair);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--ink-soft);
+            font-size: 11px;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            main {
+                grid-template-columns: 1fr;
+                gap: 3rem;
+            }
+            .auth-visual {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- reusable sun mark -->
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+        <symbol id="sun-mark" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="17" fill="currentColor" />
+            <g id="sun-rays" stroke="currentColor" stroke-width="5" stroke-linecap="round"></g>
+        </symbol>
+    </svg>
+
+    <div id="grain"></div>
+    <div class="cursor-dot" id="cDot"></div>
+    <div class="cursor-ring" id="cRing"></div>
+
+    <!-- HEADER / NAV -->
+    <header>
+        <a class="brand" href="ref.html">
+            <svg aria-hidden="true"><use href="#sun-mark" /></svg>Univo
+        </a>
+        <a href="ref.html" class="nav-back mono">
+            ← Return to overview
+        </a>
+        <div class="nav-actions">
+            <a href="register.html" class="nav-cta mono">Register</a>
+        </div>
+    </header>
+
+    <main>
+        <!-- LEFT VISUAL ARCH -->
+        <div class="auth-visual">
+            <div class="auth-arch">
+                <img src="Red_spider_lilies_under_moon_202609022232.jpeg" alt="Red spider lilies under moon" class="arch-img">
+                <div class="arch-overlay">
+                    <span class="arch-badge mono">USER 01 — CUSTOMER LOGIN</span>
+                </div>
+            </div>
+            <div class="arch-caption mono">
+                Track requests · Certified workers · Seamless service delivery
+            </div>
+        </div>
+
+        <!-- RIGHT FORM CARD -->
+        <div class="auth-card">
+            <!-- Alert Banners -->
+            <div class="alert-banner alert-banner--error" id="errorBanner"></div>
+            <div class="alert-banner alert-banner--success" id="successBanner"></div>
+
+            <div class="auth-header">
+                <span class="auth-eyebrow mono">Existing Customer Login</span>
+                <h1 class="auth-title">Access your <em>dashboard.</em></h1>
+                <p class="auth-desc">Sign in with your verified email and password to access your customer portal.</p>
+            </div>
+
+            <form class="auth-form" id="loginForm">
+                <div class="field">
+                    <label for="loginEmail">Email Address</label>
+                    <input type="email" id="loginEmail" required autocomplete="email">
+                </div>
+
+                <div class="field">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" required autocomplete="current-password">
+                </div>
+
+                <div class="field-row">
+                    <label class="field-remember">
+                        <input type="checkbox" checked id="rememberMe">
+                        <span>Remember me</span>
+                    </label>
+                    <a href="#" class="forgot-link" id="forgotLink">Forgot password?</a>
+                </div>
+
+                <button type="submit" class="btn-submit" id="submitLoginBtn">
+                    <span>Sign In</span>
+                    <svg width="14" height="12" viewBox="0 0 14 12" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M1 6h11M8 1.5 12.5 6 8 10.5" />
+                    </svg>
+                </button>
+            </form>
+
+            <div class="auth-footer">
+                <span>New to Univo platform?</span>
+                <a href="register.html" class="mono">Create customer account →</a>
+            </div>
+        </div>
+    </main>
+
+    <footer class="mono">
+        <span>© 2026 UNIVO — AN INDIAN INNOVATION.</span>
+        <span>TOWARD A DEVELOPED NATION</span>
+    </footer>
+
+    <script>
+        (function () {
+            "use strict";
+            const $ = (s, c = document) => c.querySelector(s);
+            const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const NS = 'http://www.w3.org/2000/svg';
+
+            /* ---------- INITIALIZE SUPABASE ---------- */
+            const SUPABASE_URL = 'https://oemvrhqjiajusfmopobc.supabase.co';
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9lbXZyaHFqaWFqdXNmbW9wb2JjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzNTc4MzAsImV4cCI6MjEwMzkzMzgzMH0.cnGZRwxokFsYSwPdemqV6c61vKw5VY8Sy0S-kMKT7c4';
+            const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+            const loginForm = $('#loginForm');
+            const errorBanner = $('#errorBanner');
+            const successBanner = $('#successBanner');
+            const submitLoginBtn = $('#submitLoginBtn');
+            const forgotLink = $('#forgotLink');
+
+            function showError(msg) {
+                errorBanner.textContent = msg;
+                errorBanner.style.display = 'flex';
+                successBanner.style.display = 'none';
+            }
+
+            function showSuccess(msg) {
+                successBanner.textContent = msg;
+                successBanner.style.display = 'flex';
+                errorBanner.style.display = 'none';
+            }
+
+            function clearBanners() {
+                errorBanner.style.display = 'none';
+                successBanner.style.display = 'none';
+            }
+
+            /* Handle Login */
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                clearBanners();
+
+                if (!supabase) {
+                    showError('Supabase client failed to load. Please refresh your page.');
+                    return;
+                }
+
+                const email = $('#loginEmail').value.trim().toLowerCase();
+                const password = $('#loginPassword').value;
+
+                submitLoginBtn.disabled = true;
+                submitLoginBtn.querySelector('span').textContent = 'Signing in...';
+
+                try {
+                    const { data, error } = await supabase.auth.signInWithPassword({
+                        email: email,
+                        password: password
+                    });
+
+                    if (error) {
+                        showError(error.message);
+                        submitLoginBtn.disabled = false;
+                        submitLoginBtn.querySelector('span').textContent = 'Sign In';
+                        return;
+                    }
+
+                    // Purge legacy shared avatar so each user has their own isolated profile
+                    localStorage.removeItem('univo_user_avatar');
+
+                    showSuccess('✓ Welcome back! Redirecting to customer dashboard...');
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 1000);
+
+                } catch (err) {
+                    showError(err.message || 'Login failed. Please verify your credentials.');
+                    submitLoginBtn.disabled = false;
+                    submitLoginBtn.querySelector('span').textContent = 'Sign In';
+                }
+            });
+
+            /* Forgot Password */
+            forgotLink.addEventListener('click', async (e) => {
+                e.preventDefault();
+                clearBanners();
+                const email = $('#loginEmail').value.trim().toLowerCase();
+                if (!email) {
+                    showError('Please enter your email address in the field above first.');
+                    return;
+                }
+
+                try {
+                    const { error } = await supabase.auth.resetPasswordForEmail(email);
+                    if (error) {
+                        showError(error.message);
+                    } else {
+                        showSuccess(`Password reset instructions sent to ${email}.`);
+                    }
+                } catch (err) {
+                    showError('Failed to send reset link.');
+                }
+            });
+
+            /* ---------- build the sun mark rays ---------- */
+            (function () {
+                const g = $('#sun-rays');
+                if (!g) return;
+                for (let i = 0; i < 12; i++) {
+                    const a = i * Math.PI / 6, r2 = i % 2 === 0 ? 46 : 38;
+                    const l = document.createElementNS(NS, 'line');
+                    l.setAttribute('x1', (50 + 26 * Math.cos(a)).toFixed(1));
+                    l.setAttribute('y1', (50 + 26 * Math.sin(a)).toFixed(1));
+                    l.setAttribute('x2', (50 + r2 * Math.cos(a)).toFixed(1));
+                    l.setAttribute('y2', (50 + r2 * Math.sin(a)).toFixed(1));
+                    g.appendChild(l);
+                }
+            })();
+
+            /* ---------- custom cursor ---------- */
+            (function () {
+                if (!matchMedia('(pointer:fine)').matches || reduced) return;
+                const dot = $('#cDot'), ring = $('#cRing');
+                let mx = innerWidth / 2, my = innerHeight / 2, rx = mx, ry = my, scale = 1;
+                addEventListener('mousemove', e => {
+                    mx = e.clientX; my = e.clientY;
+                    dot.style.transform = `translate(${mx - 3}px,${my - 3}px)`;
+                }, { passive: true });
+                const grow = el => { scale = el ? 1.7 : 1; };
+                document.addEventListener('mouseover', e => {
+                    const t = e.target;
+                    if (t.matches('input,textarea,select')) { ring.style.opacity = 0; }
+                    else { ring.style.opacity = 1; grow(t.closest('a,button,[data-hover]')); }
+                });
+                function curLoop() {
+                    rx += (mx - rx) * .18; ry += (my - ry) * .18;
+                    ring.style.transform = `translate(${rx - 18}px,${ry - 18}px) scale(${scale})`;
+                    requestAnimationFrame(curLoop);
+                }
+                requestAnimationFrame(curLoop);
+            })();
+
+            /* page entrance */
+            window.addEventListener('DOMContentLoaded', () => {
+                document.body.classList.add('loaded');
+            });
+        })();
+    </script>
+</body>
+
+</html>

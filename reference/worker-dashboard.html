@@ -1,0 +1,1894 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worker Command Center — UNIVO</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap"
+        rel="stylesheet">
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* ============ DESIGN TOKENS ============ */
+        :root {
+            --cream: #F4ECDC;
+            --cream-soft: #FAF6EF;
+            --ink: #221812;
+            --ink-soft: #4a3b32;
+            --terra: #C15A2E;
+            --gold: #D9A441;
+            --green: #246d3e;
+            --green-soft: rgba(36, 109, 62, 0.08);
+            --hair: rgba(34, 24, 18, 0.12);
+            --serif: 'Fraunces', Georgia, serif;
+            --sans: 'Instrument Sans', 'Helvetica Neue', sans-serif;
+            --mono: 'Space Mono', monospace;
+            --ease: cubic-bezier(.22, 1, .36, 1);
+            --pad: 4vw;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--cream);
+            color: var(--ink);
+            font: 400 15px/1.6 var(--sans);
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        ::selection {
+            background: var(--terra);
+            color: var(--cream);
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        button {
+            font: inherit;
+            color: inherit;
+            background: none;
+            border: 0;
+            cursor: pointer;
+        }
+
+        .mono {
+            font-family: var(--mono);
+            font-size: 11px;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+        }
+
+        #grain {
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+            mix-blend-mode: multiply;
+            opacity: .05;
+            pointer-events: none;
+            z-index: 2500;
+        }
+
+        /* ============ TOP NAVIGATION ============ */
+        header {
+            padding: 1.2rem var(--pad);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--hair);
+            background: rgba(244, 236, 220, 0.96);
+            backdrop-filter: blur(16px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: .7rem;
+            font-family: var(--serif);
+            font-size: 1.35rem;
+            font-weight: 500;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: .9rem;
+            flex-wrap: wrap;
+        }
+
+        .pill-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            background: #fff;
+            border: 1px solid var(--hair);
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .emergency-toggle-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            background: #fff;
+            border: 1.5px solid rgba(193, 90, 46, 0.35);
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--terra);
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+        .emergency-toggle-btn.active {
+            background: var(--terra);
+            color: #fff;
+            border-color: var(--terra);
+            box-shadow: 0 4px 14px rgba(193, 90, 46, 0.3);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--green);
+            animation: pulseDot 2s infinite;
+        }
+
+        @keyframes pulseDot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.85); }
+        }
+
+        /* ============ HERO PROFILE HEADER ============ */
+        .dashboard-header-hero {
+            max-width: 1350px;
+            width: 100%;
+            margin: 1.8rem auto 1.2rem;
+            padding: 0 var(--pad);
+        }
+
+        .hero-banner {
+            background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(244,236,220,0.88)), url('interior_bg.jpeg') no-repeat center / cover;
+            border: 1.5px solid var(--hair);
+            border-radius: 24px;
+            padding: clamp(1.8rem, 3.2vw, 2.6rem);
+            box-shadow: 0 12px 36px rgba(34, 24, 18, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .hero-left h1 {
+            font-family: var(--serif);
+            font-size: clamp(1.9rem, 3.2vw, 2.8rem);
+            font-weight: 400;
+            line-height: 1.15;
+        }
+
+        .hero-left h1 em {
+            font-style: italic;
+            color: var(--terra);
+        }
+
+        /* Nav Tabs Bar */
+        .dash-tabs {
+            max-width: 1350px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 0 var(--pad);
+            display: flex;
+            gap: .6rem;
+            border-bottom: 1.5px solid var(--hair);
+            flex-wrap: wrap;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .dash-tabs::-webkit-scrollbar {
+            display: none;
+            width: 0;
+            height: 0;
+        }
+
+        .tab-btn {
+            padding: 0.85rem 1.4rem;
+            font-family: var(--sans);
+            font-size: 13.5px;
+            font-weight: 600;
+            color: var(--ink-soft);
+            border-bottom: 2.5px solid transparent;
+            cursor: pointer;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            transition: all .2s;
+        }
+
+        .tab-btn:hover {
+            color: var(--ink);
+        }
+
+        .tab-btn.active {
+            color: var(--terra);
+            border-bottom-color: var(--terra);
+        }
+
+        .tab-count {
+            background: rgba(34, 24, 18, 0.07);
+            padding: 2px 7px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-family: var(--mono);
+        }
+
+        .tab-btn.active .tab-count {
+            background: rgba(193, 90, 46, 0.12);
+            color: var(--terra);
+        }
+
+        /* Main Viewport */
+        main {
+            max-width: 1350px;
+            width: 100%;
+            margin: 1.8rem auto 5rem;
+            padding: 0 var(--pad);
+        }
+
+        .tab-pane {
+            display: none;
+            flex-direction: column;
+            gap: 2rem;
+            animation: fadeIn .3s var(--ease);
+        }
+
+        .tab-pane.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Layout Grids */
+        .grid-2col {
+            display: grid;
+            grid-template-columns: 1.35fr 1fr;
+            gap: 1.8rem;
+        }
+
+        .grid-3col {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.6rem;
+        }
+
+        @media (max-width: 980px) {
+            .grid-2col {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Clean White Cards */
+        .dash-card {
+            background: #fff;
+            border: 1.5px solid var(--hair);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 8px 24px rgba(34, 24, 18, 0.03);
+            display: flex;
+            flex-direction: column;
+            gap: 1.3rem;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--hair);
+            padding-bottom: 0.9rem;
+            flex-wrap: wrap;
+            gap: .6rem;
+        }
+
+        .card-title {
+            font-family: var(--serif);
+            font-size: 1.4rem;
+            font-weight: 500;
+        }
+
+        /* Action Buttons */
+        .btn-primary {
+            background: var(--ink);
+            color: var(--cream);
+            padding: 0.85rem 1.6rem;
+            border-radius: 999px;
+            font-family: var(--mono);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .12em;
+            text-align: center;
+            transition: all .2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .6rem;
+        }
+
+        .btn-primary:hover {
+            background: var(--terra);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(193, 90, 46, 0.28);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--ink-soft);
+            border: 1px solid var(--hair);
+            padding: 0.85rem 1.4rem;
+            border-radius: 999px;
+            font-family: var(--mono);
+            font-size: 11px;
+            text-align: center;
+            transition: all .2s;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--ink);
+            color: var(--ink);
+        }
+
+        /* Explanation Box: "How this is done based on what" */
+        .basis-explainer-box {
+            background: rgba(244, 236, 220, 0.55);
+            border-left: 3.5px solid var(--terra);
+            border-radius: 0 12px 12px 0;
+            padding: 0.9rem 1.1rem;
+            font-size: 12.5px;
+            line-height: 1.5;
+        }
+
+        .basis-title {
+            font-family: var(--mono);
+            font-size: 9.5px;
+            font-weight: 700;
+            color: var(--terra);
+            margin-bottom: 3px;
+        }
+
+        /* Skill DNA Card with evidence */
+        .skill-evidence-item {
+            display: flex;
+            flex-direction: column;
+            gap: .4rem;
+            padding-bottom: .9rem;
+            border-bottom: 1px dashed var(--hair);
+        }
+
+        .skill-evidence-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .skill-header-row {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 600;
+            font-size: 13.5px;
+        }
+
+        .skill-track {
+            height: 7px;
+            background: rgba(34, 24, 18, 0.07);
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .skill-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--terra), var(--gold));
+            border-radius: 999px;
+        }
+
+        .skill-evidence-note {
+            font-size: 11.5px;
+            color: var(--ink-soft);
+        }
+
+        /* Customer Reviews Cards */
+        .review-card {
+            background: #fff;
+            border: 1px solid var(--hair);
+            border-radius: 16px;
+            padding: 1.4rem;
+            display: flex;
+            flex-direction: column;
+            gap: .8rem;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+            transition: all .2s;
+        }
+
+        .review-card:hover {
+            border-color: rgba(193, 90, 46, 0.35);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+        }
+
+        .stars-row {
+            color: #d97706;
+            font-size: 14px;
+            letter-spacing: 2px;
+        }
+
+        /* 15-Section Drawer */
+        .passport-drawer-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(20, 14, 10, 0.65);
+            backdrop-filter: blur(8px);
+            display: none;
+            justify-content: flex-end;
+            z-index: 5000;
+        }
+
+        .drawer-content {
+            background: var(--cream);
+            width: 100%;
+            max-width: 650px;
+            height: 100%;
+            padding: 2.5rem;
+            overflow-y: auto;
+            box-shadow: -10px 0 40px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            gap: 1.6rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="grain"></div>
+
+    <!-- ============================================== -->
+    <!-- HEADER                                         -->
+    <!-- ============================================== -->
+    <header>
+        <div style="display:flex; align-items:center; gap:.8rem">
+            <a class="brand" href="ref.html">UNIVO</a>
+            <span class="mono" style="font-size:10px; background:var(--ink); color:var(--cream); padding:3px 10px; border-radius:999px">
+                TECHNICIAN COMMAND CENTER
+            </span>
+        </div>
+
+        <div class="header-actions">
+            <!-- SOS Emergency Mode Toggle -->
+            <button type="button" class="emergency-toggle-btn" id="emergencyToggleBtn" onclick="toggleEmergencyMode()">
+                <span>⚡ SOS Emergency Mode</span>
+                <span id="emergencyStatusText" class="mono" style="font-size:9.5px">(OFF)</span>
+            </button>
+
+            <!-- Trust Score Badge -->
+            <div class="pill-badge" title="Calculated from Aadhaar KYC (25), Trade Diploma (25), Police PCC (20), Reviews (16), Punctuality (10)">
+                <span class="mono" style="font-size:10px; color:var(--ink-soft)">TRUST SCORE:</span>
+                <span style="color:var(--green); font-family:var(--mono); font-weight:700">96 / 100</span>
+                <span style="color:var(--green)">★</span>
+            </div>
+
+            <!-- Worker Passport Trigger -->
+            <button type="button" class="pill-badge" style="border-color:var(--terra); color:var(--terra); font-weight:700" onclick="openPassportDrawer()">
+                ★ Worker Passport (15/15)
+            </button>
+
+            <!-- Duty Status -->
+            <div class="pill-badge">
+                <span class="status-dot"></span>
+                <span id="dutyStatusLabel">Active On-Duty</span>
+            </div>
+
+            <!-- Profile Info -->
+            <div class="pill-badge">
+                <div style="width:26px; height:26px; border-radius:50%; background:var(--ink); color:var(--cream); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700" id="avatarDisplay">
+                    RS
+                </div>
+                <div>
+                    <span style="font-weight:600; font-size:12.5px" id="workerNameHeader">Rahan S</span>
+                </div>
+            </div>
+
+            <a href="ref.html" class="mono" style="color:var(--ink-soft); font-size:11px; text-decoration:underline">Logout</a>
+        </div>
+    </header>
+
+    <!-- ============================================== -->
+    <!-- HERO HEADER                                    -->
+    <!-- ============================================== -->
+    <div class="dashboard-header-hero">
+        <div class="hero-banner">
+            <div class="hero-left">
+                <div class="mono" style="color:var(--terra); font-size:10px; font-weight:700">
+                    GOVERNMENT RECOGNIZED HUMAN CAPITAL · CO-OPERATIVE ACCREDITED
+                </div>
+                <h1>Welcome back, <em id="heroWorkerName">Rahan.</em></h1>
+                <p style="color:var(--ink-soft); font-size:14px; margin-top:4px">
+                    Accredited by <strong>Chennai Central Artisan & Technicians Co-operative #TN-COOP-410</strong>. Algorithmic Fair Dispatch ensures fair opportunity distribution with zero platform commission.
+                </p>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:.5rem; text-align:right">
+                <div class="mono" style="font-size:10px; color:#777">ACCREDITATION STATUS</div>
+                <div style="display:inline-flex; align-items:center; gap:.5rem; background:var(--green-soft); color:var(--green); padding:6px 16px; border-radius:999px; font-weight:700; font-size:12px; border:1px solid rgba(36,109,62,0.3)">
+                    ✓ 15/15 PASSPORT VERIFIED & ACTIVE
+                </div>
+                <div class="mono" style="font-size:9.5px; color:#888">PASSPORT ID: #UNV-WRK-2026-0984</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- NAVIGATION TABS                                -->
+    <!-- ============================================== -->
+    <nav class="dash-tabs">
+        <button type="button" class="tab-btn active" onclick="switchTab('dispatch')">
+            <span>⚡ Live Dispatch & Jobs</span>
+            <span class="tab-count">1</span>
+        </button>
+        <button type="button" class="tab-btn" onclick="switchTab('reviews')">
+            <span>⭐ Customer Reviews</span>
+            <span class="tab-count">142</span>
+        </button>
+        <button type="button" class="tab-btn" onclick="switchTab('skill-dna')">
+            <span>🧬 Skill DNA & AI Advisor</span>
+        </button>
+        <button type="button" class="tab-btn" onclick="switchTab('earnings')">
+            <span>📈 Earnings & Market Demand</span>
+        </button>
+        <button type="button" class="tab-btn" onclick="switchTab('forecast')">
+            <span>🔮 Tamil Nadu AI Forecast</span>
+            <span class="tab-count" style="background:rgba(193,90,46,0.12); color:var(--terra); font-weight:700">LIVE SURGE</span>
+        </button>
+        <a href="worker-welfare.html" class="tab-btn" style="text-decoration:none">
+            <span>🏛 Cooperative Welfare Portal →</span>
+        </a>
+        <a href="worker-governance.html" class="tab-btn" style="text-decoration:none">
+            <span>🗳️ Cooperative Voting & Petitions →</span>
+            <span class="tab-count" style="background:rgba(193,90,46,0.12); color:var(--terra); font-weight:700">2 OPEN VOTES</span>
+        </a>
+    </nav>
+
+    <!-- ============================================== -->
+    <!-- TAB 1: LIVE DISPATCH & JOBS                    -->
+    <!-- ============================================== -->
+    <main>
+        <div class="tab-pane active" id="tab-dispatch">
+            <!-- Democratic Cooperative Action Banner -->
+            <div style="background:linear-gradient(135deg, rgba(36,109,62,0.08), rgba(244,236,220,0.9)); border:1.5px solid rgba(36,109,62,0.3); border-radius:20px; padding:1.2rem 1.8rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1.2rem">
+                <div>
+                    <div class="mono" style="color:var(--green); font-size:10px; font-weight:700">DEMOCRATIC COOPERATIVE DECISION REQUIRED</div>
+                    <h3 style="font-family:var(--serif); font-size:1.4rem; margin-top:2px">2 Active Board Resolutions Awaiting Your Member Vote</h3>
+                    <p style="font-size:12.5px; color:var(--ink-soft); margin-top:2px">
+                        Vote on the Residential Tariff Revision (₹349 → ₹399) and Night Emergency Multipliers. Only resolutions crossing 50% majority are implemented.
+                    </p>
+                </div>
+                <a href="worker-governance.html" class="btn-primary" style="text-decoration:none">
+                    Cast Member Ballot Now (2 Open) →
+                </a>
+            </div>
+
+            <!-- AI Forecast Tomorrow Hotspot Alert Banner -->
+            <div style="background:linear-gradient(135deg, rgba(193,90,46,0.06), #fff); border:1.5px dashed var(--terra); border-radius:20px; padding:1.2rem 1.8rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1.2rem">
+                <div>
+                    <div class="mono" style="color:var(--terra); font-size:10px; font-weight:700">🔮 AI FORECAST ENGINE · TOMORROW'S HIGH DEMAND ALERT</div>
+                    <h3 style="font-family:var(--serif); font-size:1.4rem; margin-top:2px">
+                        Chennai OMR Tech Belt Forecasts a <em style="color:var(--terra)">+68% Technician Deficit</em> Tomorrow
+                    </h3>
+                    <p style="font-size:12.5px; color:var(--ink-soft); margin-top:2px">
+                        Severe supply shortage of 225 electricians across Sholinganallur & Siruseri due to 38.5°C heatwave HVAC loads. Relocate your roaming beacon for +₹1,400 daily surge earnings.
+                    </p>
+                </div>
+                <button type="button" class="btn-primary" onclick="switchTab('forecast')">
+                    View Tamil Nadu Demand Map & Roam →
+                </button>
+            </div>
+
+            <div class="grid-2col">
+                <!-- INCOMING JOB -->
+                <div class="dash-card">
+                    <div class="card-header">
+                        <div>
+                            <span class="mono" style="color:var(--terra); font-size:10px">REAL-TIME FAIR DISPATCH</span>
+                            <h2 class="card-title">Available Opportunity</h2>
+                        </div>
+                        <span class="mono" style="font-size:10.5px; color:var(--green); font-weight:700">★ 98% MATCH SCORE</span>
+                    </div>
+
+                    <!-- Standard Job Card -->
+                    <div id="standardJobCard" style="display:flex; flex-direction:column; gap:1.2rem">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start">
+                            <div>
+                                <h3 style="font-family:var(--serif); font-size:1.35rem">Living Room MCB Tripping & Short Circuit</h3>
+                                <p style="font-size:13px; color:var(--ink-soft); margin-top:3px">
+                                    Customer: <strong>Sunita Sharma</strong> · Flat 4B, 42 Anna Salai, Chennai (2.1 km away)
+                                </p>
+                            </div>
+                            <div style="font-family:var(--serif); font-size:1.9rem; font-weight:700; color:var(--green)">
+                                ₹349.00
+                            </div>
+                        </div>
+
+                        <!-- EXPLAINER: HOW THIS IS DONE BASED ON WHAT -->
+                        <div class="basis-explainer-box">
+                            <div class="basis-title">HOW THIS JOB WAS ALLOCATED BASED ON YOUR PROFILE:</div>
+                            <ul style="padding-left:1.1rem; margin-top:3px; display:flex; flex-direction:column; gap:2px">
+                                <li><strong>Qualification First:</strong> Matched your verified National Trade Certificate (NTC) in electrical diagnostics.</li>
+                                <li><strong>Distance:</strong> You are 2.1 km away (closest qualified technician).</li>
+                                <li><strong>Fairness & Workload:</strong> You have completed 4 jobs today (below the 6-job daily fatigue threshold).</li>
+                                <li><strong>Zero Commission:</strong> 100% of the ₹349 fee will be deposited directly to your UPI.</li>
+                            </ul>
+                        </div>
+
+                        <div style="display:flex; gap:1rem" id="standardJobActions">
+                            <button type="button" id="btnAcceptStandardJob" class="btn-primary" style="flex:1" onclick="acceptJob('standard')">
+                                Accept Assignment (₹349.00) →
+                            </button>
+                            <button type="button" class="btn-secondary" onclick="declineJob('standard')">
+                                Decline
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Emergency SOS Card (When Emergency mode is active) -->
+                    <div id="emergencyJobCard" style="display:none; flex-direction:column; gap:1.2rem; border-top:1.5px dashed var(--terra); padding-top:1.2rem">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start">
+                            <div>
+                                <span class="mono" style="background:rgba(193,90,46,0.12); color:var(--terra); padding:3px 8px; border-radius:999px; font-weight:700">
+                                    ⚡ 100% EMERGENCY MATCH · 1.5x SURGE
+                                </span>
+                                <h3 style="font-family:var(--serif); font-size:1.35rem; margin-top:6px; color:var(--terra)">
+                                    Commercial Feeder Busbar Arcing (SOS)
+                                </h3>
+                                <p style="font-size:13px; color:var(--ink-soft); margin-top:2px">
+                                    Gemini Circle, Anna Salai (1.4 km) · Immediate Arrival Needed
+                                </p>
+                            </div>
+                            <div style="font-family:var(--serif); font-size:1.9rem; font-weight:700; color:var(--terra)">
+                                ₹649.00
+                            </div>
+                        </div>
+
+                        <div class="basis-explainer-box" style="border-left-color:var(--terra); background:rgba(193,90,46,0.06)">
+                            <div class="basis-title">EMERGENCY ALLOCATION BASIS:</div>
+                            <span>Insulated tool qualification and Level 3 master tier verified. Immediate emergency dispatch override active.</span>
+                        </div>
+
+                        <button type="button" id="btnAcceptEmergencyJob" class="btn-primary" style="background:var(--terra)" onclick="acceptJob('emergency')">
+                            Accept Priority SOS Dispatch (₹649.00) →
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ACTIVE JOB LIFECYCLE TRACKER & WELLBEING -->
+                <div style="display:flex; flex-direction:column; gap:1.8rem">
+                    <!-- LIFECYCLE -->
+                    <div class="dash-card">
+                        <div class="card-header">
+                            <div>
+                                <span class="mono" style="color:var(--terra); font-size:10px">ACTIVE JOB TRACKER</span>
+                                <h2 class="card-title">Booking #UNV-88219</h2>
+                            </div>
+                            <span class="mono" style="font-size:11px; color:var(--green)">IN ROUTE</span>
+                        </div>
+
+                        <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:.5rem; text-align:center">
+                            <div style="background:var(--green-soft); color:var(--green); border:1px solid rgba(36,109,62,0.3); border-radius:10px; padding:.6rem .2rem; font-size:10.5px" class="mono">1. Dispatched</div>
+                            <div style="background:var(--ink); color:#fff; border-radius:10px; padding:.6rem .2rem; font-size:10.5px" class="mono" id="stArrived">2. On Site</div>
+                            <div style="background:rgba(34,24,18,0.05); border-radius:10px; padding:.6rem .2rem; font-size:10.5px" class="mono" id="stProgress">3. In Progress</div>
+                            <div style="background:rgba(34,24,18,0.05); border-radius:10px; padding:.6rem .2rem; font-size:10.5px" class="mono" id="stDone">4. Complete</div>
+                        </div>
+
+                        <div style="display:flex; justify-content:space-between; align-items:center; background:var(--cream-soft); padding:1rem; border-radius:14px; border:1px solid var(--hair)">
+                            <div>
+                                <div style="font-weight:600; font-size:13px">Customer Verification PIN: #9842</div>
+                                <div style="font-size:11.5px; color:var(--ink-soft)">Verify with customer upon arrival</div>
+                            </div>
+                            <button type="button" class="btn-primary" style="padding:0.6rem 1.2rem; font-size:10.5px" onclick="advanceStep()">
+                                Advance Stage →
+                            </button>
+                        </div>
+
+                        <!-- WORKER COLLECT AMOUNT & BILLING PANEL (SHOWN ONLY AFTER ACCEPTING ORDER) -->
+                        <div id="workerBillingBox" style="display:none; background:#fff; border:1.5px solid var(--hair); border-radius:14px; padding:1.2rem; flex-direction:column; gap:.8rem; margin-top:.5rem; animation:viewFadeIn .3s var(--ease) both">
+                            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.4rem">
+                                <div>
+                                    <span class="mono" style="color:var(--terra); font-size:10px; font-weight:700">SERVICE SETTLEMENT & INVOICING</span>
+                                    <div style="font-weight:700; font-size:14px; color:var(--ink); margin-top:2px">Collect Amount from Customer</div>
+                                </div>
+                                <span class="mono" id="workerBillStatusBadge" style="font-size:10px; font-weight:700; padding:3px 9px; border-radius:999px; background:rgba(193,90,46,0.1); color:var(--terra)">
+                                    READY TO BILL
+                                </span>
+                            </div>
+
+                            <p style="font-size:12px; color:var(--ink-soft); margin:0; line-height:1.4">
+                                Enter the final service amount (including labor and any installed materials). Once sent, the customer will see this bill in their portal and complete payment.
+                            </p>
+
+                            <div style="display:grid; grid-template-columns:1fr 1.6fr; gap:.8rem; align-items:flex-end">
+                                <div>
+                                    <label class="mono" style="font-size:10px; color:#666; font-weight:700; display:block; margin-bottom:4px">AMOUNT TO COLLECT (₹)</label>
+                                    <div style="position:relative">
+                                        <span style="position:absolute; left:12px; top:50%; transform:translateY(-50%); font-weight:700; color:var(--terra); font-size:15px">₹</span>
+                                        <input type="number" id="workerBillAmount" value="349" min="50" step="10" style="width:100%; padding:0.6rem 0.8rem 0.6rem 28px; border:1.5px solid var(--hair); border-radius:10px; font-size:15px; font-weight:700; font-family:var(--mono); color:var(--ink); background:#faf7f2; outline:none; transition:border .2s" onfocus="this.style.borderColor='var(--terra)'" onblur="this.style.borderColor='var(--hair)'">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="mono" style="font-size:10px; color:#666; font-weight:700; display:block; margin-bottom:4px">SERVICE BREAKDOWN / NOTES</label>
+                                    <input type="text" id="workerBillNotes" placeholder="e.g. Diagnostics + Switchboard Rewiring" value="Standard Electrical Service + Diagnostics" style="width:100%; padding:0.6rem 0.8rem; border:1.5px solid var(--hair); border-radius:10px; font-size:12px; font-family:inherit; color:var(--ink); background:#faf7f2; outline:none; transition:border .2s" onfocus="this.style.borderColor='var(--terra)'" onblur="this.style.borderColor='var(--hair)'">
+                                </div>
+                            </div>
+
+                            <!-- Live Settlement Notice / Status Message -->
+                            <div id="workerPaymentNotice" style="display:none; padding:.75rem 1rem; border-radius:10px; font-size:12px; line-height:1.4"></div>
+
+                            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.6rem; margin-top:.2rem">
+                                <div class="mono" style="font-size:10.5px; color:#777">
+                                    Zero Platform Deductions · 100% direct settlement to your UPI
+                                </div>
+                                <button type="button" id="btnSendBill" class="btn-primary" style="padding:0.65rem 1.4rem; font-size:11px; background:var(--terra)" onclick="sendBillToCustomer()">
+                                    Request Payment from Customer →
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- WELLBEING PAUSE BOX -->
+                    <div class="dash-card">
+                        <div class="card-header">
+                            <div>
+                                <span class="mono" style="color:var(--terra); font-size:10px">WELLBEING INTELLIGENCE</span>
+                                <h3 class="card-title" style="font-size:1.2rem">Ergonomic & Rest Status</h3>
+                            </div>
+                            <span class="mono" style="font-size:10px; color:var(--green)">OPTIMAL</span>
+                        </div>
+                        <p style="font-size:12.5px; color:var(--ink-soft)">
+                            You have logged <strong>5.4 hours</strong> of duty today. The Fair Dispatch Engine ensures you are not overloaded.
+                        </p>
+                        <button type="button" class="btn-secondary" id="btnRestPause" onclick="toggleRestInterval()">
+                            Take 30-Minute Rest Breather ☕
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- TAB 2: CUSTOMER REVIEWS (BRAND NEW SECTION)    -->
+        <!-- ============================================== -->
+        <div class="tab-pane" id="tab-reviews">
+            <div class="dash-card">
+                <div class="card-header">
+                    <div>
+                        <span class="mono" style="color:var(--terra); font-size:10px">CUSTOMER FEEDBACK & VERIFIED RATINGS</span>
+                        <h2 class="card-title">Customer Reviews (142 Total)</h2>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:.6rem">
+                        <span style="font-family:var(--serif); font-size:2rem; font-weight:700; color:var(--terra); line-height:1">4.9</span>
+                        <div style="display:flex; flex-direction:column">
+                            <div class="stars-row">★★★★★</div>
+                            <span class="mono" style="font-size:9.5px; color:var(--ink-soft)">100% VERIFIED BOOKINGS</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rating Breakdown Bar -->
+                <div class="basis-explainer-box" style="background:#fff; border-left:3.5px solid var(--green)">
+                    <div class="basis-title">RATINGS OVERVIEW BASED ON COMPLETED JOBS:</div>
+                    <div style="display:flex; gap:2rem; flex-wrap:wrap; font-size:12.5px; margin-top:4px">
+                        <span><strong>5 Stars:</strong> 131 reviews (92%)</span>
+                        <span><strong>4 Stars:</strong> 9 reviews (7%)</span>
+                        <span><strong>3 Stars:</strong> 2 reviews (1%)</span>
+                        <span><strong>2/1 Stars:</strong> 0 reviews (0%)</span>
+                    </div>
+                </div>
+
+                <!-- Individual Verified Review Cards -->
+                <div class="grid-2col">
+                    <!-- Review 1 -->
+                    <div class="review-card">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start">
+                            <div>
+                                <strong style="font-size:14.5px">Sunita Sharma</strong>
+                                <div class="mono" style="font-size:9.5px; color:var(--green)">✓ VERIFIED SERVICE · YESTERDAY</div>
+                            </div>
+                            <div class="stars-row">★★★★★</div>
+                        </div>
+                        <div style="font-size:11.5px; color:var(--terra); font-weight:600">
+                            Service: Living Room MCB Tripping & Diagnosis · Anna Salai
+                        </div>
+                        <p style="font-size:13px; color:var(--ink-soft); line-height:1.6">
+                            “Rahan arrived in under 18 minutes. Diagnosed our continuous MCB tripping within 10 minutes—it was an overload on the master neutral line. Courteous, professional, and wore protective insulated gloves. Highly recommended!”
+                        </p>
+                        <div style="font-size:11px; color:#888; border-top:1px solid var(--hair); padding-top:.5rem">
+                            Booking ID: #UNV-88219 · Verified by Co-operative Board
+                        </div>
+                    </div>
+
+                    <!-- Review 2 -->
+                    <div class="review-card">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start">
+                            <div>
+                                <strong style="font-size:14.5px">Arun Prakash</strong>
+                                <div class="mono" style="font-size:9.5px; color:var(--green)">✓ VERIFIED SERVICE · 3 DAYS AGO</div>
+                            </div>
+                            <div class="stars-row">★★★★★</div>
+                        </div>
+                        <div style="font-size:11.5px; color:var(--terra); font-weight:600">
+                            Service: Distribution Board Replacement & Earthing · Kilpauk
+                        </div>
+                        <p style="font-size:13px; color:var(--ink-soft); line-height:1.6">
+                            “Extremely knowledgeable about 3-phase domestic wiring. Explained the safety hazard clearly, cleaned up all cut copper wires, and fixed our distribution box neatly. Fair pricing with zero extra hidden costs.”
+                        </p>
+                        <div style="font-size:11px; color:#888; border-top:1px solid var(--hair); padding-top:.5rem">
+                            Booking ID: #UNV-87941 · Verified by Co-operative Board
+                        </div>
+                    </div>
+
+                    <!-- Review 3 -->
+                    <div class="review-card">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start">
+                            <div>
+                                <strong style="font-size:14.5px">Dr. Kavitha Raman</strong>
+                                <div class="mono" style="font-size:9.5px; color:var(--green)">✓ VERIFIED SERVICE · 5 DAYS AGO</div>
+                            </div>
+                            <div class="stars-row">★★★★★</div>
+                        </div>
+                        <div style="font-size:11.5px; color:var(--terra); font-weight:600">
+                            Service: Inverter Battery Setup & Voltage Calibration · T. Nagar
+                        </div>
+                        <p style="font-size:13px; color:var(--ink-soft); line-height:1.6">
+                            “Punctual, polite, and very methodical. Checked the earthing resistance with his digital meter before switching on the inverter. Gave us practical battery maintenance tips. Very satisfied with the cooperative standard.”
+                        </p>
+                        <div style="font-size:11px; color:#888; border-top:1px solid var(--hair); padding-top:.5rem">
+                            Booking ID: #UNV-87612 · Verified by Co-operative Board
+                        </div>
+                    </div>
+
+                    <!-- Review 4 -->
+                    <div class="review-card">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start">
+                            <div>
+                                <strong style="font-size:14.5px">Deepak M.</strong>
+                                <div class="mono" style="font-size:9.5px; color:var(--green)">✓ VERIFIED SERVICE · 1 WEEK AGO</div>
+                            </div>
+                            <div class="stars-row">★★★★☆</div>
+                        </div>
+                        <div style="font-size:11.5px; color:var(--terra); font-weight:600">
+                            Service: Emergency Power Outage Diagnosis · Nungambakkam
+                        </div>
+                        <p style="font-size:13px; color:var(--ink-soft); line-height:1.6">
+                            “Solved a burnt neutral link quickly in the middle of a power cut. Great work, arrived very fast during rain. Good quality work.”
+                        </p>
+                        <div style="font-size:11px; color:#888; border-top:1px solid var(--hair); padding-top:.5rem">
+                            Booking ID: #UNV-87104 · Verified by Co-operative Board
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- TAB 3: SKILL DNA & AI ADVISOR                  -->
+        <!-- ============================================== -->
+        <div class="tab-pane" id="tab-skill-dna">
+            <div class="grid-2col">
+                <!-- SKILL DNA WITH EXPLICIT BASIS -->
+                <div class="dash-card">
+                    <div class="card-header">
+                        <div>
+                            <span class="mono" style="color:var(--terra); font-size:10px">VERIFIED EVIDENCE & PROFICIENCY</span>
+                            <h2 class="card-title">Skill DNA Helix</h2>
+                        </div>
+                        <span class="mono" style="font-size:10px; color:var(--green)">TIER 3 MASTER SPECIALIST</span>
+                    </div>
+
+                    <div class="basis-explainer-box">
+                        <div class="basis-title">HOW THIS PROFICIENCY IS CALCULATED:</div>
+                        <span>Scores are computed directly from certified exam scores (DGT/NSDC), completed job audit reports, customer feedback, and zero-fault safety inspections.</span>
+                    </div>
+
+                    <div style="display:flex; flex-direction:column; gap:1.1rem; margin-top:.4rem">
+                        <!-- Skill 1 -->
+                        <div class="skill-evidence-item">
+                            <div class="skill-header-row">
+                                <span>Diagnostics & Fault Isolation</span>
+                                <span class="mono" style="color:var(--terra)">98%</span>
+                            </div>
+                            <div class="skill-track"><div class="skill-fill" style="width:98%"></div></div>
+                            <div class="skill-evidence-note">
+                                <strong>Basis:</strong> 32 completed diagnostic jobs · 100% zero-recurrence record · DGT Practical Exam Grade A.
+                            </div>
+                        </div>
+
+                        <!-- Skill 2 -->
+                        <div class="skill-evidence-item">
+                            <div class="skill-header-row">
+                                <span>MCB Circuit & Distribution Boards</span>
+                                <span class="mono" style="color:var(--terra)">95%</span>
+                            </div>
+                            <div class="skill-track"><div class="skill-fill" style="width:95%"></div></div>
+                            <div class="skill-evidence-note">
+                                <strong>Basis:</strong> 48 breaker replacements · Verified safety isolation procedure followed.
+                            </div>
+                        </div>
+
+                        <!-- Skill 3 -->
+                        <div class="skill-evidence-item">
+                            <div class="skill-header-row">
+                                <span>Earthing & Safety Code Compliance</span>
+                                <span class="mono" style="color:var(--terra)">99%</span>
+                            </div>
+                            <div class="skill-track"><div class="skill-fill" style="width:99%"></div></div>
+                            <div class="skill-evidence-note">
+                                <strong>Basis:</strong> Level 3 Police & TN Electrical Licensing Board statutory compliance cleared.
+                            </div>
+                        </div>
+
+                        <!-- Skill 4 -->
+                        <div class="skill-evidence-item">
+                            <div class="skill-header-row">
+                                <span>Inverter & Battery Backup Systems</span>
+                                <span class="mono" style="color:var(--terra)">91%</span>
+                            </div>
+                            <div class="skill-track"><div class="skill-fill" style="width:91%"></div></div>
+                            <div class="skill-evidence-note">
+                                <strong>Basis:</strong> 18 residential inverter installs · Voltage calibration test verified.
+                            </div>
+                        </div>
+
+                        <!-- Skill 5 -->
+                        <div class="skill-evidence-item">
+                            <div class="skill-header-row">
+                                <span>Customer Advisory & Communication</span>
+                                <span class="mono" style="color:var(--terra)">96%</span>
+                            </div>
+                            <div class="skill-track"><div class="skill-fill" style="width:96%"></div></div>
+                            <div class="skill-evidence-note">
+                                <strong>Basis:</strong> 142 customer reviews (4.9 / 5.0 satisfaction score).
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI SKILL GROWTH ADVISOR -->
+                <div class="dash-card">
+                    <div class="card-header">
+                        <div>
+                            <span class="mono" style="color:var(--terra); font-size:10px">VOCATIONAL UPGRADE ENGINE</span>
+                            <h2 class="card-title">AI Skill Growth Advisor</h2>
+                        </div>
+                        <span class="mono" style="font-size:10px; color:var(--terra)">2 OPPORTUNITIES</span>
+                    </div>
+
+                    <p style="font-size:12.5px; color:var(--ink-soft)">
+                        Based on search trends and customer bookings in your active zone, the AI has identified high-ROI trade qualifications you can add to your passport:
+                    </p>
+
+                    <!-- Growth Item 1 -->
+                    <div style="background:var(--cream-soft); border:1px solid var(--hair); border-radius:14px; padding:1.2rem; display:flex; flex-direction:column; gap:.5rem">
+                        <div style="display:flex; justify-content:space-between; align-items:center">
+                            <strong style="font-size:13.5px">Solar Rooftop Inverter Certification</strong>
+                            <span class="mono" style="color:var(--green); font-weight:700; font-size:10.5px">+₹4,500 / WEEK</span>
+                        </div>
+                        <div class="basis-explainer-box" style="background:#fff">
+                            <div class="basis-title">WHY RECOMMENDED:</div>
+                            <span>+55% surge in solar rooftop installs in Anna Nagar & Central Chennai. 4-hour subsidized module available.</span>
+                        </div>
+                        <button type="button" class="btn-primary" style="padding:0.65rem 1.2rem; font-size:10.5px; margin-top:.4rem" onclick="alert('Enrolled in Solar Inverter Certification via Co-op Society!')">
+                            Enroll via Co-op (Free Subsidy) →
+                        </button>
+                    </div>
+
+                    <!-- Growth Item 2 -->
+                    <div style="background:var(--cream-soft); border:1px solid var(--hair); border-radius:14px; padding:1.2rem; display:flex; flex-direction:column; gap:.5rem">
+                        <div style="display:flex; justify-content:space-between; align-items:center">
+                            <strong style="font-size:13.5px">Smart Home IoT Circuit Automation</strong>
+                            <span class="mono" style="color:var(--green); font-weight:700; font-size:10.5px">+₹3,200 / WEEK</span>
+                        </div>
+                        <div class="basis-explainer-box" style="background:#fff">
+                            <div class="basis-title">WHY RECOMMENDED:</div>
+                            <span>Growing requests for smart switches and WiFi breaker modules in luxury apartments.</span>
+                        </div>
+                        <button type="button" class="btn-secondary" style="padding:0.65rem 1.2rem; font-size:10.5px; margin-top:.4rem" onclick="alert('IoT module saved to your learning list.')">
+                            View Syllabus
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- TAB 4: EARNINGS & MARKET DEMAND                -->
+        <!-- ============================================== -->
+        <div class="tab-pane" id="tab-earnings">
+            <div class="grid-2col">
+                <!-- EARNINGS -->
+                <div class="dash-card">
+                    <div class="card-header">
+                        <div>
+                            <span class="mono" style="color:var(--terra); font-size:10px">ZERO COMMISSION GUARANTEE</span>
+                            <h2 class="card-title">Earnings Intelligence</h2>
+                        </div>
+                        <span class="mono" style="font-size:10px; color:var(--green)">DIRECT UPI PAYOUT</span>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:1rem; text-align:center">
+                        <div style="background:var(--cream-soft); border:1px solid var(--hair); border-radius:14px; padding:1.2rem">
+                            <span class="mono" style="font-size:9.5px; color:#777">TODAY</span>
+                            <div style="font-family:var(--serif); font-size:1.8rem; font-weight:700; color:var(--green); margin-top:3px">₹1,840</div>
+                            <span style="font-size:11px; color:#777">4 Dispatches</span>
+                        </div>
+                        <div style="background:var(--cream-soft); border:1px solid var(--hair); border-radius:14px; padding:1.2rem">
+                            <span class="mono" style="font-size:9.5px; color:#777">THIS WEEK</span>
+                            <div style="font-family:var(--serif); font-size:1.8rem; font-weight:700; color:var(--ink); margin-top:3px">₹12,450</div>
+                            <span style="font-size:11px; color:#777">26 Dispatches</span>
+                        </div>
+                        <div style="background:var(--cream-soft); border:1px solid var(--hair); border-radius:14px; padding:1.2rem">
+                            <span class="mono" style="font-size:9.5px; color:#777">EST. MONTH</span>
+                            <div style="font-family:var(--serif); font-size:1.8rem; font-weight:700; color:var(--terra); margin-top:3px">₹52,000</div>
+                            <span style="font-size:11px; color:#777">On Track</span>
+                        </div>
+                    </div>
+
+                    <div class="basis-explainer-box">
+                        <div class="basis-title">TRANSPARENT TARIFF CALCULATION BASIS:</div>
+                        <span>100% of the customer payment is transferred directly to your bank account (<strong>rahan.elec@okhdfcbank</strong>). UNIVO does not charge commission fees.</span>
+                    </div>
+
+                    <button type="button" class="btn-primary" onclick="alert('Instant payout of ₹1,840.00 transferred to rahan.elec@okhdfcbank via IMPS!')">
+                        Withdraw Today's Earnings (₹1,840.00) →
+                    </button>
+                </div>
+
+                <!-- DEMAND HEATMAP -->
+                <div class="dash-card">
+                    <div class="card-header">
+                        <div>
+                            <span class="mono" style="color:var(--terra); font-size:10px">REGIONAL LIVE DEMAND</span>
+                            <h2 class="card-title">Demand-Aware Hotspots</h2>
+                        </div>
+                        <span class="mono" style="font-size:10px; color:var(--terra)">LIVE TELEMETRY</span>
+                    </div>
+
+                    <p style="font-size:12.5px; color:var(--ink-soft)">
+                        Areas experiencing elevated repair queries based on grid fluctuations and weather patterns:
+                    </p>
+
+                    <div style="display:flex; flex-direction:column; gap:.8rem">
+                        <div style="display:flex; justify-content:space-between; align-items:center; background:var(--cream-soft); padding:1rem; border-radius:12px">
+                            <div>
+                                <strong style="font-size:13.5px">Central Zone & Anna Salai</strong>
+                                <div style="font-size:11.5px; color:var(--ink-soft)">Commercial Breaker Trips & Feeder Arcing</div>
+                            </div>
+                            <span class="mono" style="color:var(--terra); font-weight:700">+42% SPIKE 🔥</span>
+                        </div>
+
+                        <div style="display:flex; justify-content:space-between; align-items:center; background:var(--cream-soft); padding:1rem; border-radius:12px">
+                            <div>
+                                <strong style="font-size:13.5px">Anna Nagar Residential</strong>
+                                <div style="font-size:11.5px; color:var(--ink-soft)">HVAC Overload Relays & Heavy Breakers</div>
+                            </div>
+                            <span class="mono" style="color:var(--terra); font-weight:700">+68% SURGE 🔥</span>
+                        </div>
+
+                        <div style="display:flex; justify-content:space-between; align-items:center; background:var(--cream-soft); padding:1rem; border-radius:12px">
+                            <div>
+                                <strong style="font-size:13.5px">T. Nagar Commercial</strong>
+                                <div style="font-size:11.5px; color:var(--ink-soft)">Distribution Board Modernization</div>
+                            </div>
+                            <span class="mono" style="color:var(--green); font-weight:700">+29% STEADY 📈</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- TAB 5: COOPERATIVE WELFARE                     -->
+        <!-- ============================================== -->
+        <div class="tab-pane" id="tab-welfare">
+            <div class="dash-card">
+                <div class="card-header">
+                    <div>
+                        <span class="mono" style="color:var(--terra); font-size:10px">SOCIAL SECURITY & SOLIDARITY</span>
+                        <h2 class="card-title">Cooperative Welfare & Benefits Hub</h2>
+                    </div>
+                    <span class="mono" style="font-size:10px; color:var(--terra)">SOCIETY #TN-COOP-410</span>
+                </div>
+
+                <div class="basis-explainer-box">
+                    <div class="basis-title">COOPERATIVE WELFARE BASIS:</div>
+                    <span>As a certified technician of <strong>Chennai Central Artisan & Technicians Co-operative Society</strong>, you are entitled to statutory tool subsidies, zero-interest credit lines, and group family medical protection.</span>
+                </div>
+
+                <div style="background:linear-gradient(135deg, rgba(193,90,46,0.08), rgba(217,164,65,0.08)); border:1.5px dashed var(--terra); border-radius:18px; padding:1.4rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-top:.4rem">
+                    <div>
+                        <div class="mono" style="color:var(--terra); font-size:10px; font-weight:700">DEDICATED SOCIAL SECURITY FRAME</div>
+                        <h3 style="font-family:var(--serif); font-size:1.4rem; margin-top:2px">Full Cooperative Welfare & Protection Portal</h3>
+                        <p style="font-size:12.5px; color:var(--ink-soft); margin-top:2px">
+                            Access the Benefit Eligibility Engine, "Benefits You're Missing" AI finder, 1-Click Claims, Welfare Health Score, and Life-Event Crisis Support.
+                        </p>
+                    </div>
+                    <a href="worker-welfare.html" class="btn-primary" style="text-decoration:none">
+                        Open Dedicated Welfare Frame →
+                    </a>
+                </div>
+
+                <div class="grid-3col" style="margin-top:.5rem">
+                    <div style="background:var(--cream-soft); border:1px solid var(--hair); border-radius:16px; padding:1.4rem; display:flex; flex-direction:column; gap:.6rem">
+                        <div style="font-size:24px">🧰</div>
+                        <strong style="font-size:14.5px">Tool Upgrade Subsidy (₹5,000)</strong>
+                        <p style="font-size:12px; color:var(--ink-soft); line-height:1.5">
+                            Annual capital grant to purchase digital multimeters, megohmmeters, and insulated hand tools.
+                        </p>
+                        <button type="button" class="btn-secondary" style="font-size:10.5px; padding:0.65rem; margin-top:.4rem" onclick="alert('Tool grant claim filed under Member ID #TN-COOP-MEM-984!')">
+                            Claim Subsidy →
+                        </button>
+                    </div>
+
+                    <div style="background:var(--cream-soft); border:1px solid var(--hair); border-radius:16px; padding:1.4rem; display:flex; flex-direction:column; gap:.6rem">
+                        <div style="font-size:24px">🏥</div>
+                        <strong style="font-size:14.5px">Cashless Health Cover (₹5 Lakhs)</strong>
+                        <p style="font-size:12px; color:var(--ink-soft); line-height:1.5">
+                            Cashless hospitalization for technician, spouse, and children across 120 network hospitals in Tamil Nadu.
+                        </p>
+                        <button type="button" class="btn-secondary" style="font-size:10.5px; padding:0.65rem; margin-top:.4rem" onclick="alert('Health Card Active: UNV-TN-HLTH-2026. Coverage: ₹5,00,000.')">
+                            View Health Card →
+                        </button>
+                    </div>
+
+                    <div style="background:var(--cream-soft); border:1px solid var(--hair); border-radius:16px; padding:1.4rem; display:flex; flex-direction:column; gap:.6rem">
+                        <div style="font-size:24px">💳</div>
+                        <strong style="font-size:14.5px">Zero-Interest Tool Loan (₹10,000)</strong>
+                        <p style="font-size:12px; color:var(--ink-soft); line-height:1.5">
+                            Instant credit for spare parts, wires, and equipment without bank interest or hidden processing fees.
+                        </p>
+                        <button type="button" class="btn-secondary" style="font-size:10.5px; padding:0.65rem; margin-top:.4rem" onclick="alert('₹10,000 credit line available for instant draw to UPI.')">
+                            Access Credit Line →
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- TAB 6: AI WORK SUPPLY & DEMAND FORECAST (TN)   -->
+        <!-- ============================================== -->
+        <div class="tab-pane" id="tab-forecast">
+            <!-- Forecast Hero Card -->
+            <div class="dash-card">
+                <div class="card-header">
+                    <div>
+                        <span class="mono" style="color:var(--terra); font-size:10px">TAMIL NADU STATEWIDE WORK SUPPLY TELEMETRY</span>
+                        <h2 class="card-title">AI Work Supply & Demand Forecast Engine</h2>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:.8rem">
+                        <div class="pill-badge" id="roamingStatusBadge" style="border-color:var(--green); color:var(--green); font-weight:700">
+                            📍 Base: Chennai Central (Ready to Roam)
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Time Horizon Switcher & Summary Bar -->
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; background:var(--cream-soft); padding:1rem 1.4rem; border-radius:16px; border:1px solid var(--hair)">
+                    <div style="display:flex; gap:.6rem; flex-wrap:wrap">
+                        <button type="button" class="btn-primary" id="btnHorizonTomorrow" style="padding:0.6rem 1.2rem; font-size:11px" onclick="switchForecastHorizon('tomorrow')">
+                            Tomorrow (Next 24H)
+                        </button>
+                        <button type="button" class="btn-secondary" id="btnHorizon3Day" style="padding:0.6rem 1.2rem; font-size:11px" onclick="switchForecastHorizon('3day')">
+                            3-Day Outlook
+                        </button>
+                        <button type="button" class="btn-secondary" id="btnHorizon7Day" style="padding:0.6rem 1.2rem; font-size:11px" onclick="switchForecastHorizon('7day')">
+                            7-Day Supply Wave
+                        </button>
+                    </div>
+
+                    <div style="display:flex; gap:1.8rem; font-size:12.5px; flex-wrap:wrap">
+                        <span>Statewide Demand: <strong id="stateDemandText" style="color:var(--green)">8,450+ Repairs</strong></span>
+                        <span>Supply Deficit: <strong id="stateDeficitText" style="color:var(--terra)">+38% Tech Shortage</strong></span>
+                        <span>Peak Hotspot: <strong id="statePeakHotspot">Chennai OMR Corridor (+68%)</strong></span>
+                    </div>
+                </div>
+
+                <!-- Predictive Causal Radar: Why Demand is Spiking -->
+                <div class="basis-explainer-box">
+                    <div class="basis-title">AI CAUSAL PREDICTION BASIS (WEATHER + GRID + COMMERCIAL SHIFTS):</div>
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1rem; margin-top:.4rem; font-size:12px">
+                        <div>
+                            🌡️ <strong>Weather Correlation:</strong> 38.5°C peak ambient heat and 88% humidity forecast for tomorrow across coastal Tamil Nadu, causing +65% surge in residential and commercial air conditioning circuit breaker overloads.
+                        </div>
+                        <div>
+                            ⚡ <strong>Grid Substation Load:</strong> TANGEDCO 230kV substation peak load shifts towards evening (18:00 - 22:00), creating localized phase voltage drops and tripping safety MCBs.
+                        </div>
+                        <div>
+                            🏭 <strong>Commercial Maintenance:</strong> Industrial shift in Coimbatore & Tiruppur scheduled for Friday-Saturday, generating early bookings for factory motor rewiring and power capacitors.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Regional Matrix: Tamil Nadu Hotspots -->
+                <div>
+                    <h3 style="font-family:var(--serif); font-size:1.35rem; margin-bottom:.8rem">
+                        High-Demand Relocation Zones (Move to Earn More)
+                    </h3>
+                    <p style="font-size:12.5px; color:var(--ink-soft); margin-bottom:1.2rem">
+                        Technicians who relocate their active roaming beacon to high-deficit zones receive first-priority dispatch queue allocation and earn 1.4x to 1.8x fair surge tariffs:
+                    </p>
+
+                    <div class="grid-3col">
+                        <!-- Hotspot 1: Chennai OMR Corridor -->
+                        <div style="background:var(--cream-soft); border:1.5px solid rgba(193,90,46,0.4); border-radius:18px; padding:1.4rem; display:flex; flex-direction:column; gap:.8rem; position:relative">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start">
+                                <div>
+                                    <span class="mono" style="background:rgba(193,90,46,0.14); color:var(--terra); padding:3px 8px; border-radius:999px; font-weight:700; font-size:9.5px">
+                                        CRITICAL SHORTAGE 🔥 +68%
+                                    </span>
+                                    <h4 style="font-family:var(--serif); font-size:1.3rem; margin-top:5px">Chennai OMR Tech Belt</h4>
+                                    <span style="font-size:11.5px; color:var(--ink-soft)">Sholinganallur · Siruseri · Navalur</span>
+                                </div>
+                            </div>
+
+                            <div style="display:flex; flex-direction:column; gap:3px; font-size:12px; border-top:1px dashed var(--hair); padding-top:.6rem">
+                                <div><strong>Expected Jobs:</strong> 310 repair requests</div>
+                                <div><strong>Active Techs:</strong> 85 electricians (Deficit of 225)</div>
+                                <div><strong>Est. Daily Earnings:</strong> <span style="color:var(--green); font-weight:700">₹3,800 - ₹5,200 / day</span></div>
+                                <div style="color:var(--terra); font-size:11.5px"><strong>Primary Needs:</strong> Heavy HVAC 3-phase breakers & busbars.</div>
+                            </div>
+
+                            <button type="button" class="btn-primary" style="font-size:10.5px; padding:0.7rem; margin-top:.4rem" onclick="setRoamingZone('Chennai OMR Tech Corridor', '+68%')">
+                                Set Roaming Beacon for Tomorrow →
+                            </button>
+                        </div>
+
+                        <!-- Hotspot 2: Coimbatore Industrial Belt -->
+                        <div style="background:var(--cream-soft); border:1px solid var(--hair); border-radius:18px; padding:1.4rem; display:flex; flex-direction:column; gap:.8rem">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start">
+                                <div>
+                                    <span class="mono" style="background:rgba(36,109,62,0.12); color:var(--green); padding:3px 8px; border-radius:999px; font-weight:700; font-size:9.5px">
+                                        HIGH COMMERCIAL DEMAND ⚡ +45%
+                                    </span>
+                                    <h4 style="font-family:var(--serif); font-size:1.3rem; margin-top:5px">Coimbatore & Tiruppur</h4>
+                                    <span style="font-size:11.5px; color:var(--ink-soft)">Peelamedu · Kurichi · Avinashi</span>
+                                </div>
+                            </div>
+
+                            <div style="display:flex; flex-direction:column; gap:3px; font-size:12px; border-top:1px dashed var(--hair); padding-top:.6rem">
+                                <div><strong>Expected Jobs:</strong> 240 commercial jobs</div>
+                                <div><strong>Active Techs:</strong> 110 technicians</div>
+                                <div><strong>Est. Daily Earnings:</strong> <span style="color:var(--green); font-weight:700">₹4,200 - ₹6,000 / day</span></div>
+                                <div style="color:var(--ink-soft); font-size:11.5px"><strong>Primary Needs:</strong> 3-phase motor starters, textile loom rewiring.</div>
+                            </div>
+
+                            <button type="button" class="btn-primary" style="font-size:10.5px; padding:0.7rem; margin-top:.4rem" onclick="setRoamingZone('Coimbatore Industrial Hub', '+45%')">
+                                Set Roaming Beacon for Tomorrow →
+                            </button>
+                        </div>
+
+                        <!-- Hotspot 3: Central Chennai & Anna Nagar -->
+                        <div style="background:var(--cream-soft); border:1px solid var(--hair); border-radius:18px; padding:1.4rem; display:flex; flex-direction:column; gap:.8rem">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start">
+                                <div>
+                                    <span class="mono" style="background:rgba(34,24,18,0.08); color:var(--ink-soft); padding:3px 8px; border-radius:999px; font-weight:700; font-size:9.5px">
+                                        CURRENT BASE ZONE · +38%
+                                    </span>
+                                    <h4 style="font-family:var(--serif); font-size:1.3rem; margin-top:5px">Central Chennai Metro</h4>
+                                    <span style="font-size:11.5px; color:var(--ink-soft)">Anna Salai · Anna Nagar · T. Nagar</span>
+                                </div>
+                            </div>
+
+                            <div style="display:flex; flex-direction:column; gap:3px; font-size:12px; border-top:1px dashed var(--hair); padding-top:.6rem">
+                                <div><strong>Expected Jobs:</strong> 195 domestic dispatches</div>
+                                <div><strong>Active Techs:</strong> 120 technicians</div>
+                                <div><strong>Est. Daily Earnings:</strong> <span style="color:var(--green); font-weight:700">₹2,800 - ₹3,600 / day</span></div>
+                                <div style="color:var(--ink-soft); font-size:11.5px"><strong>Primary Needs:</strong> Domestic MCB breaker trips & short circuits.</div>
+                            </div>
+
+                            <button type="button" class="btn-secondary" style="font-size:10.5px; padding:0.7rem; margin-top:.4rem" onclick="setRoamingZone('Central Chennai (Current)', '+38%')">
+                                Active Base (Current) ✓
+                            </button>
+                        </div>
+
+                        <!-- Hotspot 4: Madurai South Grid -->
+                        <div style="background:var(--cream-soft); border:1px solid var(--hair); border-radius:18px; padding:1.4rem; display:flex; flex-direction:column; gap:.8rem">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start">
+                                <div>
+                                    <span class="mono" style="background:rgba(217,164,65,0.15); color:#a16207; padding:3px 8px; border-radius:999px; font-weight:700; font-size:9.5px">
+                                        INVERTER BACKUP SURGE 🔋 +52%
+                                    </span>
+                                    <h4 style="font-family:var(--serif); font-size:1.3rem; margin-top:5px">Madurai & South Grid</h4>
+                                    <span style="font-size:11.5px; color:var(--ink-soft)">Mattuthavani · Thirunagar · Teppakulam</span>
+                                </div>
+                            </div>
+
+                            <div style="display:flex; flex-direction:column; gap:3px; font-size:12px; border-top:1px dashed var(--hair); padding-top:.6rem">
+                                <div><strong>Expected Jobs:</strong> 160 battery & inverter repairs</div>
+                                <div><strong>Active Techs:</strong> 65 technicians</div>
+                                <div><strong>Est. Daily Earnings:</strong> <span style="color:var(--green); font-weight:700">₹3,100 - ₹4,400 / day</span></div>
+                                <div style="color:var(--ink-soft); font-size:11.5px"><strong>Primary Needs:</strong> Inverter battery replacement & lightning arrestors.</div>
+                            </div>
+
+                            <button type="button" class="btn-primary" style="font-size:10.5px; padding:0.7rem; margin-top:.4rem" onclick="setRoamingZone('Madurai South Hub', '+52%')">
+                                Set Roaming Beacon for Tomorrow →
+                            </button>
+                        </div>
+
+                        <!-- Hotspot 5: Trichy & Thanjavur Agro-Electric -->
+                        <div style="background:var(--cream-soft); border:1px solid var(--hair); border-radius:18px; padding:1.4rem; display:flex; flex-direction:column; gap:.8rem">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start">
+                                <div>
+                                    <span class="mono" style="background:rgba(36,109,62,0.12); color:var(--green); padding:3px 8px; border-radius:999px; font-weight:700; font-size:9.5px">
+                                        AGRO-MOTOR DEMAND 🚜 +22%
+                                    </span>
+                                    <h4 style="font-family:var(--serif); font-size:1.3rem; margin-top:5px">Trichy & Thanjavur</h4>
+                                    <span style="font-size:11.5px; color:var(--ink-soft)">Kallanai · Thiruverumbur · Srirangam</span>
+                                </div>
+                            </div>
+
+                            <div style="display:flex; flex-direction:column; gap:3px; font-size:12px; border-top:1px dashed var(--hair); padding-top:.6rem">
+                                <div><strong>Expected Jobs:</strong> 130 pump starter setups</div>
+                                <div><strong>Active Techs:</strong> 75 technicians</div>
+                                <div><strong>Est. Daily Earnings:</strong> <span style="color:var(--green); font-weight:700">₹2,400 - ₹3,200 / day</span></div>
+                                <div style="color:var(--ink-soft); font-size:11.5px"><strong>Primary Needs:</strong> Agricultural borewell submersibles & relays.</div>
+                            </div>
+
+                            <button type="button" class="btn-primary" style="font-size:10.5px; padding:0.7rem; margin-top:.4rem" onclick="setRoamingZone('Trichy Agro-Electric Hub', '+22%')">
+                                Set Roaming Beacon for Tomorrow →
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 7-Day Supply Wave Trend Visualization -->
+                <div style="background:var(--cream-soft); border:1px solid var(--hair); border-radius:18px; padding:1.6rem; display:flex; flex-direction:column; gap:1rem">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.6rem">
+                        <div>
+                            <span class="mono" style="color:var(--terra); font-size:10px; font-weight:700">7-DAY TAMIL NADU PROJECTION</span>
+                            <h4 style="font-family:var(--serif); font-size:1.3rem; margin-top:2px">Weekly Work Supply Wave</h4>
+                        </div>
+                        <span class="mono" style="font-size:10.5px; color:var(--green); font-weight:700">SATURDAY PEAK SURGE (1.8x)</span>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:repeat(7, 1fr); gap:.6rem; text-align:center; margin-top:.4rem">
+                        <div style="display:flex; flex-direction:column; gap:.4rem; align-items:center">
+                            <span class="mono" style="font-size:10px; font-weight:700">TOMORROW</span>
+                            <div style="width:100%; height:80px; background:rgba(34,24,18,0.06); border-radius:8px; display:flex; align-items:flex-end">
+                                <div style="width:100%; height:68%; background:var(--terra); border-radius:8px"></div>
+                            </div>
+                            <span style="font-size:11px; font-weight:600">1,120</span>
+                            <span class="mono" style="font-size:9.5px; color:var(--terra)">1.4x Surge</span>
+                        </div>
+
+                        <div style="display:flex; flex-direction:column; gap:.4rem; align-items:center">
+                            <span class="mono" style="font-size:10px; font-weight:700">FRI</span>
+                            <div style="width:100%; height:80px; background:rgba(34,24,18,0.06); border-radius:8px; display:flex; align-items:flex-end">
+                                <div style="width:100%; height:76%; background:var(--terra); border-radius:8px"></div>
+                            </div>
+                            <span style="font-size:11px; font-weight:600">1,280</span>
+                            <span class="mono" style="font-size:9.5px; color:var(--terra)">1.5x Surge</span>
+                        </div>
+
+                        <div style="display:flex; flex-direction:column; gap:.4rem; align-items:center">
+                            <span class="mono" style="font-size:10px; font-weight:700; color:var(--terra)">SAT (PEAK)</span>
+                            <div style="width:100%; height:80px; background:rgba(34,24,18,0.06); border-radius:8px; display:flex; align-items:flex-end">
+                                <div style="width:100%; height:100%; background:linear-gradient(180deg, #b91c1c, var(--terra)); border-radius:8px"></div>
+                            </div>
+                            <span style="font-size:11px; font-weight:700; color:var(--terra)">1,640</span>
+                            <span class="mono" style="font-size:9.5px; color:#b91c1c; font-weight:700">1.8x Peak</span>
+                        </div>
+
+                        <div style="display:flex; flex-direction:column; gap:.4rem; align-items:center">
+                            <span class="mono" style="font-size:10px; font-weight:700">SUN</span>
+                            <div style="width:100%; height:80px; background:rgba(34,24,18,0.06); border-radius:8px; display:flex; align-items:flex-end">
+                                <div style="width:100%; height:86%; background:var(--terra); border-radius:8px"></div>
+                            </div>
+                            <span style="font-size:11px; font-weight:600">1,410</span>
+                            <span class="mono" style="font-size:9.5px; color:var(--terra)">1.6x Peak</span>
+                        </div>
+
+                        <div style="display:flex; flex-direction:column; gap:.4rem; align-items:center">
+                            <span class="mono" style="font-size:10px; font-weight:700">MON</span>
+                            <div style="width:100%; height:80px; background:rgba(34,24,18,0.06); border-radius:8px; display:flex; align-items:flex-end">
+                                <div style="width:100%; height:55%; background:var(--green); border-radius:8px"></div>
+                            </div>
+                            <span style="font-size:11px; font-weight:600">980</span>
+                            <span class="mono" style="font-size:9.5px; color:var(--green)">1.2x Base</span>
+                        </div>
+
+                        <div style="display:flex; flex-direction:column; gap:.4rem; align-items:center">
+                            <span class="mono" style="font-size:10px; font-weight:700">TUE</span>
+                            <div style="width:100%; height:80px; background:rgba(34,24,18,0.06); border-radius:8px; display:flex; align-items:flex-end">
+                                <div style="width:100%; height:58%; background:var(--green); border-radius:8px"></div>
+                            </div>
+                            <span style="font-size:11px; font-weight:600">1,020</span>
+                            <span class="mono" style="font-size:9.5px; color:var(--green)">1.3x Base</span>
+                        </div>
+
+                        <div style="display:flex; flex-direction:column; gap:.4rem; align-items:center">
+                            <span class="mono" style="font-size:10px; font-weight:700">WED</span>
+                            <div style="width:100%; height:80px; background:rgba(34,24,18,0.06); border-radius:8px; display:flex; align-items:flex-end">
+                                <div style="width:100%; height:60%; background:var(--green); border-radius:8px"></div>
+                            </div>
+                            <span style="font-size:11px; font-weight:600">1,060</span>
+                            <span class="mono" style="font-size:9.5px; color:var(--green)">1.3x Base</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ============================================== -->
+    <!-- 15-SECTION PASSPORT AUDIT DRAWER               -->
+    <!-- ============================================== -->
+    <div class="passport-drawer-modal" id="passportDrawer">
+        <div class="drawer-content">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--hair); padding-bottom:1rem">
+                <div>
+                    <span class="mono" style="color:var(--terra); font-size:10px">VERIFIED DIGITAL IDENTITY</span>
+                    <h2 style="font-family:var(--serif); font-size:1.8rem">15-Section Passport</h2>
+                </div>
+                <button type="button" onclick="closePassportDrawer()" style="font-size:26px; color:#666">&times;</button>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:1.1rem; font-size:13.5px">
+                <div><strong>01. Personal Info:</strong> <span id="drName">Rahan S</span> (DOB: 1996-05-14)</div>
+                <div><strong>02. Location:</strong> Chennai Metro (Anna Nagar, T. Nagar, Central Zone) · 13.0827° N, 80.2707° E</div>
+                <div><strong>03. Identity:</strong> Aadhaar UIDAI Biometric Level 3 Cleared</div>
+                <div><strong>04. Primary Profession:</strong> Electrical & Power (4 Years Exp)</div>
+                <div><strong>05. Skills:</strong> MCB Circuits, 3-Phase Wiring, Earthing, Inverter Systems</div>
+                <div><strong>06. Certifications:</strong> National Trade Certificate (NTC) #NSDC-NTC-2022-77491</div>
+                <div><strong>07. Work Experience:</strong> 4 Years (Chennai Power Guild, Southern Infra)</div>
+                <div><strong>08. Capability:</strong> SOS Emergency, Routine Rewiring, 10 km Radius</div>
+                <div><strong>09. Availability:</strong> Mon-Sat (08:00 - 18:00 Shift) · Active On-Duty</div>
+                <div><strong>10. Languages:</strong> Tamil (Native), English (Professional), Hindi</div>
+                <div><strong>11. Pricing:</strong> Base Rate ₹349 · Tariff Range ₹299 - ₹699</div>
+                <div><strong>12. Documents:</strong> Aadhaar, NTC Certificate, Clean Police Clearance</div>
+                <div><strong>13. Emergency Contact:</strong> S. Selvam (Father - 9443219870)</div>
+                <div><strong>14. Payment:</strong> UPI (rahan.elec@okhdfcbank) · Zero Commission</div>
+                <div><strong>15. Co-op Verification:</strong> Approved by Er. S. Ramanathan (#TN-COOP-410)</div>
+            </div>
+
+            <a href="worker-passport.html" class="btn-primary" style="text-align:center; text-decoration:none; margin-top:1rem">
+                Edit Trade Passport Credentials →
+            </a>
+        </div>
+    </div>
+
+    <!-- SCRIPT LOGIC -->
+    <script>
+        (function () {
+            // Load saved worker passport data
+            try {
+                const pass = JSON.parse(localStorage.getItem('univo_worker_passport_data') || '{}');
+                if (pass.fullName) {
+                    document.getElementById('workerNameHeader').textContent = pass.fullName;
+                    document.getElementById('heroWorkerName').textContent = pass.fullName.split(' ')[0] || 'Technician';
+                    document.getElementById('drName').textContent = pass.fullName;
+                    const initials = pass.fullName.split(' ').map(n => n[0]).join('').toUpperCase();
+                    document.getElementById('avatarDisplay').textContent = initials || 'RS';
+                }
+            } catch (e) {}
+
+            // Tab Navigation Switcher
+            window.switchTab = function (tabId) {
+                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+
+                const targetBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => {
+                    const oc = b.getAttribute('onclick');
+                    return oc && oc.includes("'" + tabId + "'");
+                });
+                if (targetBtn) targetBtn.classList.add('active');
+
+                const targetPane = document.getElementById('tab-' + tabId);
+                if (targetPane) {
+                    targetPane.classList.add('active');
+                }
+            };
+
+            // Drawer controls
+            window.openPassportDrawer = function () {
+                document.getElementById('passportDrawer').style.display = 'flex';
+            };
+            window.closePassportDrawer = function () {
+                document.getElementById('passportDrawer').style.display = 'none';
+            };
+
+            // Emergency Mode Toggle
+            let emergencyActive = false;
+            window.toggleEmergencyMode = function () {
+                emergencyActive = !emergencyActive;
+                const btn = document.getElementById('emergencyToggleBtn');
+                const text = document.getElementById('emergencyStatusText');
+                const card = document.getElementById('emergencyJobCard');
+
+                if (emergencyActive) {
+                    btn.classList.add('active');
+                    text.textContent = '(ACTIVE - 1.5x TARIFF)';
+                    card.style.display = 'flex';
+                    alert('⚡ SOS Emergency Opportunity Mode Active! High-priority dispatch with 1.5x fair tariff is now displayed.');
+                } else {
+                    btn.classList.remove('active');
+                    text.textContent = '(OFF)';
+                    card.style.display = 'none';
+                }
+            };
+
+            // Wellbeing Rest Pause
+            let isPaused = false;
+            window.toggleRestInterval = function () {
+                isPaused = !isPaused;
+                const btn = document.getElementById('btnRestPause');
+                const label = document.getElementById('dutyStatusLabel');
+
+                if (isPaused) {
+                    btn.textContent = 'Resume Active Dispatch';
+                    btn.style.background = 'var(--ink)';
+                    btn.style.color = '#fff';
+                    label.textContent = 'Rest Pause (Held)';
+                    alert('☕ 30-minute rest break activated. New non-emergency dispatches are paused to protect your health.');
+                } else {
+                    btn.textContent = 'Take 30-Minute Rest Breather ☕';
+                    btn.style.background = 'transparent';
+                    btn.style.color = 'var(--ink-soft)';
+                    label.textContent = 'Active On-Duty';
+                    alert('Rest interval completed. Active On-Duty restored.');
+                }
+            };
+
+            /* ==========================================================
+               WORKER BILLING & DIRECT PAYMENT SETTLEMENT PROTOCOL
+               Allows worker to enter amount to collect from customer
+               ========================================================== */
+            const paymentChannel = typeof BroadcastChannel !== 'undefined'
+                ? new BroadcastChannel('univo_payment_channel')
+                : null;
+
+            if (paymentChannel) {
+                paymentChannel.onmessage = (event) => {
+                    if (!event.data) return;
+                    if (event.data.type === 'PAYMENT_COMPLETED') {
+                        onPaymentCompletedByCustomer(event.data.data);
+                    }
+                };
+            }
+
+            function initWorkerPaymentState() {
+                const isAccepted = localStorage.getItem('univo_job_accepted') === 'true';
+                const billingBox = document.getElementById('workerBillingBox');
+                
+                if (isAccepted) {
+                    if (billingBox) billingBox.style.display = 'flex';
+                    const stdBtn = document.getElementById('btnAcceptStandardJob');
+                    if (stdBtn) {
+                        stdBtn.textContent = '✓ Order Accepted';
+                        stdBtn.style.background = '#246d3e';
+                        stdBtn.disabled = true;
+                    }
+                    const emgBtn = document.getElementById('btnAcceptEmergencyJob');
+                    if (emgBtn) {
+                        emgBtn.textContent = '✓ Priority SOS Accepted';
+                        emgBtn.style.background = '#246d3e';
+                        emgBtn.disabled = true;
+                    }
+
+                    const activeBill = localStorage.getItem('univo_active_bill');
+                    if (activeBill) {
+                        try {
+                            const bill = JSON.parse(activeBill);
+                            if (bill.status === 'PAID') {
+                                onPaymentCompletedByCustomer(bill, false);
+                            } else if (bill.status === 'PENDING') {
+                                showBillPendingState(bill);
+                            }
+                        } catch (e) { }
+                    }
+                } else {
+                    if (billingBox) billingBox.style.display = 'none';
+                }
+            }
+
+            // Job Actions
+            window.acceptJob = function (type) {
+                const amt = type === 'emergency' ? 649 : 349;
+                const amtInput = document.getElementById('workerBillAmount');
+                if (amtInput) amtInput.value = amt;
+                const notesInput = document.getElementById('workerBillNotes');
+                if (notesInput) {
+                    notesInput.value = type === 'emergency' 
+                        ? 'Priority SOS Emergency Dispatch + Immediate Rectification' 
+                        : 'Standard Electrical Service + Diagnostics';
+                }
+
+                // Persist order acceptance
+                localStorage.setItem('univo_job_accepted', 'true');
+
+                // Update accept button UI
+                const stdBtn = document.getElementById('btnAcceptStandardJob');
+                if (stdBtn && type === 'standard') {
+                    stdBtn.textContent = '✓ Order Accepted';
+                    stdBtn.style.background = '#246d3e';
+                    stdBtn.disabled = true;
+                }
+                const emgBtn = document.getElementById('btnAcceptEmergencyJob');
+                if (emgBtn && type === 'emergency') {
+                    emgBtn.textContent = '✓ Priority SOS Accepted';
+                    emgBtn.style.background = '#246d3e';
+                    emgBtn.disabled = true;
+                }
+
+                // REVEAL COLLECT AMOUNT / BILLING BOX ONLY AFTER ACCEPTING ORDER
+                const billingBox = document.getElementById('workerBillingBox');
+                if (billingBox) {
+                    billingBox.style.display = 'flex';
+                    billingBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    billingBox.style.boxShadow = '0 0 0 3px var(--terra)';
+                    setTimeout(() => { billingBox.style.boxShadow = 'none'; }, 2000);
+                }
+
+                alert('✓ Assignment Accepted! Navigation route launched. Customer has been notified.\n\nThe "Collect Amount from Customer" field is now active below.');
+            };
+
+            window.sendBillToCustomer = function () {
+                const amountInput = document.getElementById('workerBillAmount');
+                const notesInput = document.getElementById('workerBillNotes');
+                const rawAmount = parseFloat(amountInput?.value || '0');
+
+                if (!rawAmount || rawAmount < 50) {
+                    alert('Please enter a valid bill amount of at least ₹50.');
+                    amountInput?.focus();
+                    return;
+                }
+
+                const workerName = document.getElementById('heroWorkerName')?.textContent || 'R. Karthik';
+                const bookingId = '#UNV-88219';
+                const billData = {
+                    booking_id: bookingId,
+                    worker_name: workerName,
+                    worker_trade: 'Certified Master Electrician',
+                    worker_upi: 'rahan.elec@okhdfcbank',
+                    amount: rawAmount,
+                    notes: notesInput?.value || 'Standard Electrical Service + Diagnostics',
+                    status: 'PENDING',
+                    timestamp: new Date().toISOString(),
+                    time_str: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                };
+
+                // Store in localStorage for cross-page persistence
+                localStorage.setItem('univo_active_bill', JSON.stringify(billData));
+
+                // Broadcast in real time across browser tabs
+                if (paymentChannel) {
+                    paymentChannel.postMessage({ type: 'BILL_REQUESTED', data: billData });
+                }
+
+                showBillPendingState(billData);
+                alert(`✓ Bill of ₹${rawAmount.toFixed(2)} sent to customer!\n\nThe customer has received the payment request in their dashboard and will complete the transaction.`);
+            };
+
+            function showBillPendingState(bill) {
+                const badge = document.getElementById('workerBillStatusBadge');
+                const notice = document.getElementById('workerPaymentNotice');
+                const btn = document.getElementById('btnSendBill');
+
+                if (badge) {
+                    badge.textContent = 'AWAITING CUSTOMER PAYMENT';
+                    badge.style.background = 'rgba(255, 107, 0, 0.12)';
+                    badge.style.color = '#FF6B00';
+                }
+
+                if (notice) {
+                    notice.style.display = 'block';
+                    notice.style.background = '#fff8f2';
+                    notice.style.border = '1px solid rgba(255, 107, 0, 0.3)';
+                    notice.style.color = 'var(--ink)';
+                    notice.innerHTML = `
+                        <div style="display:flex; justify-content:space-between; align-items:center">
+                            <strong>⏳ Bill Sent: ₹${bill.amount.toFixed(2)}</strong>
+                            <span class="mono" style="font-size:10px; color:#888">${bill.time_str || ''}</span>
+                        </div>
+                        <div style="font-size:11.5px; color:var(--ink-soft); margin-top:2px">
+                            Awaiting customer verification & digital settlement via UPI / Card / Wallet.
+                        </div>
+                    `;
+                }
+
+                if (btn) {
+                    btn.textContent = 'Update / Re-send Bill ↻';
+                }
+            }
+
+            function onPaymentCompletedByCustomer(data, shouldAlert = true) {
+                const badge = document.getElementById('workerBillStatusBadge');
+                const notice = document.getElementById('workerPaymentNotice');
+                const btn = document.getElementById('btnSendBill');
+
+                if (badge) {
+                    badge.textContent = '✓ PAYMENT RECEIVED & SETTLED';
+                    badge.style.background = 'rgba(36, 109, 62, 0.15)';
+                    badge.style.color = '#246d3e';
+                }
+
+                if (notice) {
+                    notice.style.display = 'block';
+                    notice.style.background = '#f2fbf5';
+                    notice.style.border = '1.5px solid rgba(36, 109, 62, 0.35)';
+                    notice.style.color = '#246d3e';
+                    notice.innerHTML = `
+                        <div style="display:flex; justify-content:space-between; align-items:center">
+                            <strong>✓ ₹${parseFloat(data.amount || 349).toFixed(2)} PAYMENT RECEIVED</strong>
+                            <span class="mono" style="font-size:10.5px; background:#246d3e; color:#fff; padding:2px 8px; border-radius:999px">TXN: ${data.txn_id || '#TXN-UNV-9281'}</span>
+                        </div>
+                        <div style="font-size:11.5px; color:var(--ink); margin-top:3px">
+                            Method: <strong>${data.method || 'Google Pay (UPI)'}</strong> · 100% credited to your bank account (rahan.elec@okhdfcbank).
+                        </div>
+                    `;
+                }
+
+                // Advance lifecycle to Complete
+                if (document.getElementById('stProgress')) {
+                    document.getElementById('stProgress').style.background = 'var(--green-soft)';
+                    document.getElementById('stProgress').style.color = 'var(--green)';
+                }
+                if (document.getElementById('stDone')) {
+                    document.getElementById('stDone').style.background = 'var(--green-soft)';
+                    document.getElementById('stDone').style.color = 'var(--green)';
+                }
+
+                if (btn) {
+                    btn.disabled = true;
+                    btn.textContent = '✓ Payment Complete';
+                    btn.style.background = '#246d3e';
+                    btn.style.cursor = 'default';
+                }
+
+                if (shouldAlert) {
+                    playPaymentChime();
+                    alert(`🎉 PAYMENT RECEIVED!\n\nCustomer has paid ₹${parseFloat(data.amount || 349).toFixed(2)} via ${data.method || 'UPI'}.\nTransaction Ref: ${data.txn_id || '#TXN-UNV-9281'}\n\n100% of this fee has been deposited to your registered bank account with 0% platform commission.`);
+                }
+            }
+
+            function playPaymentChime() {
+                try {
+                    const AC = window.AudioContext || window.webkitAudioContext;
+                    if (!AC) return;
+                    const ctx = new AC();
+                    if (ctx.state === 'suspended') ctx.resume();
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+                    osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.12);
+                    osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.24);
+                    osc.frequency.setValueAtTime(1046.5, ctx.currentTime + 0.36);
+                    gain.gain.setValueAtTime(0.08, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start();
+                    osc.stop(ctx.currentTime + 0.62);
+                } catch (e) { }
+            }
+
+            window.declineJob = function (type) {
+                if (confirm('Decline this job? It will be fairly re-allocated to the next nearest cooperative technician.')) {
+                    document.getElementById('standardJobCard').style.display = 'none';
+                    localStorage.removeItem('univo_job_accepted');
+                    localStorage.removeItem('univo_active_bill');
+                    const billingBox = document.getElementById('workerBillingBox');
+                    if (billingBox) billingBox.style.display = 'none';
+                }
+            };
+
+            // Lifecycle Step
+            let currentStep = 2;
+            window.advanceStep = function () {
+                currentStep++;
+                if (currentStep === 3) {
+                    document.getElementById('stArrived').style.background = 'var(--green-soft)';
+                    document.getElementById('stArrived').style.color = 'var(--green)';
+                    document.getElementById('stProgress').style.background = 'var(--ink)';
+                    document.getElementById('stProgress').style.color = '#fff';
+                    alert('Service status updated: Work in Progress on site.');
+                } else if (currentStep === 4) {
+                    document.getElementById('stProgress').style.background = 'var(--green-soft)';
+                    document.getElementById('stProgress').style.color = 'var(--green)';
+                    document.getElementById('stDone').style.background = 'var(--green-soft)';
+                    document.getElementById('stDone').style.color = 'var(--green)';
+                    alert('Job completed! Payment credited to your UPI settlement vault.');
+                }
+            };
+
+            // Check for saved roaming zone
+            const savedZone = localStorage.getItem('univo_worker_roaming_zone');
+            if (savedZone) {
+                const badge = document.getElementById('roamingStatusBadge');
+                if (badge) {
+                    badge.textContent = `📍 Roaming Zone: ${savedZone} (Active Beacon)`;
+                    badge.style.borderColor = 'var(--terra)';
+                    badge.style.color = 'var(--terra)';
+                }
+            }
+
+            // Set Roaming Zone
+            window.setRoamingZone = function (zoneName, surgePct) {
+                localStorage.setItem('univo_worker_roaming_zone', zoneName);
+                const badge = document.getElementById('roamingStatusBadge');
+                if (badge) {
+                    badge.textContent = `📍 Roaming Zone: ${zoneName} (${surgePct} Active)`;
+                    badge.style.borderColor = 'var(--terra)';
+                    badge.style.color = 'var(--terra)';
+                }
+                alert(`✓ Roaming Beacon Activated for Tomorrow!\n\nTarget Region: ${zoneName}\nExpected Surge: ${surgePct}\nPriority: First-order queue allocation enabled when you arrive in ${zoneName} tomorrow morning.`);
+            };
+
+            // Switch Forecast Horizon
+            window.switchForecastHorizon = function (horizon) {
+                const btnT = document.getElementById('btnHorizonTomorrow');
+                const btn3 = document.getElementById('btnHorizon3Day');
+                const btn7 = document.getElementById('btnHorizon7Day');
+
+                const demandText = document.getElementById('stateDemandText');
+                const deficitText = document.getElementById('stateDeficitText');
+                const hotspotText = document.getElementById('statePeakHotspot');
+
+                btnT.className = 'btn-secondary';
+                btn3.className = 'btn-secondary';
+                btn7.className = 'btn-secondary';
+
+                if (horizon === 'tomorrow') {
+                    btnT.className = 'btn-primary';
+                    demandText.textContent = '8,450+ Repairs';
+                    deficitText.textContent = '+38% Tech Shortage';
+                    hotspotText.textContent = 'Chennai OMR Corridor (+68%)';
+                } else if (horizon === '3day') {
+                    btn3.className = 'btn-primary';
+                    demandText.textContent = '24,800+ Repairs';
+                    deficitText.textContent = '+46% Weekend Surge Deficit';
+                    hotspotText.textContent = 'Coimbatore Industrial Belt (+55%)';
+                } else if (horizon === '7day') {
+                    btn7.className = 'btn-primary';
+                    demandText.textContent = '58,200+ Repairs';
+                    deficitText.textContent = '+41% Average Deficit';
+                    hotspotText.textContent = 'Saturday Statewide Peak (1,640 jobs/zone)';
+                }
+            };
+
+            // Initialize worker payment status from persistence
+            initWorkerPaymentState();
+        })();
+    </script>
+</body>
+
+</html>
