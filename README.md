@@ -1,16 +1,66 @@
 # UNIVO — Cooperative Gig Operating System
 
-> *Every job creates intelligence for the next opportunity.*
+<p align="center">
+  <em>Every job creates intelligence for the next opportunity.</em>
+</p>
 
-[![Node.js](https://img.shields.io/badge/Runtime-Node.js_v18+-68a063?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org/)
-[![Database](https://img.shields.io/badge/Database-PostgreSQL_%2F_Supabase-336791?style=flat-square&logo=postgresql&logoColor=white)](https://supabase.com/)
-[![GIS Engine](https://img.shields.io/badge/GIS-Leaflet.js_v1.9-199900?style=flat-square&logo=leaflet&logoColor=white)](https://leafletjs.com/)
-[![Streaming Protocol](https://img.shields.io/badge/Streaming-RFC_7233_Byte_Range-007acc?style=flat-square)](https://httpwg.org/specs/rfc7233.html)
-[![License](https://img.shields.io/badge/License-ISC-blue?style=flat-square)](LICENSE)
+<p align="center">
+  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Runtime-Node.js_v18+-68a063?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js" /></a>
+  <a href="https://supabase.com/"><img src="https://img.shields.io/badge/Database-PostgreSQL_%2F_Supabase-336791?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL" /></a>
+  <a href="https://leafletjs.com/"><img src="https://img.shields.io/badge/GIS_Engine-Leaflet.js_v1.9-199900?style=for-the-badge&logo=leaflet&logoColor=white" alt="Leaflet" /></a>
+  <a href="https://httpwg.org/specs/rfc7233.html"><img src="https://img.shields.io/badge/Streaming-RFC_7233_Byte_Range-007acc?style=for-the-badge" alt="Streaming" /></a>
+  <a href="#license--attribution"><img src="https://img.shields.io/badge/License-ISC-blue?style=for-the-badge" alt="License" /></a>
+</p>
+
+---
+
+<p align="center">
+  <img src="screeenshots/Screenshot%202026-09-17%20181554.png" alt="UNIVO Master Ecosystem Gateway" width="100%" />
+</p>
+
+<p align="center">
+  <em>Figure 1: <strong>UNIVO Master Ecosystem Gateway</strong> — A cooperative workforce operating system connecting citizens, technicians, cooperative societies, and policymakers into a unified computational architecture.</em>
+</p>
+
+---
+
+## 📌 Table of Contents
+
+- [Overview](#overview)
+- [The Structural Problem](#the-structural-problem)
+- [The UNIVO Idea](#the-univo-idea)
+- [Why UNIVO is Different](#why-univo-is-different)
+- [Stakeholder Ecosystem & Live Interfaces](#stakeholder-ecosystem--live-interfaces)
+  - [1. Customer Portal & Smart Diagnostics](#1-customer-portal--smart-diagnostics)
+  - [2. Worker Portal & Sovereign Passport](#2-worker-portal--sovereign-passport)
+  - [3. Cooperative Command Dashboard](#3-cooperative-command-dashboard)
+  - [4. Government Intelligence & Policy Command](#4-government-intelligence--policy-command)
+- [Signature Innovations](#signature-innovations)
+- [AI Diagnostic Pipeline](#ai-diagnostic-pipeline)
+- [Fair Dispatch Technical Deep Dive](#fair-dispatch-technical-deep-dive)
+- [End-to-End Service Lifecycle & Settlement](#end-to-end-service-lifecycle--settlement)
+- [The Collective Intelligence Loop & Data Flywheel](#the-collective-intelligence-loop--data-flywheel)
+- [Technical Architecture](#technical-architecture)
+- [Security, Privacy & Data Governance](#security-privacy--data-governance)
+- [India-Specific Systemic Design & Scalability](#india-specific-systemic-design--scalability)
+- [Service Ecosystem (18 Standardized Families)](#service-ecosystem-18-standardized-families)
+- [Implementation Reality Matrix](#implementation-reality-matrix)
+- [Repository Structure](#repository-structure)
+- [Local Setup & Quickstart](#local-setup--quickstart)
+- [Visual Demo Flow](#visual-demo-flow)
+- [Roadmap & Horizons](#roadmap--horizons)
+- [License & Attribution](#license--attribution)
+
+---
+
+## Overview
 
 UNIVO is not a conventional two-sided service marketplace. It is a **cooperative workforce operating system** connecting service discovery, technical skill qualification, algorithmic fairness, occupational health protection, split payments, learning, and public workforce intelligence into a unified computational architecture.
 
 By coordinating four primary stakeholders—**Customers, Service Workers, Cooperative Societies, and Government Administrators**—UNIVO transforms ephemeral gig transactions into durable human capital, verifiable craftsmanship, and systemic economic resilience.
+
+> [!IMPORTANT]
+> **Core Mission**: Traditional platforms extract value from low-wage transactions and keep workers isolated. UNIVO organizes workers into accredited cooperative societies, replaces arbitrary 5-star ratings with verifiable 15-dimensional Skill DNA, guarantees 100% direct-to-bank zero-commission payouts, and provides governments with macro labor intelligence.
 
 ---
 
@@ -27,6 +77,7 @@ Modern informal labor markets and commercial aggregator platforms are optimized 
 * **Isolated Cooperative Societies:** Grassroots labor unions and credit societies lack modern software infrastructure to coordinate dispatches, monitor member welfare, or forecast trade deficits.
 * **Policy Blindness:** Municipalities and state agencies remain blind to localized trade shortages, wage degradation, and workforce migration patterns until acute labor distress emerges.
 
+> [!NOTE]
 > **The problem is not simply finding a worker.**  
 > **The problem is coordinating an entire workforce fairly, intelligently, and sustainably.**
 
@@ -99,7 +150,7 @@ UNIVO connects transactions to collective workforce intelligence.**
 
 ---
 
-## What We Built
+## Stakeholder Ecosystem & Live Interfaces
 
 UNIVO provides dedicated, purpose-built interfaces for all four ecosystem stakeholders:
 
@@ -118,82 +169,155 @@ flowchart TD
     G -.->|Disaster Response Switch| CO
 ```
 
-### 1. Customer Portal
-* **Multimodal Service Ingestion:** Describe problems via natural language text, vernacular voice audio, or photographic evidence.
-* **AI-Assisted Job Diagnostics:** Diagnostic engine resolves customer symptoms into standardized trade scopes, required toolkits, and baseline price brackets.
-* **Qualified Matching & Transparency:** Insight into why a specific cooperative technician was recommended, detailing verified trade badges and guild accreditation.
-* **Lifecycle Tracking & Invoicing:** Real-time job milestone updates, digital receipts, transparent labor breakdowns, and verified feedback logging.
+---
 
-### 2. Worker Portal
-* **15-Section Dynamic Worker Passport:** Comprehensive digital credential capturing identity records, verified professions, secondary trades, specialized toolkits, certifications, languages, rate matrices, and emergency contacts.
-* **Skill DNA Engine:** Tracks technical versatility, equipment certifications, and task complexity records over time.
-* **Fair Dispatch Feed:** Job opportunities dispatched with clear explanations regarding distance, required skill match, and estimated remuneration.
-* **Trust Score & Guild Attestation:** Visual breakdown of trade accreditations, cooperative society endorsements, and punctuality indices.
-* **Operational Calendar & Availability:** Self-managed working hours, calendar sync, and active/rest toggles.
-* **Earnings & Welfare Analytics:** Transparent breakdowns of take-home pay, cooperative fee allocations, and accumulated welfare credits.
-* **Wellbeing Guardian Indicator:** Tracks consecutive shift intensity and transit fatigue, proactively advising rest.
+### 1. Customer Portal & Smart Diagnostics
+
+The customer experience focuses on frictionless problem communication, AI-assisted symptom triage, proactive household intelligence, and 24/7 emergency dispatch.
+
+#### A. Customer Authentication & Onboarding
+Seamless onboarding with role-based segregation for citizens and residential societies.
+
+![Customer Login Screen](screeenshots/Screenshot%202026-09-17%20181713.png)
+*Figure 2: Customer Authentication Portal — Dedicated, clean gateway for household accounts.*
+
+---
+
+#### B. Home Intelligence & Proactive Maintenance
+Rather than waiting for catastrophic breakdowns, UNIVO continuously models appliance run-times, plumbing pressure histories, and electrical loads to calculate household health scores and recommend scheduled maintenance.
+
+![Customer Home Intelligence Dashboard](screeenshots/Screenshot%202026-09-17%20182207.png)
+*Figure 3: Home Intelligence Dashboard — Predictive household health index (88/100) tracking electrical circuits, water pumps, HVAC systems, and architectural fixtures.*
+
+---
+
+#### C. 24/7 Rapid Emergency Service Dispatch
+For immediate electrical hazards, severe pipe bursts, structural blockages, or gas leaks, customers can trigger an instant emergency dispatch locked to their high-precision GPS coordinates.
+
+![Emergency Service Request](screeenshots/Screenshot%202026-09-17%20182235.png)
+*Figure 4: Emergency Service Request & 24/7 Rapid Response Squad — Instant GPS-locked triage for high-hazard municipal breakdowns.*
+
+---
+
+### 2. Worker Portal & Sovereign Passport
+
+Trade workers access a comprehensive digital workplace where they own their sovereign professional credentials, view transparent earnings, cast democratic guild ballots, and receive fair work dispatches.
+
+#### A. Verified Technician Access
+Technicians log into their personalized workstation with multi-factor trade identification.
+
+![Worker Login Screen](screeenshots/Screenshot%202026-09-17%20181755.png)
+*Figure 5: Technician Access Portal — Role-gated authentication for accredited cooperative guild artisans.*
+
+---
+
+#### B. Technician Command Center & Democratic Governance
+The worker command center displays live dispatches, real-time trust scores (e.g. 96/100), 15-section passport status, active cooperative board resolutions awaiting member voting, and heatwave demand alerts.
+
+![Worker Command Center](screeenshots/Screenshot%202026-09-17%20182343.png)
+*Figure 6: Technician Command Center — Featuring active member balloting for tariff revisions, verified trust ratings, and forward-looking regional demand forecasts.*
+
+---
+
+#### C. Earnings Intelligence & Regional Demand Hotspots
+Technicians enjoy a **Zero Commission Guarantee** where 100% of customer payments settle directly into their verified bank account or UPI ID. The Demand Radar guides roaming technicians to zones experiencing electrical and plumbing surges.
+
+![Worker Earnings Intelligence & Hotspots](screeenshots/Screenshot%202026-09-17%20182437.png)
+*Figure 7: Earnings Intelligence & Hotspots — Transparent income breakdown (Daily ₹1,840 / Monthly ₹52,000 track) and real-time neighborhood demand spikes.*
+
+---
 
 ### 3. Cooperative Command Dashboard
-* **Workforce Overview & Rostering:** Live telemetry of registered guild artisans, active dispatches, and regional trade distribution across municipal wards.
-* **Fairness Center:** Real-time algorithmic oversight monitoring Gini coefficients of opportunity distribution, dispatch dispersion rates, and equity rebalancing across members.
-* **Wellbeing & Safety Intelligence:** Fleet-wide fatigue monitoring, overwork alerts, and hazardous job tracking.
-* **Welfare & Mutual Aid Hub:** Administration of member medical claims, micro-grants, emergency stipends, and retirement allocations.
-* **Skill-Gap Analytics & Training Planner:** Identifies trades experiencing unmet regional demand, enabling coordinators to schedule upskilling workshops.
-* **Democratic Governance:** Member voting portals to table resolutions, vote on bylaws, and elect coordinators.
-* **Digital Twin / What-If Engine:** Simulation sandbox allowing coordinators to model the systemic impact of wage floor adjustments, capacity expansion, or weather disruptions before issuing operational policies.
 
-### 4. Government Intelligence
-* **Authorized Macro Aggregation:** Strictly decoupled from Personal Identifiable Information (PII); provides state and municipal bodies with macro labor telemetry.
-* **Interactive GIS Spatial Map:** Real-time district-level visualization of cooperative coverage, labor density, and underserved zones built on Leaflet.js.
-* **Demand & Supply Forecasting:** Macro-level identification of seasonal labor shortages and infrastructure maintenance demands.
-* **Skill Gap & Training Intelligence:** Informs public vocational institutions (e.g., ITI, NSDC) on localized trade deficits to optimize state training subsidies.
-* **GigForce Crisis Deployment:** Municipal command interface to mobilize certified cooperative plumbers, electricians, and technicians for rapid civil recovery during floods, cyclones, or civic infrastructure failures.
+Grassroots cooperative societies serve as the institutional anchor of UNIVO. Through this unified command interface, coordinators manage member rosters, resolve customer SOS incidents, disburse mutual aid, and oversee dispatch equity.
+
+#### A. Cooperative Command Overview & Incident Monitoring
+Cooperative coordinators maintain continuous oversight over active zone workers, customer emergency dossiers, live dispatch queues, and society reserve pools.
+
+![Cooperative Command Dashboard](screeenshots/Screenshot%202026-09-20%20092727.png)
+*Figure 8: Cooperative Headquarters Command Dashboard (Tamil Nadu Regional Cooperative Society) — Live workforce roster, customer panic SOS handling, and guild financial reserves.*
+
+---
+
+#### B. Welfare & Mutual Aid Hub
+An autonomous solidarity fund financed through collective dividend allocations (₹15–₹25 per completed job). It directly finances member healthcare grants, tool replacement subsidies, and family emergency relief without state bureaucratic delays.
+
+![Welfare and Mutual Aid Hub](screeenshots/Screenshot%202026-09-20%20092512.png)
+*Figure 9: Welfare & Mutual Aid Hub — Active solidarity corpus (₹4,82,500), 95.2% member eligibility coverage, and real-time claim adjudication.*
+
+---
+
+### 4. Government Intelligence & Policy Command
+
+Public authorities require visibility into labor markets without infringing on worker privacy. UNIVO provides state labour commissioners, district collectors, and skill missions with authorized, k-anonymized macro telemetry.
+
+#### A. Policy Command Authentication
+State and municipal nodal officers authenticate into their designated jurisdiction and department portal.
+
+![Government Portal Login](screeenshots/Screenshot%202026-09-17%20181840.png)
+*Figure 10: National & State Policy Command Login — Administrative entry for government labour commissioners and district nodal officers.*
+
+---
+
+#### B. District Intelligence Dossier & Macro Telemetry
+State administrators can inspect district-by-district formalization metrics, job completions, living wage floor compliance (99.2%), and direct benefit transfers (DBT) to unorganized workers.
+
+![District Intelligence Dossier](screeenshots/Screenshot%202026-09-20%20092907.png)
+*Figure 11: Chennai Metro District Official Intelligence Dossier — Telemetry displaying 348,200 active verified workers, 892,100 completed jobs, and a +34.4% employment lift.*
+
+---
+
+#### C. Statewide District Directory & Statutory Policy Directive Engine
+Nodal officers can monitor all 38 districts of Tamil Nadu and broadcast legally binding gazetted directives, seasonal safety guidelines, or disaster relief funds directly to registered cooperatives.
+
+![Districts Directory and Policy Directive Engine](screeenshots/Screenshot%202026-09-20%20092933.png)
+*Figure 12: Statewide Districts Directory & Statutory Policy Directives — Real-time tracking of district-level wage growth, formalization rate, and executive decree broadcasting.*
 
 ---
 
 ## Signature Innovations
 
-### FairWork AI / Fair Dispatch
+### 1. FairWork AI / Fair Dispatch
 * **What it does:** Allocates service requests using a multi-objective optimization function balancing skill qualification, geographic dignity, idle rotation, and income parity across the guild.
 * **Problem:** Commercial algorithms concentrate jobs among hyper-active workers to shave seconds off arrival times, accelerating burnout while leaving equally qualified peers underemployed.
 * **Why it matters:** Ensures every verified cooperative worker receives a fair distribution of livelihood opportunities while eliminating arbitrary algorithmic penalties.
 
-### Worker-Controlled AI
+### 2. Worker-Controlled AI
 * **What it does:** Provides workers transparent visibility into why an opportunity was matched to them, allowing them to define personalized dispatch preferences, maximum travel radiuses, and preferred tool scopes.
 * **Problem:** Commercial gig workers are managed by black-box algorithms that punish rejected orders with hidden shadow-bans or demotions.
 * **Why it matters:** Restores human autonomy and self-determination to digital labor management.
 
-### Skill DNA
+### 3. Skill DNA
 * **What it does:** Structures worker capability across 15 distinct dimensions—including tool ownership, certified task complexities, language fluencies, and historical diagnostic accuracy—into a verifiable digital credential.
 * **Problem:** Workers are flattened into generic categories and subjective 5-star ratings, making specialized craftsmanship invisible.
 * **Why it matters:** Transforms labor into an appreciating asset, allowing workers to build cumulative, portable professional equity.
 
-### Trust Intelligence
+### 4. Trust Intelligence
 * **What it does:** Computes a multidimensional trust rating incorporating physical tool verification, cooperative society attestation, safety adherence, and craft execution.
 * **Problem:** Subjective review systems are vulnerable to customer bias, extortion, and discrimination.
 * **Why it matters:** Grounds trust in verifiable trade competence, backed by the peer accountability of the cooperative society.
 
-### Wellbeing Guardian
+### 5. Wellbeing Guardian
 * **What it does:** Monitors consecutive working hours, extreme transit distances, and strenuous environmental conditions, automatically throttling dispatch access and initiating rest prompts when fatigue thresholds are met.
 * **Problem:** Platforms profit from overwork, encouraging 12–16 hour shifts that lead to chronic illness and workplace accidents.
 * **Why it matters:** Embeds occupational health and life preservation directly into the dispatch engine.
 
-### Demand Radar (Jobs Before They Arrive)
+### 6. Demand Radar (Jobs Before They Arrive)
 * **What it does:** Analyzes seasonal weather patterns, historical equipment degradation cycles, and municipal housing age to forecast specific maintenance needs before customers file a ticket.
 * **Problem:** Informal workers endure extreme income volatility because they react purely to ad-hoc breakdowns.
 * **Why it matters:** Converts volatile break-fix gig work into predictable, scheduled preventative maintenance contracts.
 
-### Cooperative Brain
+### 7. Cooperative Brain
 * **What it does:** Aggregates telemetry across hundreds of local dispatches to provide cooperative leaders with unified insights into guild earnings, dispute trends, and tooling bottlenecks.
 * **Problem:** Small cooperatives cannot compete against tech monopolies due to lack of software infrastructure and data science resources.
 * **Why it matters:** Gives grassroots worker collectives institutional-grade computational intelligence.
 
-### Digital Twin / What-If Simulator
+### 8. Digital Twin / What-If Simulator
 * **What it does:** An in-browser predictive simulation environment allowing cooperative managers to simulate the systemic consequences of adjusting base rates, admitting new apprentice cohorts, or expanding service boundaries.
 * **Problem:** Operational mistakes in price setting or labor supply directly hurt low-income workers before they can be corrected.
 * **Why it matters:** Enables safe, risk-free policy experimentation before rolling out changes to the living workforce.
 
-### GigForce Crisis Mode
+### 9. GigForce Crisis Mode
 * **What it does:** A coordinated civic failover switch that pivots trade professionals (certified pipefitters, high-voltage wiremen, structural carpenters) into emergency disaster response units during municipal crises.
 * **Problem:** During natural disasters, corporate platforms either shut down or engage in opportunistic surge pricing while cities struggle to find skilled repair crews.
 * **Why it matters:** Turns the everyday cooperative workforce into an organized national civil defense asset.
@@ -202,7 +326,10 @@ flowchart TD
 
 ## AI Diagnostic Pipeline
 
-The UNIVO diagnostic layer acts as an automated triage mechanism that translates uncalibrated customer descriptions into structured, actionable engineering work orders.
+The UNIVO diagnostic layer acts as an automated triage mechanism that translates uncalibrated customer descriptions into structured, actionable engineering work orders. Customers can either write in natural language, speak in vernacular regional dialects (Tamil & English supported), or upload photos of physical damage.
+
+![AI Diagnostic Triage: Natural Language & Computer Vision](screeenshots/Screenshot%202026-09-17%20182134.png)
+*Figure 13: Multimodal Diagnostic Ingestion — Natural Language NLP parsing alongside Computer Vision diagnostic ingestion.*
 
 ```text
 Customer Input (Text / Vernacular Voice / Photo)
@@ -243,6 +370,7 @@ Customer Input (Text / Vernacular Voice / Photo)
 
 Commercial dispatch algorithms treat labor allocation as a latency-minimization or margin-maximization problem. UNIVO treats dispatch as an **ethical multi-objective resource allocation problem**.
 
+> [!IMPORTANT]
 > **Foundational Principle:**  
 > *Qualification comes first. Fairness operates exclusively among qualified candidates.*
 
@@ -300,6 +428,24 @@ Incoming Work Order
 
 ---
 
+## End-to-End Service Lifecycle & Settlement
+
+During service delivery, transparency protects both citizen and technician. The worker app tracks milestone progressions (`Dispatched` → `On Site` → `In Progress` → `Complete`), verifies the customer via a secure one-time PIN, and generates the final transparent invoice.
+
+<p align="center">
+  <img src="screeenshots/Screenshot%202026-09-17%20182516.png" alt="Service Settlement and Invoicing Interface" width="450" />
+</p>
+
+<p align="center">
+  <em>Figure 14: On-Site Service Settlement & Zero-Deduction Direct UPI Settlement.</em>
+</p>
+
+- **Customer Verification PIN (#9842):** Eliminates impersonation or erroneous dispatches.
+- **Stage Progression:** Advance stage controls allow real-time milestone sync back to cooperative monitoring.
+- **Zero Commission Guarantee:** Transparent tariff collection with zero platform skimming, direct to technician UPI.
+
+---
+
 ## The Collective Intelligence Loop & Data Flywheel
 
 In UNIVO, no service task exists in isolation. Every completed job enriches the broader ecosystem:
@@ -325,7 +471,9 @@ $$\mathbf{Job} \longrightarrow \mathbf{Data} \longrightarrow \mathbf{Intelligenc
 
 ---
 
-## Technical Architecture: Implemented vs. Planned Stack
+## Technical Architecture
+
+### Implemented vs. Planned Stack
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────┐
@@ -507,6 +655,21 @@ prototype 3/
 ├── package.json                             # Node.js project manifest with start/dev scripts
 ├── run.bat                                  # One-click Windows batch launcher (starts server + opens browser)
 ├── server.js                                # Production HTTP streaming server supporting RFC 7233 range requests
+├── screeenshots/                            # Production UI captures across all 4 stakeholder portals
+│   ├── Screenshot 2026-09-17 181554.png     # Master landing page & ecosystem gateway hero
+│   ├── Screenshot 2026-09-17 181713.png     # Customer authentication portal
+│   ├── Screenshot 2026-09-17 181755.png     # Worker / technician login portal
+│   ├── Screenshot 2026-09-17 181840.png     # Government policy command login portal
+│   ├── Screenshot 2026-09-17 182134.png     # AI multimodal diagnostic triage (NLP & Vision)
+│   ├── Screenshot 2026-09-17 182207.png     # Customer dashboard - Home Intelligence
+│   ├── Screenshot 2026-09-17 182235.png     # 24/7 Emergency service request & GPS lock
+│   ├── Screenshot 2026-09-17 182343.png     # Technician command center & democratic voting
+│   ├── Screenshot 2026-09-17 182437.png     # Worker earnings intelligence & demand hotspots
+│   ├── Screenshot 2026-09-17 182516.png     # Service settlement, stage tracking & UPI payout
+│   ├── Screenshot 2026-09-20 092512.png     # Welfare & mutual aid hub (solidarity corpus)
+│   ├── Screenshot 2026-09-20 092727.png     # Cooperative headquarters command dashboard
+│   ├── Screenshot 2026-09-20 092907.png     # Government policy command - district dossier
+│   └── Screenshot 2026-09-20 092933.png     # All 38 districts directory & directive engine
 └── reference/                               # UNIVO core application suites & asset repositories
     ├── index.html                           # Internal gateway redirector
     ├── ref.html                             # UNIVO master landing page & ecosystem gateway
